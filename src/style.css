@@ -9,7 +9,4 @@
     color: theme('colors.text.default');
     font-family: theme('fontFamily.sans');
   }
-  #app {
-    zoom: 1.2;
-  }
 }
