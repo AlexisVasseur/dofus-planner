@@ -18,17 +18,17 @@ function pickCopy() { build.addCopyCardAfter(props.afterCardId); open.value = fa
 </script>
 
 <template>
-  <div class="conn w-[180px] relative flex items-center justify-center py-4" ref="root">
+  <div class="conn w-[200px] relative flex items-center justify-center py-4" ref="root">
     <button
       type="button"
-      class="pill-plus relative z-20 rounded-full font-display tracking-[0.2em] uppercase flex items-center gap-2.5 px-5 py-2.5 transition-all"
+      class="pill-plus relative z-20 w-11 h-11 rounded-full flex items-center justify-center transition-all"
       :class="open
-        ? 'bg-accent text-[#061a13] shadow-[0_0_0_4px_#050505,0_0_28px_rgba(91,211,168,0.5),0_4px_14px_rgba(0,0,0,0.55)] scale-[1.04]'
-        : 'bg-bg-surface border border-accent/70 text-accent shadow-[0_0_0_4px_#050505,0_0_12px_rgba(91,211,168,0.15)] hover:bg-accent hover:text-[#061a13] hover:border-accent hover:shadow-[0_0_0_4px_#050505,0_0_28px_rgba(91,211,168,0.5)]'"
+        ? 'bg-accent text-[#061a13] shadow-[0_0_0_4px_#050505,0_0_28px_rgba(91,211,168,0.5),0_4px_14px_rgba(0,0,0,0.55)] scale-[1.06]'
+        : 'bg-bg-surface border border-accent/70 text-accent shadow-[0_0_0_4px_#050505,0_0_12px_rgba(91,211,168,0.18)] hover:bg-accent hover:text-[#061a13] hover:border-accent hover:shadow-[0_0_0_4px_#050505,0_0_28px_rgba(91,211,168,0.55)] hover:scale-[1.06]'"
+      :aria-label="open ? 'Fermer le menu' : 'Ajouter une étape'"
       @click="toggle"
     >
-      <span class="font-sans text-[18px] font-bold leading-none">+</span>
-      <span v-if="open" class="text-sm">Ajouter</span>
+      <span class="font-sans text-[20px] font-bold leading-none -mt-0.5">+</span>
     </button>
     <ConnectorPopover v-if="open" @empty="pickEmpty" @copy="pickCopy" />
   </div>
