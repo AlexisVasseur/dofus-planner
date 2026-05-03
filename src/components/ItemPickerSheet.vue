@@ -31,6 +31,20 @@ const card = computed(() => target.value
 const slotForFilter = ref<SearchTarget>(null);
 watch(slotForQuery, (v) => { slotForFilter.value = v; }, { immediate: true });
 
+watch(target, (newTarget, oldTarget) => {
+  if (newTarget === null) return; // closing — leave search alone
+  // Reset on first open or whenever the target points to a different slot/dofus
+  if (
+    !oldTarget
+    || oldTarget.kind !== newTarget.kind
+    || oldTarget.cardId !== newTarget.cardId
+    || (newTarget.kind === 'slot' && oldTarget.kind === 'slot' && oldTarget.slot !== newTarget.slot)
+    || (newTarget.kind === 'dofus' && oldTarget.kind === 'dofus' && oldTarget.index !== newTarget.index)
+  ) {
+    search.value = '';
+  }
+});
+
 const { results, loading, error } = useItemSearch(slotForFilter, search);
 
 const filtered = computed(() => {
