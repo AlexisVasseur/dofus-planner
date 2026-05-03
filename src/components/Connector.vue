@@ -18,8 +18,8 @@ function pickCopy() { build.addCopyCardAfter(props.afterCardId); open.value = fa
 </script>
 
 <template>
-  <div class="conn w-[120px] self-stretch relative flex items-center justify-center" ref="root">
-    <div class="absolute w-full h-px" style="background: linear-gradient(90deg, transparent 0%, #1f1f1f 20%, #1f1f1f 80%, transparent 100%);"></div>
+  <div class="conn w-[120px] relative flex items-center justify-center py-4" ref="root">
+    <div class="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-border-default opacity-60"></div>
     <button
       type="button"
       class="pill-plus relative z-20 rounded-full font-display tracking-[0.2em] uppercase flex items-center gap-2 px-3 py-1.5 transition-all"

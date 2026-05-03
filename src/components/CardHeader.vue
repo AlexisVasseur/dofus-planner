@@ -94,7 +94,7 @@ function onRemove() {
     </button>
     <div class="right flex-1 min-w-0">
       <div class="flex items-baseline">
-        <span class="font-sans text-[9px] font-semibold text-text-faint uppercase tracking-[0.25em] mr-1.5">Lv</span>
+        <span class="font-display text-[12px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
         <input
           v-if="editingLevel"
           ref="levelInputRef"
