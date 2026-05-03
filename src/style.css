@@ -8,5 +8,6 @@
     background-color: theme('colors.bg-page');
     color: theme('colors.text.default');
     font-family: theme('fontFamily.sans');
+    zoom: 1.2;
   }
 }
