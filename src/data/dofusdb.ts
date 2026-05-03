@@ -8,17 +8,21 @@ export interface Item {
   stats: string[];
 }
 
+function normalizeSearch(s: string): string {
+  return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
+}
+
 // DofusDB exposes itemTypes; these are the typeId values we expect to filter by.
 // Verify against the live API before going to prod (Task 18).
 export const SLOT_TO_TYPE_IDS: Record<SlotType, number[]> = {
   coiffe: [16],
   cape: [17],
   amulette: [1],
-  anneau1: [10],
-  anneau2: [10],
-  ceinture: [11],
-  bottes: [9],
-  arme: [2, 3, 4, 5, 6, 7, 8, 19, 20, 22, 24, 25, 83, 84, 85, 86],
+  anneau1: [9],
+  anneau2: [9],
+  ceinture: [10],
+  bottes: [11],
+  arme: [2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22],
   familier: [18, 121],
 };
 
@@ -58,8 +62,9 @@ export async function fetchItemsBySlot(slot: SlotType, opts: FetchItemsOpts): Pr
     params.append('typeId[$in][]', String(tid));
   }
   params.append('$limit', String(opts.limit));
-  if (opts.search.trim().length > 0) {
-    params.append('name.fr[$search]', opts.search.trim());
+  const normalizedSearch = normalizeSearch(opts.search);
+  if (normalizedSearch.length > 0) {
+    params.append('slug.fr[$search]', normalizedSearch);
   }
   const url = `${BASE_URL}/items?${params.toString()}`;
   const res = await fetch(url);

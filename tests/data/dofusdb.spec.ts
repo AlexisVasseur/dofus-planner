@@ -57,14 +57,13 @@ describe('dofusdb client', () => {
     expect(calledUrl).toContain(`${encodeURIComponent('$limit')}=50`);
   });
 
-  it('fetchItemsBySlot URL-encodes the search term', async () => {
-    await fetchItemsBySlot('coiffe', { search: 'épée bouftou', limit: 50 });
+  it('fetchItemsBySlot uses slug.fr[$search] with normalized (lowercased, no diacritics) input', async () => {
+    await fetchItemsBySlot('coiffe', { search: 'Épée Bouftou', limit: 50 });
     const fetchSpy = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
     const calledUrl = fetchSpy.mock.calls[0][0] as string;
-    // URLSearchParams emits '+' for spaces (not '%20'), and encodes the key.
-    const encodedKey = encodeURIComponent('name.fr[$search]');
-    const encodedValue = encodeURIComponent('épée bouftou').replace(/%20/g, '+');
-    expect(calledUrl).toContain(`${encodedKey}=${encodedValue}`);
+    // URLSearchParams encodes the brackets and dollar; the value uses '+' for spaces.
+    // The search term should be lowercased and stripped of diacritics: 'epee bouftou'
+    expect(calledUrl).toContain('slug.fr%5B%24search%5D=epee+bouftou');
   });
 
   it('fetchItem returns a single Item by id', async () => {
