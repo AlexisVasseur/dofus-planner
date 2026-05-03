@@ -1,11 +1,11 @@
 export type SlotType =
   | 'coiffe' | 'cape' | 'amulette' | 'anneau1' | 'anneau2'
-  | 'ceinture' | 'bottes' | 'arme' | 'familier';
+  | 'ceinture' | 'bottes' | 'arme' | 'bouclier' | 'familier';
 
 export const SLOT_ORDER = [
   'coiffe', 'cape', 'amulette',
   'anneau1', 'anneau2',
-  'ceinture', 'bottes', 'arme', 'familier',
+  'ceinture', 'bottes', 'arme', 'bouclier', 'familier',
 ] as const satisfies readonly SlotType[];
 
 export const DOFUS_COUNT = 6;
@@ -19,5 +19,6 @@ export const SLOT_LABEL: Record<SlotType, string> = {
   ceinture: 'Ceinture',
   bottes: 'Bottes',
   arme: 'Arme',
+  bouclier: 'Bouclier',
   familier: 'Familier',
 };

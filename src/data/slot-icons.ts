@@ -10,6 +10,7 @@ export const SLOT_ICON_SVG: Record<SlotType, string> = {
   ceinture: `<rect x="4" y="10" width="16" height="4" rx="1" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="10.5" y="9" width="3" height="6" fill="none" stroke="currentColor" stroke-width="1.2"/>`,
   bottes: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M9 5 L9 16 L6 16 L6 19 L18 19 L15 16 L15 5 Z"/>`,
   arme: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" d="M5 19 L13 11 M11 9 L18 4 L20 6 L15 13 Z M5 19 L8 16"/>`,
+  bouclier: `<path fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" d="M12 4 L19 6 L19 13 Q19 18 12 20 Q5 18 5 13 L5 6 Z"/>`,
   familier: `<circle cx="12" cy="13" r="5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="9" cy="11" r="0.8" fill="currentColor"/><circle cx="15" cy="11" r="0.8" fill="currentColor"/>`,
 };
 

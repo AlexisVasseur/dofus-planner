@@ -23,6 +23,7 @@ export const SLOT_TO_TYPE_IDS: Record<SlotType, number[]> = {
   ceinture: [10],
   bottes: [11],
   arme: [2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22],
+  bouclier: [82],
   familier: [18, 121],
 };
 
