@@ -23,12 +23,17 @@ const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.acti
 // Card geometry — must match AppTimeline / EquipmentCard / Connector widths
 const CARD_WIDTH = 320;
 const CONNECTOR_WIDTH = 52;
-const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
+const MIN_LEFT_PADDING = 64;
 
 function gotoCard(index: number, cardId: string) {
   const el = scrollElRef.value;
   if (!el) return;
-  const cardCenter = PADDING_LEFT + index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
+  // Mirror AppTimeline's dynamic pl computation: when card count is low, pl grows so the
+  // last card's center sits >= viewport center. Same baseline formula.
+  const cardCount = build.cards.length;
+  const baseline = Math.max(0, cardCount - 1) * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
+  const paddingLeft = Math.max(MIN_LEFT_PADDING, el.clientWidth / 2 - baseline);
+  const cardCenter = paddingLeft + index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
   const target = cardCenter - el.clientWidth / 2;
   el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
   ui.setActiveCard(cardId);
