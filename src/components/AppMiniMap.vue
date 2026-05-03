@@ -23,14 +23,14 @@ const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.acti
 // Card geometry — must match AppTimeline / EquipmentCard / Connector widths
 const CARD_WIDTH = 320;
 const CONNECTOR_WIDTH = 52;
+const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
 
 function gotoCard(index: number, cardId: string) {
   const el = scrollElRef.value;
   if (!el) return;
-  // Row left padding is 50vw (== el.clientWidth / 2), so it cancels and target is just
-  // index * (card + connector) + card/2.
-  const target = index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
-  el.scrollTo({ left: target, behavior: 'smooth' });
+  const cardCenter = PADDING_LEFT + index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
+  const target = cardCenter - el.clientWidth / 2;
+  el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
   ui.setActiveCard(cardId);
 }
 </script>
