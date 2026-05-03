@@ -114,6 +114,19 @@ describe('build store', () => {
     expect(s.cards[0].level).toBe(1);
   });
 
+  it('setTitle trims whitespace and stores null for empty/whitespace-only input', () => {
+    const s = useBuildStore();
+    const id = s.cards[0].id;
+    s.setTitle(id, '   ');
+    expect(s.cards[0].title).toBeNull();
+    s.setTitle(id, '  Donjon Bouftou  ');
+    expect(s.cards[0].title).toBe('Donjon Bouftou');
+    s.setTitle(id, '');
+    expect(s.cards[0].title).toBeNull();
+    s.setTitle(id, null);
+    expect(s.cards[0].title).toBeNull();
+  });
+
   it('replaceCards replaces the whole array (used by persistence load)', () => {
     const s = useBuildStore();
     s.replaceCards([

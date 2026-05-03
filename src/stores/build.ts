@@ -47,20 +47,21 @@ export const useBuildStore = defineStore('build', () => {
 
   function setTitle(cardId: string, title: string | null): void {
     const idx = findIndex(cardId);
-    cards.value[idx].title = title && title.length > 0 ? title : null;
+    const trimmed = title?.trim() ?? '';
+    cards.value[idx].title = trimmed.length > 0 ? trimmed : null;
   }
 
-  function setSlot(cardId: string, slot: SlotType, ref: ItemRef | null): void {
+  function setSlot(cardId: string, slot: SlotType, item: ItemRef | null): void {
     const idx = findIndex(cardId);
-    cards.value[idx].slots[slot] = ref;
+    cards.value[idx].slots[slot] = item;
   }
 
-  function setDofus(cardId: string, index: number, ref: ItemRef | null): void {
+  function setDofus(cardId: string, index: number, item: ItemRef | null): void {
     if (index < 0 || index >= DOFUS_COUNT) {
       throw new Error(`Dofus index out of range: ${index}`);
     }
     const idx = findIndex(cardId);
-    cards.value[idx].dofus[index] = ref;
+    cards.value[idx].dofus[index] = item;
   }
 
   function addEmptyCardAfter(cardId: string): void {
