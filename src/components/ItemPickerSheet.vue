@@ -2,8 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
-import { useItemSearch, isOverLeveled } from '@/composables/useItemCatalog';
-import type { SlotType } from '@/types/slots';
+import { useItemSearch, isOverLeveled, type SearchTarget } from '@/composables/useItemCatalog';
 import { SLOT_LABEL } from '@/types/slots';
 
 const ui = useUiStore();
@@ -11,14 +10,13 @@ const build = useBuildStore();
 
 const target = computed(() => ui.itemPickerTarget);
 
-// The slot used for filtering server-side. For dofus picker we use 'amulette' as a placeholder
-// since DofusDB exposes dofus + trophées as their own typeIds — but we fold them into "dofus"
-// here by querying with two typeIds when target.kind === 'dofus'.
-// Simplest V1: query 'amulette' results for slot picker; for dofus picker, do a direct search by name.
-const slotForQuery = computed<SlotType | null>(() => {
+// Resolve the search target for DofusDB:
+// - slot picker: query the slot's typeIds (typeId filtering server-side)
+// - dofus picker: use the special 'dofus' target to query Dofus + Trophée typeIds
+const slotForQuery = computed<SearchTarget>(() => {
   if (!target.value) return null;
   if (target.value.kind === 'slot') return target.value.slot;
-  return 'amulette'; // fallback for dofus — search-driven, less filtering
+  return 'dofus';
 });
 const search = ref('');
 
@@ -30,7 +28,7 @@ const card = computed(() => target.value
   : null,
 );
 
-const slotForFilter = ref<SlotType | null>(null);
+const slotForFilter = ref<SearchTarget>(null);
 watch(slotForQuery, (v) => { slotForFilter.value = v; }, { immediate: true });
 
 const { results, loading, error } = useItemSearch(slotForFilter, search);

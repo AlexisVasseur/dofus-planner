@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { fetchItemsBySlot, fetchItem, SLOT_TO_TYPE_IDS } from '@/data/dofusdb';
+import { fetchItemsBySlot, fetchItem, fetchDofusOrTrophees, SLOT_TO_TYPE_IDS, DOFUS_TROPHEE_TYPE_IDS } from '@/data/dofusdb';
 
 const MOCK_RESPONSE = {
   total: 2,
@@ -45,7 +45,7 @@ describe('dofusdb client', () => {
     });
   });
 
-  it('fetchItemsBySlot includes the slot typeIds in the query', async () => {
+  it('fetchItemsBySlot includes the slot typeIds, limit, and level sort in the query', async () => {
     await fetchItemsBySlot('coiffe', { search: '', limit: 50 });
     const fetchSpy = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
     const calledUrl = fetchSpy.mock.calls[0][0] as string;
@@ -55,6 +55,7 @@ describe('dofusdb client', () => {
       expect(calledUrl).toContain(`${encodedKey}=${tid}`);
     }
     expect(calledUrl).toContain(`${encodeURIComponent('$limit')}=50`);
+    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=level`);
   });
 
   it('fetchItemsBySlot uses slug.fr[$search] with normalized (lowercased, no diacritics) input', async () => {
@@ -64,6 +65,18 @@ describe('dofusdb client', () => {
     // URLSearchParams encodes the brackets and dollar; the value uses '+' for spaces.
     // The search term should be lowercased and stripped of diacritics: 'epee bouftou'
     expect(calledUrl).toContain('slug.fr%5B%24search%5D=epee+bouftou');
+  });
+
+  it('fetchDofusOrTrophees includes the dofus/trophée typeIds, limit, and level sort', async () => {
+    await fetchDofusOrTrophees({ search: '', limit: 50 });
+    const fetchSpy = globalThis.fetch as unknown as ReturnType<typeof vi.fn>;
+    const calledUrl = fetchSpy.mock.calls[0][0] as string;
+    const encodedKey = encodeURIComponent('typeId[$in][]');
+    for (const tid of DOFUS_TROPHEE_TYPE_IDS) {
+      expect(calledUrl).toContain(`${encodedKey}=${tid}`);
+    }
+    expect(calledUrl).toContain(`${encodeURIComponent('$limit')}=50`);
+    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=level`);
   });
 
   it('fetchItem returns a single Item by id', async () => {

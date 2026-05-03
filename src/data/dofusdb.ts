@@ -62,6 +62,7 @@ export async function fetchItemsBySlot(slot: SlotType, opts: FetchItemsOpts): Pr
     params.append('typeId[$in][]', String(tid));
   }
   params.append('$limit', String(opts.limit));
+  params.append('$sort', 'level');
   const normalizedSearch = normalizeSearch(opts.search);
   if (normalizedSearch.length > 0) {
     params.append('slug.fr[$search]', normalizedSearch);
@@ -72,6 +73,27 @@ export async function fetchItemsBySlot(slot: SlotType, opts: FetchItemsOpts): Pr
   const json = (await res.json()) as { data?: RawItem[] };
   const data = json.data ?? [];
   return data.map(mapItem);
+}
+
+// DofusDB itemTypes: 23 = Dofus, 151 = Trophée. Verified live against /item-types.
+export const DOFUS_TROPHEE_TYPE_IDS: number[] = [23, 151];
+
+export async function fetchDofusOrTrophees(opts: FetchItemsOpts): Promise<Item[]> {
+  const params = new URLSearchParams();
+  for (const tid of DOFUS_TROPHEE_TYPE_IDS) {
+    params.append('typeId[$in][]', String(tid));
+  }
+  params.append('$limit', String(opts.limit));
+  params.append('$sort', 'level');
+  const normalizedSearch = normalizeSearch(opts.search);
+  if (normalizedSearch.length > 0) {
+    params.append('slug.fr[$search]', normalizedSearch);
+  }
+  const url = `${BASE_URL}/items?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
+  const json = (await res.json()) as { data?: RawItem[] };
+  return (json.data ?? []).map(mapItem);
 }
 
 export async function fetchItem(id: number): Promise<Item> {

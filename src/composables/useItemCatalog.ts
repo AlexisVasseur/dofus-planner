@@ -1,7 +1,9 @@
 import { ref, watch, type Ref } from 'vue';
 import { useDebounceFn } from '@vueuse/core';
-import { fetchItem, fetchItemsBySlot, type Item } from '@/data/dofusdb';
+import { fetchDofusOrTrophees, fetchItem, fetchItemsBySlot, type Item } from '@/data/dofusdb';
 import type { SlotType } from '@/types/slots';
+
+export type SearchTarget = SlotType | 'dofus' | null;
 
 const ITEM_CACHE_KEY = 'dofus-planner.cache.items.v1';
 
@@ -38,17 +40,19 @@ export async function ensureItem(id: number): Promise<Item> {
   return item;
 }
 
-export function useItemSearch(slot: Ref<SlotType | null>, search: Ref<string>) {
+export function useItemSearch(target: Ref<SearchTarget>, search: Ref<string>) {
   const results = ref<Item[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
   const run = useDebounceFn(async () => {
-    if (slot.value === null) return;
+    if (target.value === null) return;
     loading.value = true;
     error.value = null;
     try {
-      const items = await fetchItemsBySlot(slot.value, { search: search.value, limit: 50 });
+      const items = target.value === 'dofus'
+        ? await fetchDofusOrTrophees({ search: search.value, limit: 50 })
+        : await fetchItemsBySlot(target.value, { search: search.value, limit: 50 });
       for (const item of items) {
         cache.value[String(item.id)] = { item, fetchedAt: Date.now() };
       }
@@ -62,7 +66,7 @@ export function useItemSearch(slot: Ref<SlotType | null>, search: Ref<string>) {
     }
   }, 200);
 
-  watch([slot, search], run, { immediate: true });
+  watch([target, search], run, { immediate: true });
 
   return { results, loading, error };
 }
