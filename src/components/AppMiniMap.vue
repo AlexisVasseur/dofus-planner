@@ -2,20 +2,17 @@
 import { ref, computed, toRef, watch, onUnmounted } from 'vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
-import { useDragScroll } from '@/composables/useDragScroll';
 
 const props = defineProps<{ scrollRef: HTMLElement | null }>();
 
 const build = useBuildStore();
 const ui = useUiStore();
 
-const trackRef = ref<HTMLElement | null>(null);
 const scrollLeft = ref(0);
 const scrollWidth = ref(1);
 const clientWidth = ref(1);
 
 const scrollElRef = toRef(props, 'scrollRef');
-useDragScroll({ trackRef, scrollRef: scrollElRef });
 
 function syncFromScroll() {
   const el = scrollElRef.value;
@@ -31,8 +28,6 @@ function onScroll() {
   raf = requestAnimationFrame(syncFromScroll);
 }
 
-// Re-attach listeners whenever the underlying scroll element changes (it starts as null
-// and becomes the AppTimeline DOM node once that component mounts).
 watch(scrollElRef, (el, _prev, onCleanup) => {
   if (!el) return;
   syncFromScroll();
@@ -67,18 +62,19 @@ const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.acti
   >
     <div class="font-display text-[11px] text-text-faint tracking-[0.25em] uppercase shrink-0">Timeline</div>
     <div
-      ref="trackRef"
-      class="flex-1 h-9 bg-bg-surface border border-border-subtle rounded-md relative overflow-hidden cursor-grab active:cursor-grabbing"
+      class="flex-1 h-9 bg-bg-surface border border-border-subtle rounded-md relative overflow-hidden"
     >
       <div class="absolute inset-1 flex gap-[3px]">
         <div
           v-for="(card, idx) in build.cards"
           :key="card.id"
-          class="flex-1 h-full rounded-sm"
+          class="flex-1 h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight"
           :class="idx === activeIndex
-            ? 'bg-accent shadow-[0_0_8px_rgba(91,211,168,0.5)]'
-            : 'bg-border-default'"
-        ></div>
+            ? 'bg-accent text-[#061a13] shadow-[0_0_8px_rgba(91,211,168,0.5)] font-semibold'
+            : 'bg-border-default text-text-muted'"
+        >
+          {{ card.level === null ? '—' : `Lv ${card.level}` }}
+        </div>
       </div>
       <div
         class="absolute top-1 h-[calc(100%-8px)] border border-accent/40 bg-accent/5 rounded pointer-events-none"
