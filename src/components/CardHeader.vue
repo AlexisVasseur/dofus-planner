@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import ClassLogo from './ClassLogo.vue';
 import type { ClassId } from '@/types/classes';
 
@@ -13,6 +13,7 @@ const emit = defineEmits<{
   'open-class-picker': [];
   'update:level': [value: number | null];
   'update:title': [value: string | null];
+  'remove': [];
 }>();
 
 const editingLevel = ref(false);
@@ -20,34 +21,74 @@ const editingTitle = ref(false);
 const levelDraft = ref('');
 const titleDraft = ref('');
 
+const levelInputRef = ref<HTMLInputElement | null>(null);
+const titleInputRef = ref<HTMLInputElement | null>(null);
+
 const showCta = computed(() => props.classId === null);
 
-function startEditLevel() {
-  editingLevel.value = true;
+async function startEditLevel() {
+  if (editingLevel.value) return;
   levelDraft.value = props.level === null ? '' : String(props.level);
-}
-function commitLevel() {
-  editingLevel.value = false;
-  const trimmed = levelDraft.value.trim();
-  if (trimmed === '') { emit('update:level', null); return; }
-  const n = parseInt(trimmed, 10);
-  if (Number.isNaN(n)) return;
-  emit('update:level', Math.max(1, Math.min(200, n)));
+  editingLevel.value = true;
+  await nextTick();
+  levelInputRef.value?.focus();
+  levelInputRef.value?.select();
 }
 
-function startEditTitle() {
-  editingTitle.value = true;
-  titleDraft.value = props.title ?? '';
+let commitLevelGuard = false;
+function commitLevel() {
+  if (commitLevelGuard || !editingLevel.value) return;
+  commitLevelGuard = true;
+  editingLevel.value = false;
+  const trimmed = levelDraft.value.trim();
+  if (trimmed === '') {
+    emit('update:level', null);
+  } else {
+    const n = parseInt(trimmed, 10);
+    if (!Number.isNaN(n)) {
+      emit('update:level', Math.max(1, Math.min(200, n)));
+    }
+  }
+  // Release the guard after the current event loop tick so the next edit works.
+  setTimeout(() => { commitLevelGuard = false; }, 0);
 }
+
+function cancelLevel() {
+  editingLevel.value = false;
+}
+
+async function startEditTitle() {
+  if (editingTitle.value) return;
+  titleDraft.value = props.title ?? '';
+  editingTitle.value = true;
+  await nextTick();
+  titleInputRef.value?.focus();
+  titleInputRef.value?.select();
+}
+
+let commitTitleGuard = false;
 function commitTitle() {
+  if (commitTitleGuard || !editingTitle.value) return;
+  commitTitleGuard = true;
   editingTitle.value = false;
   const t = titleDraft.value.trim();
   emit('update:title', t.length > 0 ? t.slice(0, 30) : null);
+  setTimeout(() => { commitTitleGuard = false; }, 0);
+}
+
+function cancelTitle() {
+  editingTitle.value = false;
+}
+
+function onRemove() {
+  if (window.confirm('Supprimer cette étape ?')) {
+    emit('remove');
+  }
 }
 </script>
 
 <template>
-  <header class="header flex items-center gap-3 p-3.5 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+  <header class="header relative flex items-center gap-3 p-3.5 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
     <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
       <ClassLogo :class-id="classId" :pulse="classId === null" />
     </button>
@@ -56,41 +97,52 @@ function commitTitle() {
         <span class="font-sans text-[9px] font-semibold text-text-faint uppercase tracking-[0.25em] mr-1.5">Lv</span>
         <input
           v-if="editingLevel"
+          ref="levelInputRef"
           v-model="levelDraft"
-          type="number"
-          min="1" max="200"
-          class="font-display text-[28px] leading-none bg-transparent text-text-default w-16 outline-none focus:underline focus:underline-offset-4 decoration-dashed decoration-accent"
+          type="text"
+          inputmode="numeric"
+          maxlength="3"
+          class="font-display text-[28px] leading-none bg-transparent text-text-default w-16 outline-none border-b border-dashed border-accent"
           @blur="commitLevel"
-          @keydown.enter="commitLevel"
-          @keydown.esc="editingLevel = false"
-          ref="levelInput"
-          autofocus
+          @keydown.enter.prevent="commitLevel"
+          @keydown.esc.prevent="cancelLevel"
         />
         <button
           v-else
+          type="button"
           @click="startEditLevel"
-          class="font-display text-[28px] leading-none text-text-default border-b border-dashed border-border-default hover:border-accent"
+          class="font-display text-[28px] leading-none text-text-default border-b border-dashed border-border-default hover:border-accent cursor-text"
         >{{ level ?? '—' }}</button>
       </div>
       <input
         v-if="editingTitle"
+        ref="titleInputRef"
         v-model="titleDraft"
         maxlength="30"
-        class="block mt-1 bg-transparent font-display text-[12px] tracking-[0.18em] uppercase text-text-muted outline-none w-full"
+        class="block mt-1 bg-transparent font-display text-[12px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-accent"
         @blur="commitTitle"
-        @keydown.enter="commitTitle"
-        @keydown.esc="editingTitle = false"
+        @keydown.enter.prevent="commitTitle"
+        @keydown.esc.prevent="cancelTitle"
       />
       <button
         v-else-if="showCta"
-        class="block mt-1 font-display text-[12px] tracking-[0.18em] uppercase text-accent"
+        type="button"
+        class="block mt-1 font-display text-[12px] tracking-[0.18em] uppercase text-accent text-left"
         @click="emit('open-class-picker')"
       >Choisir une classe</button>
       <button
         v-else
+        type="button"
         class="block mt-1 font-display text-[12px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
         @click="startEditTitle"
       >{{ title ?? 'Ajouter un titre' }}</button>
     </div>
+    <button
+      type="button"
+      class="absolute top-2 right-2 w-6 h-6 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[14px] leading-none transition-colors"
+      @click="onRemove"
+      aria-label="Supprimer cette étape"
+      title="Supprimer cette étape"
+    >×</button>
   </header>
 </template>

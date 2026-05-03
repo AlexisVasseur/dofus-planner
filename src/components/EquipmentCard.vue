@@ -15,6 +15,14 @@ const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 
+function onRemoveCard() {
+  // Clear active/picker if they pointed at this card
+  if (ui.activeCardId === props.card.id) ui.setActiveCard(null);
+  if (ui.itemPickerTarget?.cardId === props.card.id) ui.closeItemPicker();
+  if (ui.classPickerCardId === props.card.id) ui.closeClassPicker();
+  build.removeCard(props.card.id);
+}
+
 const slotItems = computed(() => SLOT_ORDER.map((slot) => {
   const ref = props.card.slots[slot];
   return { slot, item: ref ? getCachedItem(ref.itemId) : null };
@@ -54,6 +62,7 @@ function activeOnDofus(index: number): boolean {
       @open-class-picker="ui.openClassPicker(card.id)"
       @update:level="(v) => build.setLevel(card.id, v)"
       @update:title="(v) => build.setTitle(card.id, v)"
+      @remove="onRemoveCard"
     />
     <div class="p-3.5">
       <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2">Équipement</h3>
