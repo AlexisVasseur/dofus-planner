@@ -11,7 +11,14 @@ export interface Card {
   level: number | null;
   title: string | null;
   slots: Record<SlotType, ItemRef | null>;
-  dofus: (ItemRef | null)[]; // length 6
+  dofus: [
+    ItemRef | null,
+    ItemRef | null,
+    ItemRef | null,
+    ItemRef | null,
+    ItemRef | null,
+    ItemRef | null,
+  ];
 }
 
 export interface Build {
