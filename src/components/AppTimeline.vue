@@ -27,7 +27,7 @@ onMounted(() => {
     ref="scrollRef"
     class="timeline-area flex-1 overflow-x-auto overflow-y-hidden relative z-[1] py-6"
   >
-    <div class="row flex items-center gap-0 px-16 min-h-full">
+    <div class="row flex items-center gap-0 px-[50vw] min-h-full">
       <template v-for="(card, idx) in build.cards" :key="card.id">
         <EquipmentCard :card="card" />
         <Connector :after-card-id="card.id" v-if="idx >= 0" />
