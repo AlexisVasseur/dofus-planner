@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #app { height: 100%; }
+  body {
+    background-color: theme('colors.bg-page');
+    color: theme('colors.text.default');
+    font-family: theme('fontFamily.sans');
+  }
+}
