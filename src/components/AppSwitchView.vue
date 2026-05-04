@@ -18,6 +18,13 @@ const activeCard = computed(() => build.cards[activeIndex.value] ?? null);
 const previousCard = computed(() =>
   activeIndex.value > 0 ? build.cards[activeIndex.value - 1] : null,
 );
+const nextCard = computed(() =>
+  activeIndex.value < build.cards.length - 1 ? build.cards[activeIndex.value + 1] : null,
+);
+// For the previous-card peek, the card BEFORE it (so the peek can render its own diff).
+const beforePrevCard = computed(() =>
+  activeIndex.value >= 2 ? build.cards[activeIndex.value - 2] : null,
+);
 
 const canGoBack = computed(() => activeIndex.value > 0);
 const canGoNext = computed(() => activeIndex.value < build.cards.length - 1);
@@ -34,7 +41,6 @@ function goNext(): void {
   if (card) ui.setActiveCard(card.id);
 }
 
-// Ensure there's an active card on first render of Switch view.
 watch(
   () => build.cards.length,
   () => {
@@ -46,7 +52,6 @@ watch(
 );
 
 useEventListener(window, 'keydown', (e: KeyboardEvent) => {
-  // Skip when typing in an input/textarea or when picker/modal is open.
   const target = e.target as HTMLElement | null;
   if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) return;
   if (ui.itemPickerTarget !== null || ui.classPickerCardId !== null) return;
@@ -60,47 +65,92 @@ const positionLabel = computed(() => {
   const lvlPart = lvl !== null && lvl !== undefined ? ` · Lv ${lvl}` : '';
   return `Étape ${activeIndex.value + 1} / ${total}${lvlPart}`;
 });
+
+const prevLevelLabel = computed(() => {
+  const lvl = previousCard.value?.level;
+  return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
+});
+const nextLevelLabel = computed(() => {
+  const lvl = nextCard.value?.level;
+  return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
+});
 </script>
 
 <template>
-  <div class="switch-view flex-1 flex items-center justify-center relative overflow-hidden px-24">
+  <div class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden">
     <!-- Position indicator -->
     <div class="absolute top-6 left-1/2 -translate-x-1/2 font-display text-[14px] tracking-[0.25em] uppercase text-text-faint pointer-events-none">
       {{ positionLabel }}
     </div>
 
-    <!-- Left arrow -->
-    <button
-      type="button"
-      :disabled="!canGoBack"
-      class="nav-btn absolute left-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-bg-surface border border-border-default text-text-muted text-[28px] leading-none flex items-center justify-center transition-colors hover:bg-accent hover:text-[#061a13] hover:border-accent disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-bg-surface disabled:hover:text-text-muted disabled:hover:border-border-default"
-      aria-label="Étape précédente"
-      title="Étape précédente (←)"
-      @click="goPrev"
-    >‹</button>
+    <!-- Carousel -->
+    <div class="carousel relative flex items-center justify-center gap-8 w-full" style="--card-width: 460px;">
+      <!-- PREV peek (card scaled down + dim, hover lifts) -->
+      <button
+        v-if="canGoBack && previousCard"
+        type="button"
+        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-right"
+        style="transform: scale(0.7);"
+        :aria-label="`Étape précédente — ${prevLevelLabel}`"
+        @click="goPrev"
+      >
+        <div class="peek-label flex items-center gap-2 font-display text-[13px] tracking-[0.2em] uppercase text-accent">
+          <span class="text-[18px]">‹</span>
+          <span>Précédent · {{ prevLevelLabel }}</span>
+        </div>
+        <div class="pointer-events-none">
+          <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
+          <EquipmentCardDiff
+            v-else-if="beforePrevCard"
+            :card="previousCard"
+            :previous="beforePrevCard"
+          />
+        </div>
+      </button>
 
-    <!-- Centered card: full for first (baseline), diff for others -->
-    <div v-if="activeCard" class="card-stage">
-      <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
-      <EquipmentCardDiff
-        v-else-if="previousCard"
-        :card="activeCard"
-        :previous="previousCard"
-      />
+      <!-- ACTIVE card -->
+      <div v-if="activeCard" class="active-card flex-shrink-0 z-10">
+        <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
+        <EquipmentCardDiff
+          v-else-if="previousCard"
+          :card="activeCard"
+          :previous="previousCard"
+        />
+      </div>
+
+      <!-- NEXT peek -->
+      <button
+        v-if="canGoNext && nextCard"
+        type="button"
+        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-left"
+        style="transform: scale(0.7);"
+        :aria-label="`Étape suivante — ${nextLevelLabel}`"
+        @click="goNext"
+      >
+        <div class="peek-label flex items-center gap-2 font-display text-[13px] tracking-[0.2em] uppercase text-accent">
+          <span>Suivant · {{ nextLevelLabel }}</span>
+          <span class="text-[18px]">›</span>
+        </div>
+        <div class="pointer-events-none">
+          <EquipmentCardDiff
+            v-if="activeCard"
+            :card="nextCard"
+            :previous="activeCard"
+          />
+        </div>
+      </button>
     </div>
-
-    <!-- Right arrow -->
-    <button
-      type="button"
-      :disabled="!canGoNext"
-      class="nav-btn absolute right-8 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-bg-surface border border-border-default text-text-muted text-[28px] leading-none flex items-center justify-center transition-colors hover:bg-accent hover:text-[#061a13] hover:border-accent disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:bg-bg-surface disabled:hover:text-text-muted disabled:hover:border-border-default"
-      aria-label="Étape suivante"
-      title="Étape suivante (→)"
-      @click="goNext"
-    >›</button>
   </div>
 </template>
 
 <style scoped>
-.nav-btn { padding-bottom: 4px; }
+.peek:hover {
+  transform: scale(0.74) !important;
+}
+.peek-prev {
+  margin-right: -160px; /* pull peek closer to the active card */
+}
+.peek-next {
+  margin-left: -160px;
+}
 </style>
