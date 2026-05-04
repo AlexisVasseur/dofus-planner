@@ -84,13 +84,13 @@ const nextLevelLabel = computed(() => {
     </div>
 
     <!-- Carousel -->
-    <div class="carousel relative flex items-center justify-center gap-8 w-full" style="--card-width: 460px;">
+    <div class="carousel relative flex items-center justify-center gap-8 w-full" style="--card-width: 720px;">
       <!-- PREV peek (card scaled down + dim, hover lifts) -->
       <button
         v-if="canGoBack && previousCard"
         type="button"
         class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-right"
-        style="transform: scale(0.7);"
+        style=""
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
@@ -123,7 +123,7 @@ const nextLevelLabel = computed(() => {
         v-if="canGoNext && nextCard"
         type="button"
         class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-left"
-        style="transform: scale(0.7);"
+        style=""
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
@@ -144,13 +144,16 @@ const nextLevelLabel = computed(() => {
 </template>
 
 <style scoped>
+.peek {
+  transform: scale(0.55) !important;
+}
 .peek:hover {
-  transform: scale(0.74) !important;
+  transform: scale(0.58) !important;
 }
 .peek-prev {
-  margin-right: -160px; /* pull peek closer to the active card */
+  margin-right: -260px; /* pull peek closer to the active card */
 }
 .peek-next {
-  margin-left: -160px;
+  margin-left: -260px;
 }
 </style>
