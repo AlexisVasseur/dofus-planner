@@ -6,10 +6,13 @@ export type ItemPickerTarget =
   | { kind: 'slot'; cardId: string; slot: SlotType }
   | { kind: 'dofus'; cardId: string; index: number };
 
+export type ViewMode = 'build' | 'switch';
+
 export const useUiStore = defineStore('ui', () => {
   const activeCardId = ref<string | null>(null);
   const itemPickerTarget = ref<ItemPickerTarget | null>(null);
   const classPickerCardId = ref<string | null>(null);
+  const viewMode = ref<ViewMode>('build');
 
   function setActiveCard(id: string | null): void {
     activeCardId.value = id;
@@ -32,14 +35,20 @@ export const useUiStore = defineStore('ui', () => {
     classPickerCardId.value = null;
   }
 
+  function setViewMode(mode: ViewMode): void {
+    viewMode.value = mode;
+  }
+
   return {
     activeCardId,
     itemPickerTarget,
     classPickerCardId,
+    viewMode,
     setActiveCard,
     openItemPicker,
     closeItemPicker,
     openClassPicker,
     closeClassPicker,
+    setViewMode,
   };
 });

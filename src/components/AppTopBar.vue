@@ -65,7 +65,23 @@ function importBuild() {
       <span class="dot w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_rgba(91,211,168,0.6)]"></span>
       Dofus level planner
     </div>
-    <div class="actions flex gap-2">
+    <div class="actions flex items-center gap-2">
+      <div class="mode-toggle flex bg-bg-page border border-border-default rounded-md p-0.5 mr-1">
+        <button
+          type="button"
+          class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
+          :class="ui.viewMode === 'build' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          @click="ui.setViewMode('build')"
+          aria-label="Mode Build (équipement complet)"
+        >Build</button>
+        <button
+          type="button"
+          class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
+          :class="ui.viewMode === 'switch' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          @click="ui.setViewMode('switch')"
+          aria-label="Mode Switch (uniquement les changements)"
+        >Switch</button>
+      </div>
       <button
         type="button"
         class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-accent hover:text-accent"
