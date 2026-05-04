@@ -98,52 +98,79 @@ function pickDofus(index: number): void {
         @click="ui.openClassPicker(card.id)"
       >
         <span class="font-display text-[10px] text-accent tracking-[0.25em] uppercase">Classe</span>
-        <span class="text-text-faint">{{ className(previous.classId) }}</span>
+        <span class="text-danger-soft line-through decoration-danger/60">{{ className(previous.classId) }}</span>
         <span class="text-accent font-mono">→</span>
-        <span class="text-text-default">{{ className(card.classId) }}</span>
+        <span class="text-accent">{{ className(card.classId) }}</span>
       </div>
 
       <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2">Équipement</h3>
 
-      <!-- Slot rows: same height/layout as Build mode (single line, ~32px) -->
+      <!-- Slot rows: same height as Build mode. Changed = red old → green new side-by-side. -->
       <div
         v-for="entry in slotEntries"
         :key="entry.slot"
-        class="slot-row group flex items-center gap-2.5 py-1 rounded-md text-[11px] leading-6 cursor-pointer transition-opacity"
+        class="slot-row group flex items-center gap-1.5 py-1 rounded-md text-[11px] leading-6 cursor-pointer transition-opacity"
         :class="entry.changed
-          ? 'bg-accent/[0.04] shadow-[inset_0_0_0_1px_rgba(91,211,168,0.2)] -mx-1 px-1'
+          ? 'bg-accent/[0.03] -mx-1 px-1'
           : 'opacity-35 hover:opacity-60'"
         @click="pickSlot(entry.slot)"
       >
-        <div
-          class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors"
-          :class="entry.newRef
-            ? entry.changed
-              ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(91,211,168,0.4)]'
-              : 'bg-bg-slot-filled border border-border-slot-filled'
-            : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
-        >
-          <img
-            v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
-            :src="itemDisplay(entry.newRef)?.iconUrl"
-            :alt="itemDisplay(entry.newRef)?.name ?? ''"
-            class="w-4 h-4"
-          />
-          <svg v-else viewBox="0 0 24 24" class="w-4 h-4" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
-        </div>
-        <span
-          class="flex-1 truncate"
-          :class="entry.newRef
-            ? entry.changed ? 'text-text-default' : 'text-text-muted'
-            : entry.changed ? 'text-text-faint' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[10.5px]'"
-        >
-          {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
-        </span>
-        <span
-          v-if="entry.changed"
-          class="text-[9px] font-mono text-text-faint truncate max-w-[100px]"
-          :title="`Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}`"
-        >← {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}</span>
+        <template v-if="entry.changed">
+          <!-- OLD (red) -->
+          <div
+            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
+          >
+            <img
+              v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
+              :src="itemDisplay(entry.oldRef)?.iconUrl"
+              :alt="itemDisplay(entry.oldRef)?.name ?? ''"
+              class="w-4 h-4"
+            />
+            <svg v-else viewBox="0 0 24 24" class="w-4 h-4 text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
+          </div>
+          <span class="flex-1 min-w-0 truncate text-danger-soft text-[10.5px] line-through decoration-danger/60 decoration-from-font">
+            {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
+          </span>
+          <span class="text-accent font-mono text-[12px] flex-shrink-0">→</span>
+          <!-- NEW (green) -->
+          <div
+            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
+          >
+            <img
+              v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+              :src="itemDisplay(entry.newRef)?.iconUrl"
+              :alt="itemDisplay(entry.newRef)?.name ?? ''"
+              class="w-4 h-4"
+            />
+            <svg v-else viewBox="0 0 24 24" class="w-4 h-4 text-accent" v-html="getSlotIconSvg(entry.slot)" />
+          </div>
+          <span class="flex-1 min-w-0 truncate text-accent text-[10.5px] font-medium">
+            {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
+          </span>
+        </template>
+        <template v-else>
+          <!-- Unchanged: standard single-item layout, dimmed -->
+          <div
+            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0"
+            :class="entry.newRef
+              ? 'bg-bg-slot-filled border border-border-slot-filled'
+              : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
+          >
+            <img
+              v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+              :src="itemDisplay(entry.newRef)?.iconUrl"
+              :alt="itemDisplay(entry.newRef)?.name ?? ''"
+              class="w-4 h-4"
+            />
+            <svg v-else viewBox="0 0 24 24" class="w-4 h-4" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
+          </div>
+          <span
+            class="flex-1 truncate"
+            :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[10.5px]'"
+          >
+            {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
+          </span>
+        </template>
       </div>
 
       <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2 mt-3.5">Dofus &amp; Trophées</h3>
