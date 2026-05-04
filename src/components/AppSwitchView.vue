@@ -176,29 +176,28 @@ const nextLevelLabel = computed(() => {
   width: 720px;
 }
 
-/* Slide animations — distance + opacity, eased */
-.slide-fwd-enter-from {
-  transform: translateX(80px);
-  opacity: 0;
-}
-.slide-fwd-leave-to {
-  transform: translateX(-80px);
-  opacity: 0;
-}
-.slide-bwd-enter-from {
-  transform: translateX(-80px);
-  opacity: 0;
-}
-.slide-bwd-leave-to {
-  transform: translateX(80px);
-  opacity: 0;
-}
+/* Slide animations — entering covers leaving via z-index, leaving only fades (no
+   transform) so we never see both cards side-by-side mid-transition. */
 .slide-fwd-enter-active,
 .slide-bwd-enter-active {
-  transition: transform 280ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity 220ms ease-out;
+  z-index: 2;
+  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity 220ms ease-out;
 }
 .slide-fwd-leave-active,
 .slide-bwd-leave-active {
-  transition: transform 200ms cubic-bezier(0.7, 0.2, 1, 0.3), opacity 160ms ease-in;
+  z-index: 1;
+  transition: opacity 140ms ease-in;
+}
+.slide-fwd-enter-from {
+  transform: translateX(60px);
+  opacity: 0;
+}
+.slide-bwd-enter-from {
+  transform: translateX(-60px);
+  opacity: 0;
+}
+.slide-fwd-leave-to,
+.slide-bwd-leave-to {
+  opacity: 0;
 }
 </style>
