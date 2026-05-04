@@ -1,10 +1,25 @@
 <script setup lang="ts">
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
+import { getCachedItem, populateCache, ensureItems } from '@/composables/useItemCatalog';
 import type { Card } from '@/types/build';
+import type { Item } from '@/data/dofusdb';
 
 const build = useBuildStore();
 const ui = useUiStore();
+
+function collectItemIds(cards: Card[]): number[] {
+  const ids = new Set<number>();
+  for (const card of cards) {
+    for (const ref of Object.values(card.slots)) {
+      if (ref) ids.add(ref.itemId);
+    }
+    for (const ref of card.dofus) {
+      if (ref) ids.add(ref.itemId);
+    }
+  }
+  return Array.from(ids);
+}
 
 function newBuild() {
   if (window.confirm('Réinitialiser le build ? Cette action est irréversible.')) {
@@ -18,8 +33,14 @@ function newBuild() {
 function exportBuild() {
   try {
     // Flatten any Pinia/Vue reactive proxies so the JSON output is plain data.
-    const flatCards = JSON.parse(JSON.stringify(build.cards));
-    const payload = { version: 1, cards: flatCards };
+    const flatCards = JSON.parse(JSON.stringify(build.cards)) as Card[];
+    // Snapshot the items used in the build so the export is self-contained.
+    const items: Item[] = [];
+    for (const id of collectItemIds(flatCards)) {
+      const item = getCachedItem(id);
+      if (item) items.push(item);
+    }
+    const payload = { version: 1, cards: flatCards, items };
     const json = JSON.stringify(payload, null, 2);
     const blob = new Blob([json], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -57,14 +78,25 @@ function importBuild() {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
       const text = await file.text();
-      const parsed = JSON.parse(text) as { version?: unknown; cards?: unknown };
+      const parsed = JSON.parse(text) as { version?: unknown; cards?: unknown; items?: unknown };
       if (parsed.version !== 1 || !Array.isArray(parsed.cards) || parsed.cards.length === 0) {
         window.alert('Fichier invalide : version ou cards manquant.');
         return;
       }
-      if (!window.confirm(`Importer ce build ? ${parsed.cards.length} card(s). Le build actuel sera remplacé.`)) return;
-      build.replaceCards(parsed.cards as Card[]);
-      ui.setActiveCard((parsed.cards as Card[])[0]?.id ?? null);
+      const cards = parsed.cards as Card[];
+      if (!window.confirm(`Importer ce build ? ${cards.length} card(s). Le build actuel sera remplacé.`)) return;
+
+      // Populate the item cache from the export's items snapshot, then fetch any missing
+      // ids from DofusDB so all icons/names render even on a fresh device.
+      if (Array.isArray(parsed.items)) {
+        populateCache(parsed.items as Item[]);
+      }
+      const missingIds = collectItemIds(cards);
+      // Fire-and-forget: cache fills in async; UI updates as items arrive.
+      void ensureItems(missingIds);
+
+      build.replaceCards(cards);
+      ui.setActiveCard(cards[0]?.id ?? null);
       ui.closeItemPicker();
       ui.closeClassPicker();
     } catch (err) {

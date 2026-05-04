@@ -40,6 +40,31 @@ export async function ensureItem(id: number): Promise<Item> {
   return item;
 }
 
+/** Bulk-populate the cache with imported items (used by build import). */
+export function populateCache(items: Item[]): void {
+  const now = Date.now();
+  for (const item of items) {
+    cache.value[String(item.id)] = { item, fetchedAt: now };
+  }
+  saveCache(cache.value);
+}
+
+/** Fetch and cache any items referenced by ids that aren't already in the cache. */
+export async function ensureItems(ids: number[]): Promise<void> {
+  const missing = ids.filter((id) => getCachedItem(id) === null);
+  if (missing.length === 0) return;
+  const fetched = await Promise.allSettled(missing.map((id) => fetchItem(id)));
+  const now = Date.now();
+  let touched = false;
+  for (const result of fetched) {
+    if (result.status === 'fulfilled') {
+      cache.value[String(result.value.id)] = { item: result.value, fetchedAt: now };
+      touched = true;
+    }
+  }
+  if (touched) saveCache(cache.value);
+}
+
 export function useItemSearch(target: Ref<SearchTarget>, search: Ref<string>) {
   const results = ref<Item[]>([]);
   const loading = ref(false);
