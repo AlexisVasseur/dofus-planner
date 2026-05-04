@@ -6,6 +6,7 @@ export interface Item {
   levelRequired: number;
   iconUrl: string;
   stats: string[];
+  typeId: number;
 }
 
 function normalizeSearch(s: string): string {
@@ -49,6 +50,7 @@ function mapItem(raw: RawItem): Item {
     levelRequired: raw.level ?? 0,
     iconUrl: raw.img ?? raw.imgUrl ?? '',
     stats,
+    typeId: raw.typeId ?? 0,
   };
 }
 

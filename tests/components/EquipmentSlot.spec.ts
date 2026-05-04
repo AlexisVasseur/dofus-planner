@@ -19,7 +19,7 @@ describe('EquipmentSlot', () => {
     const w = mount(EquipmentSlot, {
       props: {
         slot: 'coiffe',
-        item: { id: 1, name: 'Coiffe Bouftou', levelRequired: 25, iconUrl: '', stats: [] },
+        item: { id: 1, name: 'Coiffe Bouftou', levelRequired: 25, iconUrl: '', stats: [], typeId: 0 },
         cardLevel: 50,
       },
     });
@@ -31,7 +31,7 @@ describe('EquipmentSlot', () => {
     const w = mount(EquipmentSlot, {
       props: {
         slot: 'coiffe',
-        item: { id: 1, name: 'Coiffe Royal', levelRequired: 200, iconUrl: '', stats: [] },
+        item: { id: 1, name: 'Coiffe Royal', levelRequired: 200, iconUrl: '', stats: [], typeId: 0 },
         cardLevel: 50,
       },
     });
@@ -43,7 +43,7 @@ describe('EquipmentSlot', () => {
     const w = mount(EquipmentSlot, {
       props: {
         slot: 'coiffe',
-        item: { id: 1, name: 'Coiffe Royal', levelRequired: 200, iconUrl: '', stats: [] },
+        item: { id: 1, name: 'Coiffe Royal', levelRequired: 200, iconUrl: '', stats: [], typeId: 0 },
         cardLevel: null,
       },
     });

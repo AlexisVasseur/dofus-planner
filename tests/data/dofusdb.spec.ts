@@ -42,6 +42,7 @@ describe('dofusdb client', () => {
       levelRequired: 25,
       iconUrl: 'https://api.dofusdb.fr/img/items/1234.png',
       stats: ['+10 Vitalité', '+5 Force'],
+      typeId: 16,
     });
   });
 
