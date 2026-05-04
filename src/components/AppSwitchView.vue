@@ -33,14 +33,12 @@ const direction = ref<'forward' | 'backward'>('forward');
 
 function goPrev(): void {
   if (!canGoBack.value) return;
-  direction.value = 'backward';
   const card = build.cards[activeIndex.value - 1];
-  if (card) ui.setActiveCard(card.id);
+  if (card) ui.setActiveCard(card.id); // direction inferred by the sync watch
 }
 
 function goNext(): void {
   if (!canGoNext.value) return;
-  direction.value = 'forward';
   const card = build.cards[activeIndex.value + 1];
   if (card) ui.setActiveCard(card.id);
 }
@@ -55,14 +53,14 @@ watch(
   { immediate: true },
 );
 
-// When the user jumps to a card via the minimap (or keyboard), infer direction from
-// the index delta so the slide animation respects the direction of travel.
-let lastActiveIndex = activeIndex.value;
-watch(activeIndex, (idx) => {
-  if (idx > lastActiveIndex) direction.value = 'forward';
-  else if (idx < lastActiveIndex) direction.value = 'backward';
-  lastActiveIndex = idx;
-});
+// Infer direction from the index delta so the slide animation respects the direction of
+// travel for ALL navigation paths (arrows, keyboard, minimap). flush: 'sync' so the new
+// `direction` value is in place BEFORE the template re-renders with the new active key,
+// otherwise the Transition could pick up the stale direction.
+watch(activeIndex, (idx, old) => {
+  if (idx > old) direction.value = 'forward';
+  else if (idx < old) direction.value = 'backward';
+}, { flush: 'sync' });
 
 useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   const target = e.target as HTMLElement | null;
@@ -96,11 +94,12 @@ const nextLevelLabel = computed(() => {
     </div>
 
     <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 720px;">
-      <!-- PREV peek -->
+      <!-- PREV peek (Transition smooths the mount/unmount at the first card edge) -->
+      <Transition name="peek-fade">
       <button
         v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer transition-opacity opacity-40 hover:opacity-70 origin-right"
+        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-right"
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
@@ -117,6 +116,7 @@ const nextLevelLabel = computed(() => {
           />
         </div>
       </button>
+      </Transition>
 
       <!-- ACTIVE card with slide transition. pointer-events-none so it's purely visual. -->
       <div class="active-stage relative">
@@ -136,11 +136,12 @@ const nextLevelLabel = computed(() => {
         </Transition>
       </div>
 
-      <!-- NEXT peek -->
+      <!-- NEXT peek (Transition smooths the mount/unmount at the last card edge) -->
+      <Transition name="peek-fade">
       <button
         v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer transition-opacity opacity-40 hover:opacity-70 origin-left"
+        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-left"
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
@@ -156,6 +157,7 @@ const nextLevelLabel = computed(() => {
           />
         </div>
       </button>
+      </Transition>
     </div>
   </div>
 </template>
@@ -163,11 +165,23 @@ const nextLevelLabel = computed(() => {
 <style scoped>
 .peek {
   transform: scale(0.55);
+  /* Animate opacity changes from hover only — not from Vue Transition which we drive with peek-fade */
+  transition: opacity 150ms ease-out;
 }
 
 /* Hide the per-card delete (×) button in Switch view — purely visual mode. */
 :deep(.card-delete-btn) {
   display: none;
+}
+
+/* Peek mount/unmount fade — softens the abrupt appearance at first/last card edges */
+.peek-fade-enter-from,
+.peek-fade-leave-to {
+  opacity: 0 !important;
+}
+.peek-fade-enter-active,
+.peek-fade-leave-active {
+  transition: opacity 240ms ease-out;
 }
 
 /* Slide animations — distance + opacity, eased */
