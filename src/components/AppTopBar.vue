@@ -138,6 +138,13 @@ function importBuild() {
           @click="ui.setViewMode('switch')"
           aria-label="Mode Switch (uniquement les changements)"
         >Switch</button>
+        <button
+          type="button"
+          class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
+          :class="ui.viewMode === 'purchase' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          @click="ui.setViewMode('purchase')"
+          aria-label="Mode Achats (planificateur d'achat)"
+        >Achats</button>
       </div>
       <button
         type="button"

@@ -6,7 +6,7 @@ export type ItemPickerTarget =
   | { kind: 'slot'; cardId: string; slot: SlotType }
   | { kind: 'dofus'; cardId: string; index: number };
 
-export type ViewMode = 'build' | 'switch';
+export type ViewMode = 'build' | 'switch' | 'purchase';
 
 export const useUiStore = defineStore('ui', () => {
   const activeCardId = ref<string | null>(null);
