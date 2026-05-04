@@ -149,7 +149,28 @@ Per-item localStorage cache (`dofus-planner.cache.items.v1`) populated on every 
 - Loose validation on load — corrupt JSON or wrong version falls back to default Lv 1 card
 - Card slots without a key (e.g., older payloads pre-Bouclier) load fine: missing keys read as undefined → rendered as empty slot
 
-**Importer / Exporter** in the top bar: Export downloads `dofus-build-YYYY-MM-DD.json`; Import takes a JSON file (validates version + cards), confirms before replacing the in-memory build.
+**Importer / Exporter** in the top bar.
+
+Export payload schema (self-contained):
+```json
+{
+  "version": 1,
+  "cards": [ /* Card[] */ ],
+  "items": [ /* Item[] — all items used in the build, snapshotted from the local cache */ ]
+}
+```
+
+The `items` array is a snapshot of every `itemId` referenced by `cards.slots` and `cards.dofus` at export time, pulled from the local item cache (`dofus-planner.cache.items.v1`). This means imports work on a fresh device or after a wiped cache.
+
+Import flow:
+1. File picker (`<input type="file">` is appended to DOM with off-screen positioning so Firefox/Safari fire `change`).
+2. JSON.parse + version/cards validation.
+3. Confirm prompt with card count.
+4. `populateCache(parsed.items)` if the export included an items snapshot.
+5. `ensureItems(allItemIds)` fires async fetches for any ids not in cache (back-compat with old exports without `items`, or partial cache misses). Cards render reactively as items resolve.
+6. `replaceCards(parsed.cards)` swaps the build.
+
+Robustness tweaks: `JSON.parse(JSON.stringify(build.cards))` flattens any Pinia/Vue reactive proxies before serialization; `<a>` element kept in DOM for 250ms after click so the browser can start the download; `try/catch` shows the actual error via `alert` if anything fails.
 
 ## Visual identity
 
@@ -196,7 +217,7 @@ Fonts: `font-display` = Bebas Neue (level numbers, section headers, brand wordma
 
 - **Bouclier slot** (typeId 82) inserted between Arme and Familier
 - **Switch mode** with red/green per-slot diff visualization, full editing affordances
-- **Importer / Exporter** JSON in top bar
+- **Importer / Exporter** JSON in top bar (self-contained — items snapshot bundled in export, cache repopulated + missing fetched on import)
 - **Per-card delete** with confirm
 - **Double-click to clear** slots and dofus
 - **Delete/Backspace shortcut** on focused dofus cells
