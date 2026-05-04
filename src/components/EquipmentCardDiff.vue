@@ -16,15 +16,17 @@ const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 
-interface SlotDiff {
+interface SlotEntry {
   slot: SlotType;
   oldRef: ItemRef | null;
   newRef: ItemRef | null;
+  changed: boolean;
 }
-interface DofusDiff {
+interface DofusEntry {
   index: number;
   oldRef: ItemRef | null;
   newRef: ItemRef | null;
+  changed: boolean;
 }
 
 function refsEqual(a: ItemRef | null, b: ItemRef | null): boolean {
@@ -33,43 +35,25 @@ function refsEqual(a: ItemRef | null, b: ItemRef | null): boolean {
   return a.itemId === b.itemId;
 }
 
-const slotDiffs = computed<SlotDiff[]>(() => {
-  const out: SlotDiff[] = [];
-  for (const slot of SLOT_ORDER) {
+const slotEntries = computed<SlotEntry[]>(() =>
+  SLOT_ORDER.map((slot) => {
     const oldRef = props.previous.slots[slot] ?? null;
     const newRef = props.card.slots[slot] ?? null;
-    if (!refsEqual(oldRef, newRef)) {
-      out.push({ slot, oldRef, newRef });
-    }
-  }
-  return out;
-});
-
-const unchangedSlots = computed<SlotType[]>(() =>
-  SLOT_ORDER.filter((slot) => {
-    const oldRef = props.previous.slots[slot] ?? null;
-    const newRef = props.card.slots[slot] ?? null;
-    return refsEqual(oldRef, newRef);
+    return { slot, oldRef, newRef, changed: !refsEqual(oldRef, newRef) };
   }),
 );
 
-const dofusDiffs = computed<DofusDiff[]>(() => {
-  const out: DofusDiff[] = [];
+const dofusEntries = computed<DofusEntry[]>(() => {
+  const out: DofusEntry[] = [];
   for (let i = 0; i < DOFUS_COUNT; i++) {
     const oldRef = props.previous.dofus[i] ?? null;
     const newRef = props.card.dofus[i] ?? null;
-    if (!refsEqual(oldRef, newRef)) {
-      out.push({ index: i, oldRef, newRef });
-    }
+    out.push({ index: i, oldRef, newRef, changed: !refsEqual(oldRef, newRef) });
   }
   return out;
 });
 
 const classChanged = computed(() => props.card.classId !== props.previous.classId);
-
-const hasNoChanges = computed(() =>
-  !classChanged.value && slotDiffs.value.length === 0 && dofusDiffs.value.length === 0,
-);
 
 function itemDisplay(ref: ItemRef | null): { name: string; iconUrl: string } | null {
   if (ref === null) return null;
@@ -106,117 +90,85 @@ function pickDofus(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="build.removeCard(card.id)"
     />
-    <div class="p-3.5 space-y-3.5">
-      <!-- Class change -->
-      <div v-if="classChanged" class="space-y-1.5">
-        <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase">Classe</h3>
-        <button
-          type="button"
-          class="w-full flex items-center gap-2 text-[11px] hover:bg-bg-elev rounded-md p-1.5 -m-1.5"
-          @click="ui.openClassPicker(card.id)"
+    <div class="p-3.5">
+      <!-- Class hint when changed -->
+      <div
+        v-if="classChanged"
+        class="mb-2 flex items-center gap-2 text-[10.5px] cursor-pointer hover:bg-bg-elev rounded p-1 -m-1"
+        @click="ui.openClassPicker(card.id)"
+      >
+        <span class="font-display text-[10px] text-accent tracking-[0.25em] uppercase">Classe</span>
+        <span class="text-text-faint">{{ className(previous.classId) }}</span>
+        <span class="text-accent font-mono">→</span>
+        <span class="text-text-default">{{ className(card.classId) }}</span>
+      </div>
+
+      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2">Équipement</h3>
+
+      <!-- Slot rows: same height/layout as Build mode (single line, ~32px) -->
+      <div
+        v-for="entry in slotEntries"
+        :key="entry.slot"
+        class="slot-row group flex items-center gap-2.5 py-1 rounded-md text-[11px] leading-6 cursor-pointer transition-opacity"
+        :class="entry.changed
+          ? 'bg-accent/[0.04] shadow-[inset_0_0_0_1px_rgba(91,211,168,0.2)] -mx-1 px-1'
+          : 'opacity-35 hover:opacity-60'"
+        @click="pickSlot(entry.slot)"
+      >
+        <div
+          class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors"
+          :class="entry.newRef
+            ? entry.changed
+              ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(91,211,168,0.4)]'
+              : 'bg-bg-slot-filled border border-border-slot-filled'
+            : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
         >
-          <span class="text-text-faint flex-1 truncate text-left">{{ className(previous.classId) }}</span>
-          <span class="text-accent font-mono">→</span>
-          <span class="text-text-default flex-1 truncate text-left">{{ className(card.classId) }}</span>
-        </button>
-      </div>
-
-      <!-- Equipment changes -->
-      <div v-if="slotDiffs.length > 0" class="space-y-1.5">
-        <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase">Changements</h3>
-        <button
-          v-for="d in slotDiffs"
-          :key="d.slot"
-          type="button"
-          class="w-full text-left hover:bg-bg-elev rounded-md p-1.5 -m-1.5 group"
-          @click="pickSlot(d.slot)"
-        >
-          <div class="font-display text-[9px] text-text-faint tracking-[0.2em] uppercase mb-1">
-            {{ SLOT_LABEL[d.slot] }}
-          </div>
-          <div class="flex items-center gap-2 text-[11px]">
-            <div class="flex items-center gap-1.5 flex-1 min-w-0 opacity-70">
-              <div
-                class="w-5 h-5 rounded-[3px] flex items-center justify-center flex-shrink-0"
-                :class="d.oldRef
-                  ? 'bg-bg-slot-filled border border-border-slot-filled'
-                  : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
-              >
-                <img
-                  v-if="d.oldRef && itemDisplay(d.oldRef)?.iconUrl"
-                  :src="itemDisplay(d.oldRef)?.iconUrl"
-                  :alt="itemDisplay(d.oldRef)?.name ?? ''"
-                  class="w-3.5 h-3.5"
-                />
-                <svg v-else viewBox="0 0 24 24" class="w-3.5 h-3.5 text-text-ghost" v-html="getSlotIconSvg(d.slot)" />
-              </div>
-              <span class="text-text-faint truncate">{{ itemDisplay(d.oldRef)?.name ?? 'vide' }}</span>
-            </div>
-            <span class="text-accent font-mono group-hover:text-accent">→</span>
-            <div class="flex items-center gap-1.5 flex-1 min-w-0">
-              <div
-                class="w-5 h-5 rounded-[3px] flex items-center justify-center flex-shrink-0"
-                :class="d.newRef
-                  ? 'bg-bg-slot-filled border border-border-slot-filled'
-                  : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
-              >
-                <img
-                  v-if="d.newRef && itemDisplay(d.newRef)?.iconUrl"
-                  :src="itemDisplay(d.newRef)?.iconUrl"
-                  :alt="itemDisplay(d.newRef)?.name ?? ''"
-                  class="w-3.5 h-3.5"
-                />
-                <svg v-else viewBox="0 0 24 24" class="w-3.5 h-3.5 text-text-ghost" v-html="getSlotIconSvg(d.slot)" />
-              </div>
-              <span class="text-text-default truncate">{{ itemDisplay(d.newRef)?.name ?? 'vide' }}</span>
-            </div>
-          </div>
-        </button>
-      </div>
-
-      <!-- Dofus changes -->
-      <div v-if="dofusDiffs.length > 0" class="space-y-1.5">
-        <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase">Dofus &amp; Trophées</h3>
-        <button
-          v-for="d in dofusDiffs"
-          :key="d.index"
-          type="button"
-          class="w-full text-left hover:bg-bg-elev rounded-md p-1.5 -m-1.5"
-          @click="pickDofus(d.index)"
-        >
-          <div class="font-display text-[9px] text-text-faint tracking-[0.2em] uppercase mb-1">
-            Dofus {{ d.index + 1 }}
-          </div>
-          <div class="flex items-center gap-2 text-[11px]">
-            <span class="text-text-faint flex-1 truncate">{{ itemDisplay(d.oldRef)?.name ?? 'vide' }}</span>
-            <span class="text-accent font-mono">→</span>
-            <span class="text-text-default flex-1 truncate">{{ itemDisplay(d.newRef)?.name ?? 'vide' }}</span>
-          </div>
-        </button>
-      </div>
-
-      <!-- No changes -->
-      <div v-if="hasNoChanges" class="text-center py-4 text-text-faint text-[11px] italic">
-        Aucun changement par rapport à la card précédente
-      </div>
-
-      <!-- Add change: pick a slot to introduce a new diff -->
-      <div v-if="unchangedSlots.length > 0" class="pt-3 border-t border-border-subtle">
-        <div class="font-display text-[10px] text-text-faint tracking-[0.25em] uppercase mb-1.5">
-          + Ajouter un changement
+          <img
+            v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+            :src="itemDisplay(entry.newRef)?.iconUrl"
+            :alt="itemDisplay(entry.newRef)?.name ?? ''"
+            class="w-4 h-4"
+          />
+          <svg v-else viewBox="0 0 24 24" class="w-4 h-4" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
         </div>
-        <div class="grid grid-cols-5 gap-1">
-          <button
-            v-for="slot in unchangedSlots"
-            :key="slot"
-            type="button"
-            class="aspect-square rounded-[4px] bg-bg-slot-empty border border-dashed border-border-dashed-empty text-text-ghost hover:border-accent hover:text-accent flex items-center justify-center"
-            :title="SLOT_LABEL[slot]"
-            @click="pickSlot(slot)"
-          >
-            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" v-html="getSlotIconSvg(slot)" />
-          </button>
-        </div>
+        <span
+          class="flex-1 truncate"
+          :class="entry.newRef
+            ? entry.changed ? 'text-text-default' : 'text-text-muted'
+            : entry.changed ? 'text-text-faint' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[10.5px]'"
+        >
+          {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
+        </span>
+        <span
+          v-if="entry.changed"
+          class="text-[9px] font-mono text-text-faint truncate max-w-[100px]"
+          :title="`Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}`"
+        >← {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}</span>
+      </div>
+
+      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2 mt-3.5">Dofus &amp; Trophées</h3>
+      <div class="grid grid-cols-6 gap-[5px]">
+        <button
+          v-for="entry in dofusEntries"
+          :key="entry.index"
+          type="button"
+          class="aspect-square rounded-md flex items-center justify-center transition-opacity relative"
+          :class="entry.changed
+            ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(91,211,168,0.3)]'
+            : entry.newRef
+              ? 'bg-bg-slot-filled border border-border-slot-filled opacity-35 hover:opacity-60'
+              : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty opacity-35 hover:opacity-60'"
+          :title="entry.changed ? `Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}` : ''"
+          @click="pickDofus(entry.index)"
+        >
+          <img
+            v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+            :src="itemDisplay(entry.newRef)?.iconUrl"
+            :alt="itemDisplay(entry.newRef)?.name ?? ''"
+            class="w-3/4 h-3/4"
+          />
+          <span v-else-if="!entry.newRef" class="text-text-ghost text-[10px]">◇</span>
+        </button>
       </div>
     </div>
   </article>
