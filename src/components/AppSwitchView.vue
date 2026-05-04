@@ -116,9 +116,10 @@ const nextLevelLabel = computed(() => {
         </div>
       </button>
 
-      <!-- ACTIVE card. Old + new overlap in a single grid cell so they can animate
-           concurrently (one perceived motion). pointer-events-none → purely visual. -->
-      <div class="active-stage grid place-items-center" style="grid-template-areas: 'stack';">
+      <!-- ACTIVE card. Both old and new sit in the same grid cell. The container
+           clips overflow so cards sliding off-stage are invisible — no half-opacity
+           overlap is possible. pointer-events-none → purely visual. -->
+      <div class="active-stage grid place-items-center overflow-hidden" style="grid-template-areas: 'stack';">
         <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
@@ -176,28 +177,25 @@ const nextLevelLabel = computed(() => {
   width: 720px;
 }
 
-/* Slide animations — entering covers leaving via z-index, leaving only fades (no
-   transform) so we never see both cards side-by-side mid-transition. */
+/* Push carousel — both cards translate at full card width so they never share visible
+   space inside the (overflow-hidden) stage. No opacity tweak: full opacity throughout. */
 .slide-fwd-enter-active,
-.slide-bwd-enter-active {
-  z-index: 2;
-  transition: transform 260ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity 220ms ease-out;
-}
+.slide-bwd-enter-active,
 .slide-fwd-leave-active,
 .slide-bwd-leave-active {
-  z-index: 1;
-  transition: opacity 140ms ease-in;
+  transition: transform 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 .slide-fwd-enter-from {
-  transform: translateX(60px);
-  opacity: 0;
+  transform: translateX(100%);
+}
+.slide-fwd-leave-to {
+  transform: translateX(-100%);
 }
 .slide-bwd-enter-from {
-  transform: translateX(-60px);
-  opacity: 0;
+  transform: translateX(-100%);
 }
-.slide-fwd-leave-to,
 .slide-bwd-leave-to {
-  opacity: 0;
+  transform: translateX(100%);
 }
 </style>
