@@ -104,8 +104,8 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
-        <div class="peek-label flex items-center gap-2 font-display text-[13px] tracking-[0.2em] uppercase text-accent">
-          <span class="text-[18px]">‹</span>
+        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-accent">
+          <span class="text-[28px] leading-none">‹</span>
           <span>Précédent · {{ prevLevelLabel }}</span>
         </div>
         <div class="pointer-events-none">
@@ -144,9 +144,9 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
-        <div class="peek-label flex items-center gap-2 font-display text-[13px] tracking-[0.2em] uppercase text-accent">
+        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-accent">
           <span>Suivant · {{ nextLevelLabel }}</span>
-          <span class="text-[18px]">›</span>
+          <span class="text-[28px] leading-none">›</span>
         </div>
         <div class="pointer-events-none">
           <EquipmentCardDiff
@@ -163,6 +163,11 @@ const nextLevelLabel = computed(() => {
 <style scoped>
 .peek {
   transform: scale(0.55);
+}
+
+/* Hide the per-card delete (×) button in Switch view — purely visual mode. */
+:deep(.card-delete-btn) {
+  display: none;
 }
 
 /* Slide animations — distance + opacity, eased */

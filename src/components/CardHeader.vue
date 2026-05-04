@@ -139,7 +139,7 @@ function onRemove() {
     </div>
     <button
       type="button"
-      class="absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
+      class="card-delete-btn absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
       @click="onRemove"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
