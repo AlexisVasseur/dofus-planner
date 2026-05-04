@@ -107,26 +107,26 @@ function clearDofus(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="build.removeCard(card.id)"
     />
-    <div class="p-3.5">
+    <div class="p-4">
       <!-- Class hint when changed -->
       <div
         v-if="classChanged"
-        class="mb-2 flex items-center gap-2 text-[10.5px] cursor-pointer hover:bg-bg-elev rounded p-1 -m-1"
+        class="mb-3 flex items-center gap-2 text-[13px] cursor-pointer hover:bg-bg-elev rounded p-1.5 -m-1.5"
         @click="ui.openClassPicker(card.id)"
       >
-        <span class="font-display text-[10px] text-accent tracking-[0.25em] uppercase">Classe</span>
+        <span class="font-display text-[13px] text-accent tracking-[0.25em] uppercase">Classe</span>
         <span class="text-danger-soft line-through decoration-danger/60">{{ className(previous.classId) }}</span>
         <span class="text-accent font-mono">→</span>
         <span class="text-accent">{{ className(card.classId) }}</span>
       </div>
 
-      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2">Équipement</h3>
+      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3">Équipement</h3>
 
       <!-- Slot rows: same height as Build mode. Changed = red old → green new side-by-side. -->
       <div
         v-for="entry in slotEntries"
         :key="entry.slot"
-        class="slot-row group flex items-center gap-1.5 py-1 rounded-md text-[11px] leading-6 cursor-pointer transition-opacity"
+        class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer transition-opacity"
         :class="entry.changed
           ? 'bg-accent/[0.03] -mx-1 px-1'
           : 'opacity-35 hover:opacity-60'"
@@ -136,7 +136,7 @@ function clearDofus(index: number): void {
         <template v-if="entry.changed">
           <!-- OLD (red) -->
           <div
-            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
+            class="icon w-8 h-8 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
           >
             <img
               v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
@@ -144,15 +144,15 @@ function clearDofus(index: number): void {
               :alt="itemDisplay(entry.oldRef)?.name ?? ''"
               class="w-4 h-4"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-4 h-4 text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-5 h-5 text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
           </div>
-          <span class="flex-1 min-w-0 truncate text-danger-soft text-[10.5px] line-through decoration-danger/60 decoration-from-font">
+          <span class="flex-1 min-w-0 truncate text-danger-soft text-[13px] line-through decoration-danger/60 decoration-from-font">
             {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
           </span>
-          <span class="text-accent font-mono text-[12px] flex-shrink-0">→</span>
+          <span class="text-accent font-mono text-[15px] flex-shrink-0">→</span>
           <!-- NEW (green) -->
           <div
-            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
+            class="icon w-8 h-8 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
           >
             <img
               v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
@@ -160,16 +160,16 @@ function clearDofus(index: number): void {
               :alt="itemDisplay(entry.newRef)?.name ?? ''"
               class="w-4 h-4"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-4 h-4 text-accent" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-5 h-5 text-accent" v-html="getSlotIconSvg(entry.slot)" />
           </div>
-          <span class="flex-1 min-w-0 truncate text-accent text-[10.5px] font-medium">
+          <span class="flex-1 min-w-0 truncate text-accent text-[13px] font-medium">
             {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
           </span>
         </template>
         <template v-else>
           <!-- Unchanged: standard single-item layout, dimmed -->
           <div
-            class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0"
+            class="icon w-8 h-8 rounded-[5px] flex items-center justify-center flex-shrink-0"
             :class="entry.newRef
               ? 'bg-bg-slot-filled border border-border-slot-filled'
               : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
@@ -178,21 +178,21 @@ function clearDofus(index: number): void {
               v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
               :src="itemDisplay(entry.newRef)?.iconUrl"
               :alt="itemDisplay(entry.newRef)?.name ?? ''"
-              class="w-4 h-4"
+              class="w-5 h-5"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-4 h-4" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-5 h-5" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
           </div>
           <span
             class="flex-1 truncate"
-            :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[10.5px]'"
+            :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[13px]'"
           >
             {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
           </span>
         </template>
       </div>
 
-      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2 mt-3.5">Dofus &amp; Trophées</h3>
-      <div class="grid grid-cols-6 gap-[5px]">
+      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3 mt-4">Dofus &amp; Trophées</h3>
+      <div class="grid grid-cols-6 gap-1.5">
         <button
           v-for="entry in dofusEntries"
           :key="entry.index"

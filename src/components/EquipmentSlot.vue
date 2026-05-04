@@ -26,7 +26,7 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
 
 <template>
   <div
-    class="slot-row group flex items-center gap-2.5 py-1 rounded-md text-[11px] leading-6 cursor-pointer"
+    class="slot-row group flex items-center gap-3 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer"
     :class="{
       'is-filled': filled,
       'is-empty': !filled,
@@ -37,31 +37,31 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
     @dblclick.stop="emit('clear')"
   >
     <div
-      class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors"
+      class="icon w-8 h-8 rounded-[5px] flex items-center justify-center flex-shrink-0 transition-colors"
       :class="filled ? 'bg-bg-slot-filled border border-border-slot-filled' : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
     >
-      <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="label" class="w-4 h-4" />
+      <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="label" class="w-5 h-5" />
       <svg
         v-else
         viewBox="0 0 24 24"
-        class="w-4 h-4"
+        class="w-5 h-5"
         :class="filled ? 'text-text-muted' : 'text-text-ghost'"
         v-html="slotSvg"
       />
     </div>
     <span
-      class="label flex-1 transition-colors"
+      class="label flex-1 transition-colors truncate"
       :class="filled
         ? 'text-text-default'
-        : 'text-text-faint tracking-[0.1em] font-semibold text-[10.5px]'"
+        : 'text-text-faint tracking-[0.1em] font-semibold text-[13px]'"
     >{{ label }}</span>
     <span
       v-if="overLvl"
-      class="text-[9.5px] font-mono text-danger-soft border border-danger/40 bg-danger/10 rounded px-1.5 py-0.5"
+      class="text-[12px] font-mono text-danger-soft border border-danger/40 bg-danger/10 rounded px-2 py-0.5"
     >lv {{ item!.levelRequired }}</span>
     <button
       v-else-if="filled"
-      class="clear-btn opacity-0 group-hover:opacity-100 w-[22px] h-[22px] rounded-full bg-bg-elev border border-border-default text-text-muted text-xs flex items-center justify-center hover:bg-danger/20 hover:border-danger/60 hover:text-danger-soft"
+      class="clear-btn opacity-0 group-hover:opacity-100 w-7 h-7 rounded-full bg-bg-elev border border-border-default text-text-muted text-sm flex items-center justify-center hover:bg-danger/20 hover:border-danger/60 hover:text-danger-soft"
       @click.stop="emit('clear')"
       aria-label="Vider le slot"
     >×</button>

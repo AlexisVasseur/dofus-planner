@@ -83,8 +83,8 @@ function onClearDofus(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="onRemoveCard"
     />
-    <div class="p-3.5">
-      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2">Équipement</h3>
+    <div class="p-4">
+      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3">Équipement</h3>
       <EquipmentSlot
         v-for="entry in slotItems"
         :key="entry.slot"
@@ -95,8 +95,8 @@ function onClearDofus(index: number): void {
         @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
         @clear="onClearSlot(entry.slot)"
       />
-      <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2 mt-3.5">Dofus &amp; Trophées</h3>
-      <div class="grid grid-cols-6 gap-[5px]">
+      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3 mt-4">Dofus &amp; Trophées</h3>
+      <div class="grid grid-cols-6 gap-1.5">
         <DofusCell
           v-for="entry in dofusItems"
           :key="entry.index"

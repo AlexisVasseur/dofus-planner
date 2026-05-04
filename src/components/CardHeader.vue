@@ -88,13 +88,13 @@ function onRemove() {
 </script>
 
 <template>
-  <header class="header relative flex items-center gap-3 p-3.5 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+  <header class="header relative flex items-center gap-4 p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
     <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
-      <ClassLogo :class-id="classId" :pulse="classId === null" />
+      <ClassLogo :class-id="classId" :pulse="classId === null" :size="62" />
     </button>
     <div class="right flex-1 min-w-0">
       <div class="flex items-baseline">
-        <span class="font-display text-[12px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
+        <span class="font-display text-[16px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
         <input
           v-if="editingLevel"
           ref="levelInputRef"
@@ -102,7 +102,7 @@ function onRemove() {
           type="text"
           inputmode="numeric"
           maxlength="3"
-          class="font-display text-[28px] leading-none bg-transparent text-text-default w-16 outline-none border-b border-dashed border-accent"
+          class="font-display text-[36px] leading-none bg-transparent text-text-default w-20 outline-none border-b border-dashed border-accent"
           @blur="commitLevel"
           @keydown.enter.prevent="commitLevel"
           @keydown.esc.prevent="cancelLevel"
@@ -111,7 +111,7 @@ function onRemove() {
           v-else
           type="button"
           @click="startEditLevel"
-          class="font-display text-[28px] leading-none text-text-default border-b border-dashed border-border-default hover:border-accent cursor-text"
+          class="font-display text-[36px] leading-none text-text-default border-b border-dashed border-border-default hover:border-accent cursor-text"
         >{{ level ?? '—' }}</button>
       </div>
       <input
@@ -119,7 +119,7 @@ function onRemove() {
         ref="titleInputRef"
         v-model="titleDraft"
         maxlength="30"
-        class="block mt-1 bg-transparent font-display text-[12px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-accent"
+        class="block mt-1.5 bg-transparent font-display text-[16px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-accent"
         @blur="commitTitle"
         @keydown.enter.prevent="commitTitle"
         @keydown.esc.prevent="cancelTitle"
@@ -127,19 +127,19 @@ function onRemove() {
       <button
         v-else-if="showCta"
         type="button"
-        class="block mt-1 font-display text-[12px] tracking-[0.18em] uppercase text-accent text-left"
+        class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-accent text-left"
         @click="emit('open-class-picker')"
       >Choisir une classe</button>
       <button
         v-else
         type="button"
-        class="block mt-1 font-display text-[12px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
+        class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
         @click="startEditTitle"
       >{{ title ?? 'Ajouter un titre' }}</button>
     </div>
     <button
       type="button"
-      class="absolute top-2 right-2 w-6 h-6 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[14px] leading-none transition-colors"
+      class="absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
       @click="onRemove"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"

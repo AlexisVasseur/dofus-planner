@@ -33,7 +33,7 @@ const overLvl = computed(() => props.item !== null && isOverLeveled(props.item.l
     @keydown.delete.prevent="emit('clear')"
   >
     <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="item!.name" class="w-3/4 h-3/4 pointer-events-none" />
-    <span v-else-if="!filled" class="text-text-ghost text-xs pointer-events-none">◇</span>
+    <span v-else-if="!filled" class="text-text-ghost text-sm pointer-events-none">◇</span>
     <span
       v-if="overLvl"
       class="absolute top-0.5 right-0.5 w-1.5 h-1.5 rounded-full bg-danger shadow-[0_0_6px_rgba(220,38,38,0.6)] pointer-events-none"
@@ -41,7 +41,7 @@ const overLvl = computed(() => props.item !== null && isOverLeveled(props.item.l
     <button
       v-if="filled"
       type="button"
-      class="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-bg-elev border border-border-default text-text-muted text-xs leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-danger/20 hover:border-danger/60 hover:text-danger-soft transition-opacity z-10"
+      class="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-bg-elev border border-border-default text-text-muted text-sm leading-none flex items-center justify-center opacity-0 group-hover:opacity-100 hover:bg-danger/20 hover:border-danger/60 hover:text-danger-soft transition-opacity z-10"
       aria-label="Vider"
       title="Vider"
       @click.stop="emit('clear')"
