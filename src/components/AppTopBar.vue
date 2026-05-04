@@ -16,27 +16,46 @@ function newBuild() {
 }
 
 function exportBuild() {
-  const payload = { version: 1, cards: build.cards };
-  const json = JSON.stringify(payload, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `dofus-build-${new Date().toISOString().slice(0, 10)}.json`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  try {
+    // Flatten any Pinia/Vue reactive proxies so the JSON output is plain data.
+    const flatCards = JSON.parse(JSON.stringify(build.cards));
+    const payload = { version: 1, cards: flatCards };
+    const json = JSON.stringify(payload, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dofus-build-${new Date().toISOString().slice(0, 10)}.json`;
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    // Defer cleanup so the browser can start the download.
+    setTimeout(() => {
+      if (a.parentNode) a.parentNode.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 250);
+  } catch (err) {
+    window.alert(`Export échoué : ${err instanceof Error ? err.message : String(err)}`);
+  }
 }
 
 function importBuild() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = 'application/json,.json';
-  input.onchange = async (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (!file) return;
+  input.style.position = 'fixed';
+  input.style.left = '-9999px';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+
+  function cleanup() {
+    if (input.parentNode) input.parentNode.removeChild(input);
+  }
+
+  input.addEventListener('change', async (e) => {
     try {
+      const file = (e.target as HTMLInputElement).files?.[0];
+      if (!file) return;
       const text = await file.text();
       const parsed = JSON.parse(text) as { version?: unknown; cards?: unknown };
       if (parsed.version !== 1 || !Array.isArray(parsed.cards) || parsed.cards.length === 0) {
@@ -50,8 +69,14 @@ function importBuild() {
       ui.closeClassPicker();
     } catch (err) {
       window.alert(`Import échoué : ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      cleanup();
     }
-  };
+  });
+  // Some browsers don't fire change if the user cancels — ensure cleanup eventually.
+  // Fallback: remove the input after a long timeout if change didn't fire.
+  setTimeout(cleanup, 60_000);
+
   input.click();
 }
 </script>
