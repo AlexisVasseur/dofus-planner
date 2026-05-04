@@ -4,6 +4,7 @@ import AppTopBar from './components/AppTopBar.vue';
 import AppTimeline from './components/AppTimeline.vue';
 import AppMiniMap from './components/AppMiniMap.vue';
 import AppPurchasePlanner from './components/AppPurchasePlanner.vue';
+import AppSwitchView from './components/AppSwitchView.vue';
 import ItemPickerSheet from './components/ItemPickerSheet.vue';
 import ClassPickerModal from './components/ClassPickerModal.vue';
 import { useBuildStore } from './stores/build';
@@ -38,6 +39,10 @@ onMounted(() => {
     <AppTopBar class="relative z-10" />
     <template v-if="ui.viewMode === 'purchase'">
       <AppPurchasePlanner class="relative z-10" />
+    </template>
+    <template v-else-if="ui.viewMode === 'switch'">
+      <AppSwitchView class="relative z-10" />
+      <AppMiniMap :scroll-ref="null" class="relative z-10" />
     </template>
     <template v-else>
       <AppTimeline ref="timelineRef" class="relative z-10" />

@@ -26,12 +26,13 @@ const CONNECTOR_WIDTH = 52;
 const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
 
 function gotoCard(index: number, cardId: string) {
+  // Always update the active card so Switch view (no scroll) reacts.
+  ui.setActiveCard(cardId);
   const el = scrollElRef.value;
-  if (!el) return;
+  if (!el) return; // no timeline to scroll (Switch mode passes null)
   const cardCenter = PADDING_LEFT + index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
   const target = cardCenter - el.clientWidth / 2;
   el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-  ui.setActiveCard(cardId);
 }
 </script>
 
