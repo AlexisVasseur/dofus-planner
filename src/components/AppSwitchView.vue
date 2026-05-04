@@ -94,8 +94,7 @@ const nextLevelLabel = computed(() => {
     </div>
 
     <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 720px;">
-      <!-- PREV peek (Transition smooths the mount/unmount at the first card edge) -->
-      <Transition name="peek-fade">
+      <!-- PREV peek -->
       <button
         v-if="canGoBack && previousCard"
         type="button"
@@ -116,15 +115,16 @@ const nextLevelLabel = computed(() => {
           />
         </div>
       </button>
-      </Transition>
 
-      <!-- ACTIVE card with slide transition. pointer-events-none so it's purely visual. -->
-      <div class="active-stage relative">
-        <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'" mode="out-in">
+      <!-- ACTIVE card. Old + new overlap in a single grid cell so they can animate
+           concurrently (one perceived motion). pointer-events-none → purely visual. -->
+      <div class="active-stage grid place-items-center" style="grid-template-areas: 'stack';">
+        <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
             :key="activeCard.id"
             class="active-card pointer-events-none flex-shrink-0"
+            style="grid-area: stack;"
           >
             <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
             <EquipmentCardDiff
@@ -136,8 +136,7 @@ const nextLevelLabel = computed(() => {
         </Transition>
       </div>
 
-      <!-- NEXT peek (Transition smooths the mount/unmount at the last card edge) -->
-      <Transition name="peek-fade">
+      <!-- NEXT peek -->
       <button
         v-if="canGoNext && nextCard"
         type="button"
@@ -157,7 +156,6 @@ const nextLevelLabel = computed(() => {
           />
         </div>
       </button>
-      </Transition>
     </div>
   </div>
 </template>
@@ -165,7 +163,6 @@ const nextLevelLabel = computed(() => {
 <style scoped>
 .peek {
   transform: scale(0.55);
-  /* Animate opacity changes from hover only — not from Vue Transition which we drive with peek-fade */
   transition: opacity 150ms ease-out;
 }
 
@@ -174,14 +171,9 @@ const nextLevelLabel = computed(() => {
   display: none;
 }
 
-/* Peek mount/unmount fade — softens the abrupt appearance at first/last card edges */
-.peek-fade-enter-from,
-.peek-fade-leave-to {
-  opacity: 0 !important;
-}
-.peek-fade-enter-active,
-.peek-fade-leave-active {
-  transition: opacity 240ms ease-out;
+/* Active card stage — needs explicit width because the grid stack collapses to children. */
+.active-stage {
+  width: 720px;
 }
 
 /* Slide animations — distance + opacity, eased */
