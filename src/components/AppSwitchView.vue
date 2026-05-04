@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useEventListener } from '@vueuse/core';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
@@ -21,7 +21,6 @@ const previousCard = computed(() =>
 const nextCard = computed(() =>
   activeIndex.value < build.cards.length - 1 ? build.cards[activeIndex.value + 1] : null,
 );
-// For the previous-card peek, the card BEFORE it (so the peek can render its own diff).
 const beforePrevCard = computed(() =>
   activeIndex.value >= 2 ? build.cards[activeIndex.value - 2] : null,
 );
@@ -29,14 +28,19 @@ const beforePrevCard = computed(() =>
 const canGoBack = computed(() => activeIndex.value > 0);
 const canGoNext = computed(() => activeIndex.value < build.cards.length - 1);
 
+// Track direction for transition animation
+const direction = ref<'forward' | 'backward'>('forward');
+
 function goPrev(): void {
   if (!canGoBack.value) return;
+  direction.value = 'backward';
   const card = build.cards[activeIndex.value - 1];
   if (card) ui.setActiveCard(card.id);
 }
 
 function goNext(): void {
   if (!canGoNext.value) return;
+  direction.value = 'forward';
   const card = build.cards[activeIndex.value + 1];
   if (card) ui.setActiveCard(card.id);
 }
@@ -50,6 +54,15 @@ watch(
   },
   { immediate: true },
 );
+
+// When the user jumps to a card via the minimap (or keyboard), infer direction from
+// the index delta so the slide animation respects the direction of travel.
+let lastActiveIndex = activeIndex.value;
+watch(activeIndex, (idx) => {
+  if (idx > lastActiveIndex) direction.value = 'forward';
+  else if (idx < lastActiveIndex) direction.value = 'backward';
+  lastActiveIndex = idx;
+});
 
 useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   const target = e.target as HTMLElement | null;
@@ -78,19 +91,16 @@ const nextLevelLabel = computed(() => {
 
 <template>
   <div class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-    <!-- Position indicator -->
-    <div class="absolute top-6 left-1/2 -translate-x-1/2 font-display text-[14px] tracking-[0.25em] uppercase text-text-faint pointer-events-none">
+    <div class="absolute top-6 left-1/2 -translate-x-1/2 font-display text-[14px] tracking-[0.25em] uppercase text-text-faint pointer-events-none z-10">
       {{ positionLabel }}
     </div>
 
-    <!-- Carousel -->
-    <div class="carousel relative flex items-center justify-center gap-8 w-full" style="--card-width: 720px;">
-      <!-- PREV peek (card scaled down + dim, hover lifts) -->
+    <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 720px;">
+      <!-- PREV peek -->
       <button
         v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-right"
-        style=""
+        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer transition-opacity opacity-40 hover:opacity-70 origin-right"
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
@@ -108,22 +118,29 @@ const nextLevelLabel = computed(() => {
         </div>
       </button>
 
-      <!-- ACTIVE card -->
-      <div v-if="activeCard" class="active-card flex-shrink-0 z-10">
-        <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
-        <EquipmentCardDiff
-          v-else-if="previousCard"
-          :card="activeCard"
-          :previous="previousCard"
-        />
+      <!-- ACTIVE card with slide transition. pointer-events-none so it's purely visual. -->
+      <div class="active-stage relative">
+        <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'" mode="out-in">
+          <div
+            v-if="activeCard"
+            :key="activeCard.id"
+            class="active-card pointer-events-none flex-shrink-0"
+          >
+            <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
+            <EquipmentCardDiff
+              v-else-if="previousCard"
+              :card="activeCard"
+              :previous="previousCard"
+            />
+          </div>
+        </Transition>
       </div>
 
       <!-- NEXT peek -->
       <button
         v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer transition-all opacity-50 hover:opacity-90 origin-left"
-        style=""
+        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer transition-opacity opacity-40 hover:opacity-70 origin-left"
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
@@ -145,15 +162,32 @@ const nextLevelLabel = computed(() => {
 
 <style scoped>
 .peek {
-  transform: scale(0.55) !important;
+  transform: scale(0.55);
 }
-.peek:hover {
-  transform: scale(0.58) !important;
+
+/* Slide animations — distance + opacity, eased */
+.slide-fwd-enter-from {
+  transform: translateX(80px);
+  opacity: 0;
 }
-.peek-prev {
-  margin-right: -260px; /* pull peek closer to the active card */
+.slide-fwd-leave-to {
+  transform: translateX(-80px);
+  opacity: 0;
 }
-.peek-next {
-  margin-left: -260px;
+.slide-bwd-enter-from {
+  transform: translateX(-80px);
+  opacity: 0;
+}
+.slide-bwd-leave-to {
+  transform: translateX(80px);
+  opacity: 0;
+}
+.slide-fwd-enter-active,
+.slide-bwd-enter-active {
+  transition: transform 280ms cubic-bezier(0.2, 0.7, 0.3, 1), opacity 220ms ease-out;
+}
+.slide-fwd-leave-active,
+.slide-bwd-leave-active {
+  transition: transform 200ms cubic-bezier(0.7, 0.2, 1, 0.3), opacity 160ms ease-in;
 }
 </style>
