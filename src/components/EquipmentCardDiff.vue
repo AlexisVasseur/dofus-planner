@@ -73,6 +73,23 @@ function pickSlot(slot: SlotType): void {
 function pickDofus(index: number): void {
   ui.openItemPicker({ kind: 'dofus', cardId: props.card.id, index });
 }
+
+function clearSlot(slot: SlotType): void {
+  build.setSlot(props.card.id, slot, null);
+  if (ui.itemPickerTarget?.kind === 'slot'
+      && ui.itemPickerTarget.cardId === props.card.id
+      && ui.itemPickerTarget.slot === slot) {
+    ui.closeItemPicker();
+  }
+}
+function clearDofus(index: number): void {
+  build.setDofus(props.card.id, index, null);
+  if (ui.itemPickerTarget?.kind === 'dofus'
+      && ui.itemPickerTarget.cardId === props.card.id
+      && ui.itemPickerTarget.index === index) {
+    ui.closeItemPicker();
+  }
+}
 </script>
 
 <template>
@@ -114,6 +131,7 @@ function pickDofus(index: number): void {
           ? 'bg-accent/[0.03] -mx-1 px-1'
           : 'opacity-35 hover:opacity-60'"
         @click="pickSlot(entry.slot)"
+        @dblclick.stop="clearSlot(entry.slot)"
       >
         <template v-if="entry.changed">
           <!-- OLD (red) -->
@@ -187,6 +205,7 @@ function pickDofus(index: number): void {
               : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty opacity-35 hover:opacity-60'"
           :title="entry.changed ? `Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}` : ''"
           @click="pickDofus(entry.index)"
+          @dblclick.stop="clearDofus(entry.index)"
         >
           <img
             v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"

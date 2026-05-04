@@ -47,6 +47,25 @@ function activeOnDofus(index: number): boolean {
     && ui.itemPickerTarget.cardId === props.card.id
     && ui.itemPickerTarget.index === index;
 }
+
+function onClearSlot(slot: import('@/types/slots').SlotType): void {
+  build.setSlot(props.card.id, slot, null);
+  // Close picker if it was opened on this slot by the same click that triggered the dblclick
+  if (ui.itemPickerTarget?.kind === 'slot'
+      && ui.itemPickerTarget.cardId === props.card.id
+      && ui.itemPickerTarget.slot === slot) {
+    ui.closeItemPicker();
+  }
+}
+
+function onClearDofus(index: number): void {
+  build.setDofus(props.card.id, index, null);
+  if (ui.itemPickerTarget?.kind === 'dofus'
+      && ui.itemPickerTarget.cardId === props.card.id
+      && ui.itemPickerTarget.index === index) {
+    ui.closeItemPicker();
+  }
+}
 </script>
 
 <template>
@@ -74,7 +93,7 @@ function activeOnDofus(index: number): boolean {
         :card-level="card.level"
         :active="activeOnSlot(entry.slot)"
         @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
-        @clear="build.setSlot(card.id, entry.slot, null)"
+        @clear="onClearSlot(entry.slot)"
       />
       <h3 class="font-display text-[11px] text-accent/85 tracking-[0.3em] uppercase mb-2 mt-3.5">Dofus &amp; Trophées</h3>
       <div class="grid grid-cols-6 gap-[5px]">
@@ -85,7 +104,7 @@ function activeOnDofus(index: number): boolean {
           :card-level="card.level"
           :active="activeOnDofus(entry.index)"
           @pick="ui.openItemPicker({ kind: 'dofus', cardId: card.id, index: entry.index })"
-          @clear="build.setDofus(card.id, entry.index, null)"
+          @clear="onClearDofus(entry.index)"
         />
       </div>
     </div>

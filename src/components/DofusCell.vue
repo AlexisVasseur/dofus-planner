@@ -27,8 +27,10 @@ const overLvl = computed(() => props.item !== null && isOverLeveled(props.item.l
     tabindex="0"
     :aria-label="filled && item ? item.name : 'Slot dofus vide'"
     @click="emit('pick')"
+    @dblclick.stop="emit('clear')"
     @keydown.enter.prevent="emit('pick')"
     @keydown.space.prevent="emit('pick')"
+    @keydown.delete.prevent="emit('clear')"
   >
     <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="item!.name" class="w-3/4 h-3/4 pointer-events-none" />
     <span v-else-if="!filled" class="text-text-ghost text-xs pointer-events-none">◇</span>

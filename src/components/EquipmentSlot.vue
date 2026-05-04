@@ -34,6 +34,7 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
       'is-active': active,
     }"
     @click="emit('pick')"
+    @dblclick.stop="emit('clear')"
   >
     <div
       class="icon w-6 h-6 rounded-[4px] flex items-center justify-center flex-shrink-0 transition-colors"
