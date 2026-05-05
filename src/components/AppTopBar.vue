@@ -115,8 +115,8 @@ function importBuild() {
 
 <template>
   <header
-    class="topbar flex items-center justify-between px-5 py-3 border-b border-border-subtle relative z-[5] backdrop-blur-md"
-    style="background: rgba(5,5,5,0.8);"
+    class="topbar flex items-center justify-between px-5 py-2.5 mx-4 mt-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] relative z-[5]"
+    style="background: rgba(8,8,8,0.85);"
   >
     <div class="brand flex items-center gap-2.5 font-display text-base text-text-default tracking-[0.18em] uppercase">
       <span class="dot w-2 h-2 rounded-full bg-white/85 shadow-[0_0_10px_rgba(255,255,255,0.45)]"></span>
