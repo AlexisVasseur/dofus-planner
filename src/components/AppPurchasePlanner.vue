@@ -42,7 +42,7 @@ function backToBuild(): void {
 </script>
 
 <template>
-  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1] bg-bg-page">
+  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1]">
     <!-- Empty global state -->
     <div v-if="!hasAnything" class="h-full flex flex-col items-center justify-center gap-4 text-center px-6">
       <p class="font-display text-[14px] text-text-muted tracking-[0.2em] uppercase max-w-md">

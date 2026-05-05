@@ -61,17 +61,24 @@ onMounted(() => {
       />
     </div>
     <AppTopBar class="relative z-10" />
-    <template v-if="ui.viewMode === 'purchase'">
-      <AppPurchasePlanner class="relative z-10" />
-    </template>
-    <template v-else-if="ui.viewMode === 'switch'">
-      <AppSwitchView class="relative z-10" />
-      <AppMiniMap :scroll-ref="null" class="relative z-10" />
-    </template>
-    <template v-else>
-      <AppTimeline ref="timelineRef" class="relative z-10" />
-      <AppMiniMap :scroll-ref="scrollEl" class="relative z-10" />
-    </template>
+    <main
+      class="floating-content relative z-10 flex-1 mx-4 mt-3 mb-3 min-h-0 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] overflow-hidden flex flex-col"
+      style="background: rgba(8,8,8,0.55);"
+    >
+      <AppPurchasePlanner v-if="ui.viewMode === 'purchase'" />
+      <AppSwitchView v-else-if="ui.viewMode === 'switch'" />
+      <AppTimeline v-else ref="timelineRef" />
+    </main>
+    <AppMiniMap
+      v-if="ui.viewMode === 'switch'"
+      :scroll-ref="null"
+      class="relative z-10"
+    />
+    <AppMiniMap
+      v-else-if="ui.viewMode === 'build'"
+      :scroll-ref="scrollEl"
+      class="relative z-10"
+    />
     <ItemPickerSheet />
     <ClassPickerModal />
   </div>
