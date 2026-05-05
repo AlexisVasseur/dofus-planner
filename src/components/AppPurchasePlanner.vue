@@ -93,12 +93,12 @@ async function copyItem(name: string, key: string): Promise<void> {
       <!-- All rooms stacked vertically (even empty ones, with a centered placeholder).
            Each room is its own floating panel; the bottom timeline minimap drives
            which room is in view by setting ui.activeCardId. -->
-      <div class="flex flex-col gap-3 pt-3">
+      <div class="flex flex-col gap-6 pt-3 pb-12">
         <div
           v-for="room in visibleRooms"
           :key="room"
           :ref="(el) => setRoomSection(room, el as HTMLElement | null)"
-          class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
+          class="mx-4 rounded-xl border border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
           style="background: rgba(8,8,8,0.2);"
         >
           <header class="mb-3">
