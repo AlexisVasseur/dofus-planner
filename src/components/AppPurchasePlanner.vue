@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect } from 'vue';
+import { ref, computed, watchEffect, nextTick } from 'vue';
 import { useShoppingList } from '@/composables/useShoppingList';
-import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, type RoomId } from '@/types/rooms';
+import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, type RoomId, type NpcId } from '@/types/rooms';
 import { useUiStore } from '@/stores/ui';
 
 const ui = useUiStore();
@@ -21,11 +21,15 @@ watchEffect(() => {
 
 const hasAnything = computed(() => list.value.totals.items > 0);
 
-const orderedNpcsForActiveRoom = computed(() => {
-  const npcs = ROOM_NPCS[activeRoom.value];
-  const cell = list.value.rooms[activeRoom.value];
+const visibleRooms = computed(() =>
+  ROOM_ORDER.filter((r) => list.value.totals.perRoom[r] > 0),
+);
+
+function npcsForRoom(room: RoomId): NpcId[] {
+  const npcs = ROOM_NPCS[room];
+  const cell = list.value.rooms[room];
   return NPC_ORDER.filter((n) => npcs.includes(n) && (cell[n]?.length ?? 0) > 0);
-});
+}
 
 // Sliding pill behind the active tab. Same pattern as the topbar mode-toggle.
 const ROOM_COUNT = ROOM_ORDER.length;
@@ -35,9 +39,18 @@ const tabPillStyle = computed(() => ({
   width: `calc((100% - 0.5rem) / ${ROOM_COUNT})`,
 }));
 
-function pickRoom(room: RoomId): void {
+// Refs to each room <section>, keyed by RoomId, used for scroll-into-view on tab click.
+const roomSectionRefs = ref<Partial<Record<RoomId, HTMLElement | null>>>({});
+function setRoomSection(room: RoomId, el: HTMLElement | null): void {
+  roomSectionRefs.value[room] = el;
+}
+
+async function pickRoom(room: RoomId): Promise<void> {
   if (list.value.totals.perRoom[room] === 0) return;
   activeRoom.value = room;
+  await nextTick();
+  const el = roomSectionRefs.value[room];
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function backToBuild(): void {
@@ -113,44 +126,52 @@ async function copyItem(name: string, key: string): Promise<void> {
         </button>
       </nav>
 
-      <!-- All NPC sections stacked vertically in one block, separated by dividers.
-           Each item is a single line (icon + name, ellipsis if too long). -->
-      <div
-        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 flex flex-col"
-        style="background: rgba(8,8,8,0.55);"
-      >
-        <section
-          v-for="(npc, idx) in orderedNpcsForActiveRoom"
-          :key="npc"
-          class="min-w-0 py-3"
-          :class="idx > 0 && 'border-t border-border-subtle'"
+      <!-- All rooms stacked vertically. Each room is its own floating panel with the
+           previous NPC-as-columns layout. Pill tabs above scroll-jump to a room. -->
+      <div class="flex flex-col gap-3">
+        <div
+          v-for="room in visibleRooms"
+          :key="room"
+          :ref="(el) => setRoomSection(room, el as HTMLElement | null)"
+          class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 grid gap-x-6 gap-y-5 scroll-mt-16"
+          style="background: rgba(8,8,8,0.55); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
         >
-          <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2">
-            {{ NPC_LABEL[npc] }}
-          </h3>
-          <ul class="flex flex-col gap-1">
-            <li v-for="item in list.rooms[activeRoom][npc]!" :key="item.id" class="min-w-0">
-              <button
-                type="button"
-                data-testid="item-name"
-                class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
-                :class="copiedKey === `${npc}-${item.id}` && '!text-[#5DCFE0]'"
-                :title="copiedKey === `${npc}-${item.id}` ? `Copié ! (${item.name})` : `Cliquer pour copier — ${item.name}`"
-                @click="copyItem(item.name, `${npc}-${item.id}`)"
-              >
-                <img
-                  v-if="item.iconUrl"
-                  :src="item.iconUrl"
-                  alt=""
-                  class="w-5 h-5 flex-shrink-0 rounded-sm"
-                  loading="lazy"
-                />
-                <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                <span class="truncate min-w-0 flex-1">{{ copiedKey === `${npc}-${item.id}` ? '✓ ' : '' }}{{ item.name }}</span>
-              </button>
-            </li>
-          </ul>
-        </section>
+          <header class="col-span-full flex items-baseline gap-3 -mb-2">
+            <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
+              Salle {{ room }}
+            </h2>
+            <span class="font-mono text-[10px] text-text-faint">
+              {{ list.totals.perRoom[room] }} item{{ list.totals.perRoom[room] > 1 ? 's' : '' }}
+            </span>
+          </header>
+          <section v-for="npc in npcsForRoom(room)" :key="`${room}-${npc}`" class="min-w-0">
+            <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
+              {{ NPC_LABEL[npc] }}
+            </h3>
+            <ul class="flex flex-col gap-1">
+              <li v-for="item in list.rooms[room][npc]!" :key="item.id" class="min-w-0">
+                <button
+                  type="button"
+                  data-testid="item-name"
+                  class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
+                  :class="copiedKey === `${room}-${npc}-${item.id}` && '!text-[#5DCFE0]'"
+                  :title="copiedKey === `${room}-${npc}-${item.id}` ? `Copié ! (${item.name})` : `Cliquer pour copier — ${item.name}`"
+                  @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
+                >
+                  <img
+                    v-if="item.iconUrl"
+                    :src="item.iconUrl"
+                    alt=""
+                    class="w-5 h-5 flex-shrink-0 rounded-sm"
+                    loading="lazy"
+                  />
+                  <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                  <span class="truncate min-w-0 flex-1">{{ copiedKey === `${room}-${npc}-${item.id}` ? '✓ ' : '' }}{{ item.name }}</span>
+                </button>
+              </li>
+            </ul>
+          </section>
+        </div>
       </div>
     </template>
   </section>
