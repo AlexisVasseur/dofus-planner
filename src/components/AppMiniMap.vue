@@ -40,10 +40,10 @@ function gotoCard(index: number, cardId: string) {
           v-for="(card, idx) in build.cards"
           :key="card.id"
           type="button"
-          class="h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-all duration-200 ease-out cursor-pointer"
+          class="h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-all duration-200 ease-out cursor-pointer origin-center"
           :class="idx === activeIndex
-            ? 'flex-[2] bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[0_0_8px_rgba(93,207,224,0.45)] font-semibold'
-            : 'flex-1 bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
+            ? 'flex-[2] scale-100 bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[0_0_8px_rgba(93,207,224,0.45)] font-semibold'
+            : 'flex-1 scale-90 bg-border-default text-text-muted hover:scale-95 hover:bg-bg-elev hover:text-text-default'"
           :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
           @click="gotoCard(idx, card.id)"
         >
