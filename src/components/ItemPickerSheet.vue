@@ -88,46 +88,51 @@ window.addEventListener('keydown', (e) => {
   <Transition name="sheet">
     <aside
       v-if="target"
-      class="sheet fixed top-0 right-0 bottom-0 w-[540px] bg-bg-surface border-l border-border-default shadow-[-24px_0_48px_rgba(0,0,0,0.5)] flex flex-col z-50"
+      class="sheet fixed top-0 right-0 bottom-0 w-[540px] border-l border-[#5DCFE0]/30 backdrop-blur-md shadow-[-24px_0_48px_rgba(0,0,0,0.55)] flex flex-col z-50"
+      style="background: rgba(8,8,8,0.85);"
     >
-      <header class="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle">
-        <h2 class="font-display text-[11px] tracking-[0.2em] uppercase text-white/80 font-semibold">{{ sheetTitle }}</h2>
-        <button @click="close" class="font-mono text-[9px] text-text-faint border border-border-default rounded px-1.5 py-0.5">esc</button>
+      <header class="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
+        <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.06em] uppercase">{{ sheetTitle }}</h2>
+        <button
+          @click="close"
+          class="font-mono text-[9px] text-text-faint border border-border-default rounded px-1.5 py-0.5 hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] transition-colors"
+        >esc</button>
       </header>
       <div class="px-5 py-3 border-b border-border-subtle">
         <input
           v-model="search"
           placeholder="Rechercher…"
-          class="w-full bg-bg-page border border-border-default rounded-md px-3 py-2 text-xs text-text-default outline-none focus:border-white/60"
+          class="w-full bg-white/[0.04] border border-white/10 rounded-md px-3 py-2 text-xs text-text-default outline-none focus:border-[#5DCFE0]/60 focus:bg-[#5DCFE0]/[0.04] transition-colors"
           autofocus
         />
       </div>
-      <div class="flex flex-wrap gap-1.5 px-5 pb-2.5 border-b border-border-subtle">
+      <div class="flex flex-wrap gap-1.5 px-5 py-3 border-b border-border-subtle">
         <button
-          class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'all' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
-          @click="filterMode = 'all'"
-        >Tous</button>
+          v-for="opt in [
+            { mode: 'all',      label: 'Tous' },
+            { mode: 'eligible', label: '≤ Lv ' + (card?.level ?? '?') },
+            { mode: 'over',     label: 'Au-dessus' },
+          ]"
+          :key="opt.mode"
+          class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-2.5 py-1 rounded-full border transition-colors"
+          :class="filterMode === opt.mode
+            ? 'bg-[#5DCFE0]/[0.12] text-[#8AE0EE] border-[#5DCFE0]/40'
+            : 'bg-white/[0.02] border-white/10 text-text-dim hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
+          @click="filterMode = opt.mode as 'all' | 'eligible' | 'over'"
+        >{{ opt.label }}</button>
+        <span class="w-px self-stretch bg-border-subtle mx-1" aria-hidden="true" />
         <button
-          class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'eligible' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
-          @click="filterMode = 'eligible'"
-        >≤ Lv {{ card?.level ?? '?' }}</button>
-        <button
-          class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'over' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
-          @click="filterMode = 'over'"
-        >Au-dessus</button>
-        <button
-          class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="sortMode === 'level' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
-          @click="sortMode = 'level'"
-        >Trier · niveau</button>
-        <button
-          class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="sortMode === 'name' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
-          @click="sortMode = 'name'"
-        >Trier · nom</button>
+          v-for="opt in [
+            { mode: 'level', label: 'Trier · niveau' },
+            { mode: 'name',  label: 'Trier · nom' },
+          ]"
+          :key="opt.mode"
+          class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-2.5 py-1 rounded-full border transition-colors"
+          :class="sortMode === opt.mode
+            ? 'bg-[#5DCFE0]/[0.12] text-[#8AE0EE] border-[#5DCFE0]/40'
+            : 'bg-white/[0.02] border-white/10 text-text-dim hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
+          @click="sortMode = opt.mode as 'level' | 'name'"
+        >{{ opt.label }}</button>
       </div>
       <div class="flex-1 overflow-y-auto px-2 py-1.5">
         <p v-if="loading" class="text-text-dim text-xs px-3 py-4">Chargement…</p>
@@ -137,9 +142,9 @@ window.addEventListener('keydown', (e) => {
           v-for="it in filtered"
           :key="it.id"
           type="button"
-          class="item flex items-center gap-3 px-3 py-2.5 rounded-md w-full hover:bg-bg-elev"
+          class="item flex items-center gap-3 px-3 py-2.5 rounded-md w-full transition-colors hover:bg-[#8AE0EE]/[0.06]"
           :class="{
-            'bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]':
+            'bg-[#5DCFE0]/[0.10] shadow-[inset_0_0_0_1px_rgba(93,207,224,0.5)]':
               target?.kind === 'slot'
                 ? card?.slots[target.slot]?.itemId === it.id
                 : target?.kind === 'dofus' ? card?.dofus[target.index]?.itemId === it.id : false
