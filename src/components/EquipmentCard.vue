@@ -11,10 +11,10 @@ import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
-// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent.DEFAULT=#5BD3A8.
+// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent.DEFAULT=#5DCFE0.
 const SURFACE_BASE = '#0a0a0a';
 const BORDER_BASE = '#262626';
-const FALLBACK_ACCENT = '#5BD3A8';
+const FALLBACK_ACCENT = '#5DCFE0';
 
 const props = defineProps<{ card: Card }>();
 const build = useBuildStore();

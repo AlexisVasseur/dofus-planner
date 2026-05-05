@@ -34,23 +34,23 @@ const imageUrl = computed<string | null>(() => null);
 
 <style scoped>
 .frame-fill {
-  background: linear-gradient(135deg, #1a3d2e 0%, #0a1a14 100%);
+  background: linear-gradient(135deg, #143E48 0%, #0A1F25 100%);
   clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
 }
 .frame-stroke {
-  background: #5BD3A8;
+  background: #5DCFE0;
   clip-path: polygon(
     50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%,
     0% 26%, 1.5% 26%, 1.5% 74%, 50% 98.5%, 98.5% 74%, 98.5% 26%, 0% 26%
   );
-  filter: drop-shadow(0 0 6px rgba(91, 211, 168, 0.5));
+  filter: drop-shadow(0 0 6px rgba(93, 207, 224, 0.5));
   opacity: 0.9;
 }
 .frame-stroke.pulse {
   animation: pulse 2s ease-in-out infinite;
 }
 @keyframes pulse {
-  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 4px rgba(91, 211, 168, 0.3)); }
-  50%      { opacity: 0.95; filter: drop-shadow(0 0 12px rgba(91, 211, 168, 0.65)); }
+  0%, 100% { opacity: 0.4; filter: drop-shadow(0 0 4px rgba(93, 207, 224, 0.3)); }
+  50%      { opacity: 0.95; filter: drop-shadow(0 0 12px rgba(93, 207, 224, 0.65)); }
 }
 </style>

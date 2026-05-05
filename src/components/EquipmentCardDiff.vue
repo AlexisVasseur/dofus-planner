@@ -11,10 +11,10 @@ import { getSlotIconSvg } from '@/data/slot-icons';
 import { getClassAssets } from '@/composables/useClassAssets';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
-// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent=#5BD3A8.
+// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent=#5DCFE0.
 const SURFACE_BASE = '#0a0a0a';
 const BORDER_BASE = '#262626';
-const FALLBACK_ACCENT = '#5BD3A8';
+const FALLBACK_ACCENT = '#5DCFE0';
 
 const props = defineProps<{ card: Card; previous: Card }>();
 
@@ -224,7 +224,7 @@ function clearDofus(index: number): void {
           type="button"
           class="aspect-square rounded-md flex items-center justify-center transition-opacity relative"
           :class="entry.changed
-            ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(91,211,168,0.3)]'
+            ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(93,207,224,0.3)]'
             : entry.newRef
               ? 'bg-bg-slot-filled border border-border-slot-filled opacity-35 hover:opacity-60'
               : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty opacity-35 hover:opacity-60'"

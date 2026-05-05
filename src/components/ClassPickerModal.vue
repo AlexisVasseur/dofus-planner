@@ -91,6 +91,6 @@ window.addEventListener('keydown', (e) => {
 
 .cell.is-pickable:hover {
   border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
-  background-color: color-mix(in srgb, var(--class-dominant, #5BD3A8) 6%, transparent);
+  background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 6%, transparent);
 }
 </style>

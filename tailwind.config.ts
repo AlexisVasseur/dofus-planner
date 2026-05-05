@@ -15,9 +15,10 @@ export default {
         'border-dashed-empty': '#2a2a2a',
         'border-slot-filled': '#374151',
         accent: {
-          DEFAULT: '#5BD3A8',
-          deep: '#2a8568',
-          deeper: '#1a3d2e',
+          DEFAULT: '#5DCFE0',
+          bright: '#8AE0EE',
+          deep: '#2D9DB1',
+          deeper: '#143E48',
         },
         danger: {
           DEFAULT: '#b91c1c',

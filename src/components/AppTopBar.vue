@@ -132,8 +132,8 @@ function importBuild() {
         type="button"
         class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
         :class="ui.viewMode === 'build'
-          ? 'bg-gradient-to-b from-[#bee5ef] to-[#88c8d6] text-[#0a1820] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
-          : 'text-text-muted hover:text-[#a8dde9]'"
+          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
+          : 'text-text-muted hover:text-[#8AE0EE]'"
         @click="ui.setViewMode('build')"
         aria-label="Mode Build (équipement complet)"
       >Build</button>
@@ -141,8 +141,8 @@ function importBuild() {
         type="button"
         class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
         :class="ui.viewMode === 'switch'
-          ? 'bg-gradient-to-b from-[#bee5ef] to-[#88c8d6] text-[#0a1820] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
-          : 'text-text-muted hover:text-[#a8dde9]'"
+          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
+          : 'text-text-muted hover:text-[#8AE0EE]'"
         @click="ui.setViewMode('switch')"
         aria-label="Mode Switch (uniquement les changements)"
       >Switch</button>
@@ -150,8 +150,8 @@ function importBuild() {
         type="button"
         class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
         :class="ui.viewMode === 'purchase'
-          ? 'bg-gradient-to-b from-[#bee5ef] to-[#88c8d6] text-[#0a1820] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
-          : 'text-text-muted hover:text-[#a8dde9]'"
+          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
+          : 'text-text-muted hover:text-[#8AE0EE]'"
         @click="ui.setViewMode('purchase')"
         aria-label="Mode Achats (planificateur d'achat)"
       >Achats</button>
@@ -159,7 +159,7 @@ function importBuild() {
     <div class="actions flex items-center gap-2 justify-self-end">
       <button
         type="button"
-        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#a8dde9]/[0.18] hover:to-[#a8dde9]/[0.04] hover:border-[#a8dde9]/40 hover:text-[#a8dde9] active:translate-y-[1px] transition-all"
+        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#8AE0EE]/[0.18] hover:to-[#8AE0EE]/[0.04] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-all"
         @click="importBuild"
         aria-label="Importer un build"
         title="Importer un build"
@@ -172,7 +172,7 @@ function importBuild() {
       </button>
       <button
         type="button"
-        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#a8dde9]/[0.18] hover:to-[#a8dde9]/[0.04] hover:border-[#a8dde9]/40 hover:text-[#a8dde9] active:translate-y-[1px] transition-all"
+        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#8AE0EE]/[0.18] hover:to-[#8AE0EE]/[0.04] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-all"
         @click="exportBuild"
         aria-label="Exporter le build"
         title="Exporter le build"
@@ -185,7 +185,7 @@ function importBuild() {
       </button>
       <button
         type="button"
-        class="h-9 inline-flex items-center gap-1.5 bg-gradient-to-b from-[#bee5ef] to-[#88c8d6] text-[#0a1820] border border-[#a8dde9] rounded-md px-3.5 font-sans text-[11px] font-bold uppercase tracking-[0.05em] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(0,0,0,0.45)] hover:brightness-[1.05] active:translate-y-[1px] transition-all"
+        class="h-9 inline-flex items-center gap-1.5 bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] border border-[#8AE0EE] rounded-md px-3.5 font-sans text-[11px] font-bold uppercase tracking-[0.05em] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(0,0,0,0.45)] hover:brightness-[1.05] active:translate-y-[1px] transition-all"
         @click="newBuild"
         aria-label="Nouveau build"
       >
