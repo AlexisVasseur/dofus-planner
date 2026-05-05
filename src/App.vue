@@ -27,7 +27,7 @@ onMounted(() => {
   <div class="app h-full flex flex-col relative bg-bg-page">
     <div class="bg-fx absolute inset-0 pointer-events-none -z-0"
       :style="{
-        background: `radial-gradient(ellipse at 30% 20%, rgba(91, 211, 168, 0.05) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(42, 133, 104, 0.04) 0%, transparent 50%)`
+        background: `radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.025) 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, rgba(255, 255, 255, 0.015) 0%, transparent 50%)`
       }"
     ></div>
     <div class="bg-grain absolute inset-0 pointer-events-none -z-0"
