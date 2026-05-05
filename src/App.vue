@@ -61,11 +61,22 @@ onMounted(() => {
       />
     </div>
     <AppTopBar class="relative z-10" />
-    <Transition name="view" mode="out-in">
-      <AppPurchasePlanner v-if="ui.viewMode === 'purchase'" key="purchase" class="relative z-10" />
-      <AppSwitchView v-else-if="ui.viewMode === 'switch'" key="switch" class="relative z-10" />
-      <AppTimeline v-else ref="timelineRef" key="build" class="relative z-10" />
-    </Transition>
+    <!-- Page stage: a fixed flex-1 slot that always reserves the central space.
+         Pages mount inside as absolute layers so their transform/opacity transitions
+         don't move the surrounding header/minimap and never expose a body scrollbar. -->
+    <div class="page-stage relative z-10 flex-1 min-h-0 overflow-hidden">
+      <Transition name="view" mode="out-in">
+        <div v-if="ui.viewMode === 'purchase'" key="purchase" class="absolute inset-0 flex flex-col">
+          <AppPurchasePlanner class="flex-1 min-h-0" />
+        </div>
+        <div v-else-if="ui.viewMode === 'switch'" key="switch" class="absolute inset-0 flex flex-col">
+          <AppSwitchView class="flex-1 min-h-0" />
+        </div>
+        <div v-else key="build" class="absolute inset-0 flex flex-col">
+          <AppTimeline ref="timelineRef" class="flex-1 min-h-0" />
+        </div>
+      </Transition>
+    </div>
     <Transition name="dock">
       <AppMiniMap
         :key="ui.viewMode"
