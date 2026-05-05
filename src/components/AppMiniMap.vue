@@ -10,14 +10,6 @@ const ui = useUiStore();
 
 const scrollElRef = toRef(props, 'scrollRef');
 
-const lastLevel = computed(() => {
-  const cards = build.cards;
-  for (let i = cards.length - 1; i >= 0; i--) {
-    if (cards[i].level !== null) return cards[i].level!;
-  }
-  return 1;
-});
-
 const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.activeCardId));
 
 // Card geometry — must match AppTimeline / EquipmentCard / Connector widths
@@ -41,7 +33,7 @@ function gotoCard(index: number, cardId: string) {
     class="minimap mx-4 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex items-center gap-3 px-5 py-2.5 relative z-[4]"
     style="background: rgba(8,8,8,0.55);"
   >
-    <div class="font-display text-[11px] text-text-faint tracking-[0.25em] uppercase shrink-0">Timeline</div>
+    <div class="font-sans font-medium text-[11px] text-text-faint tracking-[0.05em] uppercase shrink-0">Timeline</div>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <div class="absolute inset-1 flex gap-[3px]">
         <button
@@ -58,10 +50,6 @@ function gotoCard(index: number, cardId: string) {
           {{ card.level === null ? '—' : `Lv ${card.level}` }}
         </button>
       </div>
-    </div>
-    <div class="font-mono text-[10px] text-text-dim shrink-0">
-      <span class="text-[#8AE0EE]">Lv {{ lastLevel }}</span>
-      · {{ build.cards.length }} cards · {{ lastLevel }} lvls
     </div>
   </footer>
 </template>
