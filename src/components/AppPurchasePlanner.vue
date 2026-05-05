@@ -166,13 +166,13 @@ async function copyItem(name: string, key: string): Promise<void> {
                 v-if="itemsForCell(room, npc).length === 0"
                 class="flex-1 flex items-center justify-center text-[12px] font-sans text-text-faint italic"
               >Aucun item</p>
-              <ul v-else class="flex flex-col gap-1">
+              <ul v-else class="flex flex-col gap-1.5">
                 <li v-for="item in itemsForCell(room, npc)" :key="item.id" class="relative min-w-0">
                   <button
                     type="button"
                     data-testid="item-name"
-                    class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
-                    :class="copiedKey === `${room}-${npc}-${item.id}` && '!text-[#5DCFE0]'"
+                    class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md px-2 py-1.5 hover:bg-[#8AE0EE]/[0.08] hover:border-[#8AE0EE]/30 hover:text-[#8AE0EE] transition-colors cursor-pointer"
+                    :class="copiedKey === `${room}-${npc}-${item.id}` && '!bg-[#5DCFE0]/[0.12] !border-[#5DCFE0]/40 !text-[#5DCFE0]'"
                     :title="`Cliquer pour copier — ${item.name}`"
                     @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
                   >
