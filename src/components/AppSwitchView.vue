@@ -112,9 +112,9 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
-        <div class="peek-stack flex flex-col gap-3 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-2.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-5 py-2.5 font-sans text-[18px] font-bold tracking-[0.06em] uppercase">
-            <span class="text-[24px] leading-none">‹</span>
+        <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 576px;">
+          <div class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none">
+            <span>‹</span>
             <span>Précédent · {{ prevLevelLabel }}</span>
           </div>
           <div class="opacity-40 group-hover:opacity-70 transition-opacity">
@@ -155,10 +155,10 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
-        <div class="peek-stack flex flex-col gap-3 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-2.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-5 py-2.5 font-sans text-[18px] font-bold tracking-[0.06em] uppercase">
+        <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 576px;">
+          <div class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none">
             <span>Suivant · {{ nextLevelLabel }}</span>
-            <span class="text-[24px] leading-none">›</span>
+            <span>›</span>
           </div>
           <div class="opacity-40 group-hover:opacity-70 transition-opacity">
             <EquipmentCardDiff
