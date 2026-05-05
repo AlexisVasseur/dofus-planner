@@ -93,9 +93,40 @@ function onRemove() {
       <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
         <ClassThumbnail :class-id="classId" :size="56" />
       </button>
-      <div class="right flex-1 min-w-0">
-        <div class="flex items-baseline">
-          <span class="font-display text-[16px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
+      <div
+        class="right flex-1 min-w-0"
+        :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
+      >
+        <input
+          v-if="editingTitle"
+          ref="titleInputRef"
+          v-model="titleDraft"
+          maxlength="30"
+          class="block bg-transparent font-display text-[14px] font-light tracking-[0.18em] uppercase outline-none w-full border-b border-dashed border-white/60"
+          style="color: inherit;"
+          @blur="commitTitle"
+          @keydown.enter.prevent="commitTitle"
+          @keydown.esc.prevent="cancelTitle"
+        />
+        <button
+          v-else-if="showCta"
+          type="button"
+          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left hover:opacity-80"
+          style="color: inherit;"
+          @click="emit('open-class-picker')"
+        >Choisir une classe</button>
+        <button
+          v-else
+          type="button"
+          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left w-full truncate hover:opacity-80"
+          style="color: inherit;"
+          @click="startEditTitle"
+        >{{ title ?? 'Ajouter un titre' }}</button>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span
+            class="font-display text-[18px] font-bold uppercase tracking-[0.18em] leading-none"
+            style="color: inherit;"
+          >Niv</span>
           <input
             v-if="editingLevel"
             ref="levelInputRef"
@@ -103,7 +134,8 @@ function onRemove() {
             type="text"
             inputmode="numeric"
             maxlength="3"
-            class="font-display text-[36px] leading-none bg-transparent text-text-default w-20 outline-none border-b border-dashed border-white/60"
+            class="font-display text-[36px] font-bold leading-none bg-transparent w-20 outline-none border-b border-dashed border-white/60"
+            style="color: inherit;"
             @blur="commitLevel"
             @keydown.enter.prevent="commitLevel"
             @keydown.esc.prevent="cancelLevel"
@@ -112,31 +144,10 @@ function onRemove() {
             v-else
             type="button"
             @click="startEditLevel"
-            class="font-display text-[36px] leading-none text-text-default border-b border-dashed border-border-default hover:border-white/60 cursor-text"
+            class="font-display text-[36px] font-bold leading-none border-b border-dashed border-border-default hover:border-white/60 cursor-text"
+            style="color: inherit;"
           >{{ level ?? '—' }}</button>
         </div>
-        <input
-          v-if="editingTitle"
-          ref="titleInputRef"
-          v-model="titleDraft"
-          maxlength="30"
-          class="block mt-1.5 bg-transparent font-display text-[16px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-white/60"
-          @blur="commitTitle"
-          @keydown.enter.prevent="commitTitle"
-          @keydown.esc.prevent="cancelTitle"
-        />
-        <button
-          v-else-if="showCta"
-          type="button"
-          class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-white/90 hover:text-white text-left"
-          @click="emit('open-class-picker')"
-        >Choisir une classe</button>
-        <button
-          v-else
-          type="button"
-          class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
-          @click="startEditTitle"
-        >{{ title ?? 'Ajouter un titre' }}</button>
       </div>
     </div>
     <button

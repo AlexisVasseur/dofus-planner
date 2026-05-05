@@ -122,11 +122,7 @@ function onClearDofus(index: number): void {
         @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
         @clear="onClearSlot(entry.slot)"
       />
-      <h3
-        class="font-display text-[14px] tracking-[0.3em] uppercase mb-3 mt-4"
-        :style="{ color: 'var(--class-accent, rgba(255,255,255,0.7))' }"
-      >Dofus &amp; Trophées</h3>
-      <div class="grid grid-cols-6 gap-1.5">
+      <div class="grid grid-cols-6 gap-1.5 mt-4">
         <DofusCell
           v-for="entry in dofusItems"
           :key="entry.index"
