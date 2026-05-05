@@ -10,6 +10,12 @@ import type { Card } from '@/types/build';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
 
+// Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
+// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent.DEFAULT=#5BD3A8.
+const SURFACE_BASE = '#0a0a0a';
+const BORDER_BASE = '#262626';
+const FALLBACK_ACCENT = '#5BD3A8';
+
 const props = defineProps<{ card: Card }>();
 const build = useBuildStore();
 const ui = useUiStore();
@@ -23,11 +29,11 @@ const themeStyle = computed(() => {
     base['--class-dominant'] = a.colors.dominant;
     base['--class-soft'] = a.colors.soft;
     base['--class-accent'] = a.colors.accent;
-    base.backgroundColor = `color-mix(in srgb, #0a0a0c 92%, ${a.colors.dominant} 8%)`;
-    base.borderColor = `color-mix(in srgb, #2a2a2e 70%, ${a.colors.dominant} 30%)`;
+    base.backgroundColor = `color-mix(in srgb, ${SURFACE_BASE} 92%, ${a.colors.dominant} 8%)`;
+    base.borderColor = `color-mix(in srgb, ${BORDER_BASE} 70%, ${a.colors.dominant} 30%)`;
   }
   if (isActive.value) {
-    const accent = a?.colors.accent ?? '#5BD3A8';
+    const accent = a?.colors.accent ?? FALLBACK_ACCENT;
     base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 32px ${accent}33, 0 4px 32px rgba(0,0,0,0.4)`;
   } else {
     base.boxShadow = '0 4px 32px rgba(0,0,0,0.4)';
