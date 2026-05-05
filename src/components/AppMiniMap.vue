@@ -102,10 +102,15 @@ function gotoCell(cell: Cell, idx: number): void {
             v-for="(cell, idx) in cells"
             :key="cell.key"
             type="button"
-            class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono font-bold text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
-            :class="idx === activeCellIdx
-              ? 'bg-transparent text-[#0A2530]'
-              : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
+            class="flex-1 h-full relative z-10 rounded-sm inline-flex items-center justify-center font-bold transition-colors duration-300 cursor-pointer"
+            :class="[
+              ui.viewMode === 'purchase'
+                ? 'font-sans text-[10px] tracking-[0.06em] uppercase'
+                : 'font-mono text-[10px] tracking-tight',
+              idx === activeCellIdx
+                ? 'text-[#0A2530]'
+                : 'text-text-muted hover:text-[#8AE0EE]',
+            ]"
             :aria-label="cell.ariaLabel"
             @click="gotoCell(cell, idx)"
           >

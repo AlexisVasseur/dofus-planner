@@ -31,8 +31,8 @@ void pillY;
       type="button"
       class="pill-plus relative z-20 w-9 h-9 rounded-full flex items-center justify-center transition-all"
       :class="open
-        ? 'bg-white text-[#0a0a0a] shadow-[0_0_0_3px_#050505,0_0_24px_rgba(255,255,255,0.35),0_4px_12px_rgba(0,0,0,0.55)] scale-[1.08]'
-        : 'bg-bg-surface border border-white/40 text-white/80 shadow-[0_0_0_3px_#050505,0_0_10px_rgba(255,255,255,0.10)] hover:bg-white hover:text-[#0a0a0a] hover:border-white hover:shadow-[0_0_0_3px_#050505,0_0_24px_rgba(255,255,255,0.40)] hover:scale-[1.08]'"
+        ? 'bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] shadow-[0_0_0_3px_#050505,0_0_24px_rgba(93,207,224,0.45),0_4px_12px_rgba(0,0,0,0.55)] scale-[1.08]'
+        : 'bg-bg-surface border border-[#5DCFE0]/40 text-[#5DCFE0] shadow-[0_0_0_3px_#050505,0_0_10px_rgba(93,207,224,0.15)] hover:bg-[#5DCFE0] hover:text-[#0A2530] hover:border-[#5DCFE0] hover:shadow-[0_0_0_3px_#050505,0_0_24px_rgba(93,207,224,0.50)] hover:scale-[1.08]'"
       :aria-label="open ? 'Fermer le menu' : 'Ajouter une étape'"
       @click="toggle"
     >
