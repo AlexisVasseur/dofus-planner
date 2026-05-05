@@ -97,7 +97,7 @@ function onRemove() {
       :style="{
         backgroundImage: `url('${heroUrl}')`,
         backgroundSize: 'auto 165%',
-        backgroundPosition: 'right top',
+        backgroundPosition: 'left top',
         backgroundRepeat: 'no-repeat',
         opacity: 0.55,
         maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0) 100%)',
