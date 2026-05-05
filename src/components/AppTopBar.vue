@@ -130,7 +130,7 @@ function importBuild() {
 
 <template>
   <header
-    class="topbar grid items-center px-5 py-2.5 mx-4 mt-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] relative z-[5]"
+    class="topbar grid items-center px-5 py-2.5 mx-4 mt-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] relative"
     style="background: rgba(8,8,8,0.55); grid-template-columns: 1fr auto 1fr;"
   >
     <div class="brand relative w-44 h-10 justify-self-start">
