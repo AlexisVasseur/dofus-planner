@@ -8,6 +8,13 @@ import type { Card, ItemRef } from '@/types/build';
 import { CLASSES_BY_ID } from '@/data/classes';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getSlotIconSvg } from '@/data/slot-icons';
+import { getClassAssets } from '@/composables/useClassAssets';
+
+// Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
+// Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent=#5BD3A8.
+const SURFACE_BASE = '#0a0a0a';
+const BORDER_BASE = '#262626';
+const FALLBACK_ACCENT = '#5BD3A8';
 
 const props = defineProps<{ card: Card; previous: Card }>();
 
@@ -15,6 +22,25 @@ const build = useBuildStore();
 const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
+
+const themeStyle = computed(() => {
+  const assets = getClassAssets(props.card.classId);
+  const base: Record<string, string> = { width: 'var(--card-width, 320px)' };
+  if (assets) {
+    base['--class-dominant'] = assets.colors.dominant;
+    base['--class-soft'] = assets.colors.soft;
+    base['--class-accent'] = assets.colors.accent;
+    base.backgroundColor = `color-mix(in srgb, ${SURFACE_BASE} 92%, ${assets.colors.dominant} 8%)`;
+    base.borderColor = `color-mix(in srgb, ${BORDER_BASE} 70%, ${assets.colors.dominant} 30%)`;
+  }
+  if (isActive.value) {
+    const accent = assets?.colors.accent ?? FALLBACK_ACCENT;
+    base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 32px ${accent}33, 0 4px 32px rgba(0,0,0,0.4)`;
+  } else {
+    base.boxShadow = '0 4px 32px rgba(0,0,0,0.4)';
+  }
+  return base;
+});
 
 interface SlotEntry {
   slot: SlotType;
@@ -94,9 +120,10 @@ function clearDofus(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 bg-bg-surface border border-border-default rounded-xl shadow-[0_4px_32px_rgba(0,0,0,0.4)] overflow-hidden transition-all"
-    :style="{ width: 'var(--card-width, 320px)' }"
-    :class="{ 'ring-1 ring-accent shadow-[0_0_0_1px_rgba(91,211,168,0.4),0_0_32px_rgba(91,211,168,0.15)]': isActive }"
+    class="equipment-card select-none text-left flex-shrink-0 bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
+    :style="themeStyle"
+    :class="{ 'is-active': isActive }"
+    :data-class-id="card.classId ?? ''"
     @mouseenter="ui.setActiveCard(card.id)"
   >
     <CardHeader
