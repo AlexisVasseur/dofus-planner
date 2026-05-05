@@ -68,9 +68,8 @@ onMounted(() => {
     </Transition>
     <Transition name="dock">
       <AppMiniMap
-        v-if="ui.viewMode !== 'purchase'"
         :key="ui.viewMode"
-        :scroll-ref="ui.viewMode === 'switch' ? null : scrollEl"
+        :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
         class="relative z-10"
       />
     </Transition>

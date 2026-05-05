@@ -1,23 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, watchEffect, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useShoppingList } from '@/composables/useShoppingList';
-import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, type RoomId, type NpcId } from '@/types/rooms';
+import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, levelToRoom, type RoomId, type NpcId } from '@/types/rooms';
 import { useUiStore } from '@/stores/ui';
+import { useBuildStore } from '@/stores/build';
 
 const ui = useUiStore();
+const build = useBuildStore();
 const list = useShoppingList();
-
-const activeRoom = ref<RoomId>('1-50');
-
-// Auto-shift active tab to first non-empty room when current selection becomes empty.
-watchEffect(() => {
-  const t = list.value.totals.perRoom;
-  if (t[activeRoom.value] > 0) return;
-  for (const r of ROOM_ORDER) {
-    if (t[r] > 0) { activeRoom.value = r; return; }
-  }
-  activeRoom.value = '1-50';
-});
 
 const hasAnything = computed(() => list.value.totals.items > 0);
 
@@ -34,27 +24,26 @@ function itemsForCell(room: RoomId, npc: NpcId) {
   return list.value.rooms[room][npc] ?? [];
 }
 
-// Sliding pill behind the active tab. Same pattern as the topbar mode-toggle.
-const ROOM_COUNT = ROOM_ORDER.length;
-const activeRoomIdx = computed(() => ROOM_ORDER.indexOf(activeRoom.value));
-const tabPillStyle = computed(() => ({
-  left: `calc(0.25rem + (100% - 0.5rem) / ${ROOM_COUNT} * ${activeRoomIdx.value})`,
-  width: `calc((100% - 0.5rem) / ${ROOM_COUNT})`,
-}));
-
-// Refs to each room <section>, keyed by RoomId, used for scroll-into-view on tab click.
+// Refs to each room <section>, keyed by RoomId, used to scroll-jump when the
+// active card changes (driven by the timeline minimap).
 const roomSectionRefs = ref<Partial<Record<RoomId, HTMLElement | null>>>({});
 function setRoomSection(room: RoomId, el: HTMLElement | null): void {
   roomSectionRefs.value[room] = el;
 }
 
-async function pickRoom(room: RoomId): Promise<void> {
-  if (list.value.totals.perRoom[room] === 0) return;
-  activeRoom.value = room;
+// The active room derives from the active card's level — no local nav state.
+const activeCard = computed(() => build.cards.find((c) => c.id === ui.activeCardId) ?? null);
+const activeRoom = computed<RoomId | null>(() => {
+  const lvl = activeCard.value?.level;
+  return lvl !== null && lvl !== undefined ? levelToRoom(lvl) : null;
+});
+
+watch(activeRoom, async (room) => {
+  if (room === null) return;
   await nextTick();
   const el = roomSectionRefs.value[room];
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+}, { immediate: true });
 
 function backToBuild(): void {
   ui.setViewMode('build');
@@ -101,34 +90,10 @@ async function copyItem(name: string, key: string): Promise<void> {
     </div>
 
     <template v-else>
-      <!-- Pill tabs (room selection) — same animation pattern as the topbar mode-toggle -->
-      <nav
-        class="mx-4 mt-3 sticky top-3 z-10 relative grid items-center bg-white/[0.04] border border-white/10 rounded-md p-1 h-9"
-        :style="`grid-template-columns: repeat(${ROOM_COUNT}, 1fr);`"
-      >
-        <div
-          class="tab-pill absolute top-1 bottom-1 z-0 rounded bg-[#5DCFE0] transition-[left,width] duration-300 ease-out"
-          :style="tabPillStyle"
-        />
-        <button
-          v-for="room in ROOM_ORDER"
-          :key="room"
-          type="button"
-          :disabled="list.totals.perRoom[room] === 0"
-          class="h-7 relative z-10 inline-flex items-center justify-center font-sans font-bold text-[11px] tracking-[0.06em] uppercase rounded transition-colors duration-300"
-          :class="[
-            activeRoom === room
-              ? 'text-[#0A2530]'
-              : 'text-text-muted hover:text-[#8AE0EE]',
-            list.totals.perRoom[room] === 0 && '!text-text-faint opacity-40 cursor-not-allowed',
-          ]"
-          @click="pickRoom(room)"
-        >{{ room }}</button>
-      </nav>
-
       <!-- All rooms stacked vertically (even empty ones, with a centered placeholder).
-           Each room is its own floating panel; tabs above scroll-jump to it. -->
-      <div class="flex flex-col gap-3">
+           Each room is its own floating panel; the bottom timeline minimap drives
+           which room is in view by setting ui.activeCardId. -->
+      <div class="flex flex-col gap-3 pt-3">
         <div
           v-for="room in visibleRooms"
           :key="room"
