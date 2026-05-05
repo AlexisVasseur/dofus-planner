@@ -52,7 +52,7 @@ function gotoCard(index: number, cardId: string) {
           type="button"
           class="flex-1 h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-colors cursor-pointer"
           :class="idx === activeIndex
-            ? 'bg-accent text-[#061a13] shadow-[0_0_8px_rgba(91,211,168,0.5)] font-semibold'
+            ? 'bg-white text-[#0a0a0a] shadow-[0_0_8px_rgba(255,255,255,0.35)] font-semibold'
             : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
           :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
           @click="gotoCard(idx, card.id)"
@@ -62,7 +62,7 @@ function gotoCard(index: number, cardId: string) {
       </div>
     </div>
     <div class="font-mono text-[10px] text-text-dim shrink-0">
-      <span class="text-accent">Lv {{ lastLevel }}</span>
+      <span class="text-white/85">Lv {{ lastLevel }}</span>
       · {{ build.cards.length }} cards · {{ lastLevel }} lvls
     </div>
   </footer>
