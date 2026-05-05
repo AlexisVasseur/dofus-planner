@@ -113,11 +113,11 @@ async function copyItem(name: string, key: string): Promise<void> {
         </button>
       </nav>
 
-      <!-- One NPC per column. Items stack vertically. Each item button stays on a single
-           line (icon + name, ellipsis if too long). -->
+      <!-- One NPC per column, ALL on a single row (no wrap). Items stack vertically.
+           Each item button stays on a single line (icon + name, ellipsis if too long). -->
       <div
-        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 grid gap-x-6 gap-y-5"
-        style="background: rgba(8,8,8,0.55); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
+        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 grid gap-x-5"
+        :style="{ background: 'rgba(8,8,8,0.55)', gridTemplateColumns: `repeat(${orderedNpcsForActiveRoom.length}, minmax(0, 1fr))` }"
       >
         <section v-for="npc in orderedNpcsForActiveRoom" :key="npc" class="min-w-0">
           <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
