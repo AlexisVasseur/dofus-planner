@@ -91,7 +91,7 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
-        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-accent">
+        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-white/75">
           <span class="text-[28px] leading-none">‹</span>
           <span>Précédent · {{ prevLevelLabel }}</span>
         </div>
@@ -134,7 +134,7 @@ const nextLevelLabel = computed(() => {
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
-        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-accent">
+        <div class="peek-label flex items-center gap-3 font-display text-[20px] tracking-[0.18em] uppercase text-white/75">
           <span>Suivant · {{ nextLevelLabel }}</span>
           <span class="text-[28px] leading-none">›</span>
         </div>
