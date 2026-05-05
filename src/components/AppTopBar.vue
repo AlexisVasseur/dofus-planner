@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { getCachedItem, populateCache, ensureItems } from '@/composables/useItemCatalog';
@@ -8,6 +9,19 @@ import logoUrl from '@/assets/dofus-planner.png';
 
 const build = useBuildStore();
 const ui = useUiStore();
+
+// Each viewMode is associated with a "page": Builder, Reader, Shopping.
+// Index drives the animated highlight pill behind the active toggle button.
+const TOGGLE_PAGES = [
+  { mode: 'build' as const,    label: 'Builder',  aria: 'Mode Builder (équipement complet)' },
+  { mode: 'switch' as const,   label: 'Reader',   aria: 'Mode Reader (uniquement les changements)' },
+  { mode: 'purchase' as const, label: 'Shopping', aria: 'Mode Shopping (planificateur d\'achat)' },
+];
+const activeToggleIdx = computed(() => TOGGLE_PAGES.findIndex((p) => p.mode === ui.viewMode));
+const togglePillStyle = computed(() => ({
+  left: `calc(0.25rem + (100% - 0.5rem) / 3 * ${activeToggleIdx.value})`,
+  width: 'calc((100% - 0.5rem) / 3)',
+}));
 
 function collectItemIds(cards: Card[]): number[] {
   const ids = new Set<number>();
@@ -127,34 +141,22 @@ function importBuild() {
         draggable="false"
       />
     </div>
-    <nav class="mode-toggle flex items-center justify-self-center bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 rounded-md p-1 h-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+    <nav class="mode-toggle relative grid grid-cols-3 items-center justify-self-center bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 rounded-md p-1 h-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] w-[300px]">
+      <div
+        class="toggle-pill absolute top-1 bottom-1 rounded bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)] transition-[left,width] duration-300 ease-out"
+        :style="togglePillStyle"
+      />
       <button
+        v-for="page in TOGGLE_PAGES"
+        :key="page.mode"
         type="button"
-        class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
-        :class="ui.viewMode === 'build'
-          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
+        class="h-7 relative z-10 inline-flex items-center justify-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-colors duration-300"
+        :class="ui.viewMode === page.mode
+          ? 'text-[#0A2530]'
           : 'text-text-muted hover:text-[#8AE0EE]'"
-        @click="ui.setViewMode('build')"
-        aria-label="Mode Build (équipement complet)"
-      >Build</button>
-      <button
-        type="button"
-        class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
-        :class="ui.viewMode === 'switch'
-          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
-          : 'text-text-muted hover:text-[#8AE0EE]'"
-        @click="ui.setViewMode('switch')"
-        aria-label="Mode Switch (uniquement les changements)"
-      >Switch</button>
-      <button
-        type="button"
-        class="h-7 px-3.5 inline-flex items-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-all"
-        :class="ui.viewMode === 'purchase'
-          ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)]'
-          : 'text-text-muted hover:text-[#8AE0EE]'"
-        @click="ui.setViewMode('purchase')"
-        aria-label="Mode Achats (planificateur d'achat)"
-      >Achats</button>
+        @click="ui.setViewMode(page.mode)"
+        :aria-label="page.aria"
+      >{{ page.label }}</button>
     </nav>
     <div class="actions flex items-center gap-2 justify-self-end">
       <button

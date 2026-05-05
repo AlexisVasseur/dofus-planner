@@ -61,17 +61,19 @@ onMounted(() => {
       />
     </div>
     <AppTopBar class="relative z-10" />
-    <template v-if="ui.viewMode === 'purchase'">
-      <AppPurchasePlanner class="relative z-10" />
-    </template>
-    <template v-else-if="ui.viewMode === 'switch'">
-      <AppSwitchView class="relative z-10" />
-      <AppMiniMap :scroll-ref="null" class="relative z-10" />
-    </template>
-    <template v-else>
-      <AppTimeline ref="timelineRef" class="relative z-10" />
-      <AppMiniMap :scroll-ref="scrollEl" class="relative z-10" />
-    </template>
+    <Transition name="view" mode="out-in">
+      <AppPurchasePlanner v-if="ui.viewMode === 'purchase'" key="purchase" class="relative z-10" />
+      <AppSwitchView v-else-if="ui.viewMode === 'switch'" key="switch" class="relative z-10" />
+      <AppTimeline v-else ref="timelineRef" key="build" class="relative z-10" />
+    </Transition>
+    <Transition name="dock">
+      <AppMiniMap
+        v-if="ui.viewMode !== 'purchase'"
+        :key="ui.viewMode"
+        :scroll-ref="ui.viewMode === 'switch' ? null : scrollEl"
+        class="relative z-10"
+      />
+    </Transition>
     <ItemPickerSheet />
     <ClassPickerModal />
   </div>
@@ -114,5 +116,21 @@ onMounted(() => {
 
 @media (prefers-reduced-motion: reduce) {
   .particle { animation: none; }
+}
+
+/* Cross-screen view transitions (Build / Reader / Shopping). */
+.view-enter-active, .view-leave-active {
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+.view-enter-from { opacity: 0; transform: translateY(12px); }
+.view-leave-to   { opacity: 0; transform: translateY(-8px); }
+
+/* Minimap dock slide (only present in Builder + Reader). */
+.dock-enter-active, .dock-leave-active {
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+.dock-enter-from, .dock-leave-to {
+  opacity: 0;
+  transform: translateY(120%);
 }
 </style>
