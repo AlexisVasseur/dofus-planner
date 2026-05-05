@@ -27,8 +27,8 @@ const PARTICLES = Array.from({ length: PARTICLE_COUNT }, () => {
     left: Math.random() * 100,
     top: Math.random() * 100,
     anim: `drift-${animIdx}`,
-    duration: 90 + Math.random() * 90,
-    delay: -Math.random() * 180,
+    duration: 25 + Math.random() * 30,
+    delay: -Math.random() * 55,
     alpha: 0.25 + Math.random() * 0.25,
   };
 });
