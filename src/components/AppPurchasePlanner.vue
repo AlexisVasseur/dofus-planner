@@ -115,7 +115,7 @@ async function copyItem(name: string, key: string): Promise<void> {
           :key="room"
           type="button"
           :disabled="list.totals.perRoom[room] === 0"
-          class="h-7 relative z-10 inline-flex items-center justify-center gap-1.5 font-sans font-bold text-[11px] tracking-[0.06em] uppercase rounded transition-colors duration-300"
+          class="h-7 relative z-10 inline-flex items-center justify-center font-sans font-bold text-[11px] tracking-[0.06em] uppercase rounded transition-colors duration-300"
           :class="[
             activeRoom === room
               ? 'text-[#0A2530]'
@@ -123,10 +123,7 @@ async function copyItem(name: string, key: string): Promise<void> {
             list.totals.perRoom[room] === 0 && '!text-text-faint opacity-40 cursor-not-allowed',
           ]"
           @click="pickRoom(room)"
-        >
-          <span>{{ room }}</span>
-          <span class="text-[10px] font-mono opacity-70">{{ list.totals.perRoom[room] }}</span>
-        </button>
+        >{{ room }}</button>
       </nav>
 
       <!-- All rooms stacked vertically (even empty ones, with a centered placeholder).
@@ -139,13 +136,10 @@ async function copyItem(name: string, key: string): Promise<void> {
           class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
           style="background: rgba(8,8,8,0.55);"
         >
-          <header class="flex items-baseline gap-3 mb-3">
+          <header class="mb-3">
             <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
               Salle {{ room }}
             </h2>
-            <span class="font-mono text-[10px] text-text-faint">
-              {{ list.totals.perRoom[room] }} item{{ list.totals.perRoom[room] > 1 ? 's' : '' }}
-            </span>
           </header>
 
           <p
