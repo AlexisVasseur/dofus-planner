@@ -60,7 +60,7 @@ onMounted(() => {
         }"
       />
     </div>
-    <AppTopBar class="relative z-10" />
+    <AppTopBar class="relative z-20" />
     <!-- Page stage: a fixed flex-1 slot that always reserves the central space.
          Pages mount inside as absolute layers so their transform/opacity transitions
          don't move the surrounding header/minimap and never expose a body scrollbar. -->
@@ -81,7 +81,7 @@ onMounted(() => {
       <AppMiniMap
         :key="ui.viewMode"
         :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
-        class="relative z-10"
+        class="relative z-20"
       />
     </Transition>
     <ItemPickerSheet />
