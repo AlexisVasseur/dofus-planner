@@ -121,8 +121,6 @@ function clearDofus(index: number): void {
         <span class="text-accent">{{ className(card.classId) }}</span>
       </div>
 
-      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3">Équipement</h3>
-
       <!-- Slot rows: same height as Build mode. Changed = red old → green new side-by-side. -->
       <div
         v-for="entry in slotEntries"
@@ -137,15 +135,15 @@ function clearDofus(index: number): void {
         <template v-if="entry.changed">
           <!-- OLD (red) -->
           <div
-            class="icon w-10 h-10 rounded-[6px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
+            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
           >
             <img
               v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
               :src="itemDisplay(entry.oldRef)?.iconUrl"
               :alt="itemDisplay(entry.oldRef)?.name ?? ''"
-              class="w-6 h-6"
+              class="w-[26px] h-[26px]"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-7 h-7 text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
           </div>
           <span class="flex-1 min-w-0 truncate text-danger-soft text-[13px] line-through decoration-danger/60 decoration-from-font">
             {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
@@ -153,15 +151,15 @@ function clearDofus(index: number): void {
           <span class="text-accent font-mono text-[15px] flex-shrink-0">→</span>
           <!-- NEW (green) -->
           <div
-            class="icon w-10 h-10 rounded-[6px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
+            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
           >
             <img
               v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
               :src="itemDisplay(entry.newRef)?.iconUrl"
               :alt="itemDisplay(entry.newRef)?.name ?? ''"
-              class="w-6 h-6"
+              class="w-[26px] h-[26px]"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-7 h-7 text-accent" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-accent" v-html="getSlotIconSvg(entry.slot)" />
           </div>
           <span class="flex-1 min-w-0 truncate text-accent text-[13px] font-medium">
             {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
@@ -170,7 +168,7 @@ function clearDofus(index: number): void {
         <template v-else>
           <!-- Unchanged: standard single-item layout, dimmed -->
           <div
-            class="icon w-10 h-10 rounded-[6px] flex items-center justify-center flex-shrink-0"
+            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0"
             :class="entry.newRef
               ? 'bg-bg-slot-filled border border-border-slot-filled'
               : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
@@ -179,9 +177,9 @@ function clearDofus(index: number): void {
               v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
               :src="itemDisplay(entry.newRef)?.iconUrl"
               :alt="itemDisplay(entry.newRef)?.name ?? ''"
-              class="w-7 h-7"
+              class="w-[26px] h-[26px]"
             />
-            <svg v-else viewBox="0 0 24 24" class="w-7 h-7" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
+            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px]" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
           </div>
           <span
             class="flex-1 truncate"

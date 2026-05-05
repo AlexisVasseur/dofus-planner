@@ -85,7 +85,6 @@ function onClearDofus(index: number): void {
       @remove="onRemoveCard"
     />
     <div class="p-4">
-      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3">Équipement</h3>
       <EquipmentSlot
         v-for="entry in slotItems"
         :key="entry.slot"

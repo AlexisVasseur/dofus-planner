@@ -37,14 +37,14 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
     @dblclick.stop="emit('clear')"
   >
     <div
-      class="icon w-10 h-10 rounded-[6px] flex items-center justify-center flex-shrink-0 transition-colors"
+      class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 transition-colors"
       :class="filled ? 'bg-bg-slot-filled border border-border-slot-filled' : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
     >
-      <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="label" class="w-7 h-7" />
+      <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="label" class="w-[26px] h-[26px]" />
       <svg
         v-else
         viewBox="0 0 24 24"
-        class="w-7 h-7"
+        class="w-[26px] h-[26px]"
         :class="filled ? 'text-text-muted' : 'text-text-ghost'"
         v-html="slotSvg"
       />

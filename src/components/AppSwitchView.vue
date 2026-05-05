@@ -70,13 +70,6 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
 });
 
-const positionLabel = computed(() => {
-  const total = build.cards.length;
-  const lvl = activeCard.value?.level;
-  const lvlPart = lvl !== null && lvl !== undefined ? ` · Lv ${lvl}` : '';
-  return `Étape ${activeIndex.value + 1} / ${total}${lvlPart}`;
-});
-
 const prevLevelLabel = computed(() => {
   const lvl = previousCard.value?.level;
   return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
@@ -89,10 +82,6 @@ const nextLevelLabel = computed(() => {
 
 <template>
   <div class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden">
-    <div class="absolute top-6 left-1/2 -translate-x-1/2 font-display text-[14px] tracking-[0.25em] uppercase text-text-faint pointer-events-none z-10">
-      {{ positionLabel }}
-    </div>
-
     <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 576px;">
       <!-- PREV peek -->
       <button
