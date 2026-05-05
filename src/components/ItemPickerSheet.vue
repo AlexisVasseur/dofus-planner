@@ -91,41 +91,41 @@ window.addEventListener('keydown', (e) => {
       class="sheet fixed top-0 right-0 bottom-0 w-[540px] bg-bg-surface border-l border-border-default shadow-[-24px_0_48px_rgba(0,0,0,0.5)] flex flex-col z-50"
     >
       <header class="flex items-center justify-between px-5 py-3.5 border-b border-border-subtle">
-        <h2 class="font-display text-[11px] tracking-[0.2em] uppercase text-accent font-semibold">{{ sheetTitle }}</h2>
+        <h2 class="font-display text-[11px] tracking-[0.2em] uppercase text-white/80 font-semibold">{{ sheetTitle }}</h2>
         <button @click="close" class="font-mono text-[9px] text-text-faint border border-border-default rounded px-1.5 py-0.5">esc</button>
       </header>
       <div class="px-5 py-3 border-b border-border-subtle">
         <input
           v-model="search"
           placeholder="Rechercher…"
-          class="w-full bg-bg-page border border-border-default rounded-md px-3 py-2 text-xs text-text-default outline-none focus:border-accent"
+          class="w-full bg-bg-page border border-border-default rounded-md px-3 py-2 text-xs text-text-default outline-none focus:border-white/60"
           autofocus
         />
       </div>
       <div class="flex flex-wrap gap-1.5 px-5 pb-2.5 border-b border-border-subtle">
         <button
           class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'all' ? 'bg-accent/10 text-accent border-accent/40' : 'bg-bg-page border-border-subtle text-text-dim'"
+          :class="filterMode === 'all' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
           @click="filterMode = 'all'"
         >Tous</button>
         <button
           class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'eligible' ? 'bg-accent/10 text-accent border-accent/40' : 'bg-bg-page border-border-subtle text-text-dim'"
+          :class="filterMode === 'eligible' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
           @click="filterMode = 'eligible'"
         >≤ Lv {{ card?.level ?? '?' }}</button>
         <button
           class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="filterMode === 'over' ? 'bg-accent/10 text-accent border-accent/40' : 'bg-bg-page border-border-subtle text-text-dim'"
+          :class="filterMode === 'over' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
           @click="filterMode = 'over'"
         >Au-dessus</button>
         <button
           class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="sortMode === 'level' ? 'bg-accent/10 text-accent border-accent/40' : 'bg-bg-page border-border-subtle text-text-dim'"
+          :class="sortMode === 'level' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
           @click="sortMode = 'level'"
         >Trier · niveau</button>
         <button
           class="text-[10px] uppercase tracking-[0.1em] font-medium px-2.5 py-1 rounded-full border"
-          :class="sortMode === 'name' ? 'bg-accent/10 text-accent border-accent/40' : 'bg-bg-page border-border-subtle text-text-dim'"
+          :class="sortMode === 'name' ? 'bg-white/[0.08] text-white/90 border-white/30' : 'bg-bg-page border-border-subtle text-text-dim'"
           @click="sortMode = 'name'"
         >Trier · nom</button>
       </div>
@@ -139,7 +139,7 @@ window.addEventListener('keydown', (e) => {
           type="button"
           class="item flex items-center gap-3 px-3 py-2.5 rounded-md w-full hover:bg-bg-elev"
           :class="{
-            'bg-accent/[0.06] shadow-[inset_0_0_0_1px_rgba(91,211,168,0.4)]':
+            'bg-white/[0.06] shadow-[inset_0_0_0_1px_rgba(255,255,255,0.4)]':
               target?.kind === 'slot'
                 ? card?.slots[target.slot]?.itemId === it.id
                 : target?.kind === 'dofus' ? card?.dofus[target.index]?.itemId === it.id : false
