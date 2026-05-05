@@ -120,7 +120,7 @@ function clearDofus(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
+    class="equipment-card select-none text-left flex-shrink-0 h-full flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
     :style="themeStyle"
     :class="{ 'is-active': isActive }"
     :data-class-id="card.classId ?? ''"
@@ -135,7 +135,7 @@ function clearDofus(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="build.removeCard(card.id)"
     />
-    <div class="p-4">
+    <div class="p-4 flex-1 flex flex-col min-h-0">
       <!-- Class hint when changed -->
       <div
         v-if="classChanged"
@@ -217,7 +217,7 @@ function clearDofus(index: number): void {
         </template>
       </div>
 
-      <div class="grid grid-cols-6 gap-1.5 mt-4">
+      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4">
         <button
           v-for="entry in dofusEntries"
           :key="entry.index"
