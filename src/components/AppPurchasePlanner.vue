@@ -149,13 +149,13 @@ async function copyItem(name: string, key: string): Promise<void> {
               {{ NPC_LABEL[npc] }}
             </h3>
             <ul class="flex flex-col gap-1">
-              <li v-for="item in list.rooms[room][npc]!" :key="item.id" class="min-w-0">
+              <li v-for="item in list.rooms[room][npc]!" :key="item.id" class="relative min-w-0">
                 <button
                   type="button"
                   data-testid="item-name"
                   class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
                   :class="copiedKey === `${room}-${npc}-${item.id}` && '!text-[#5DCFE0]'"
-                  :title="copiedKey === `${room}-${npc}-${item.id}` ? `Copié ! (${item.name})` : `Cliquer pour copier — ${item.name}`"
+                  :title="`Cliquer pour copier — ${item.name}`"
                   @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
                 >
                   <img
@@ -166,8 +166,14 @@ async function copyItem(name: string, key: string): Promise<void> {
                     loading="lazy"
                   />
                   <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                  <span class="truncate min-w-0 flex-1">{{ copiedKey === `${room}-${npc}-${item.id}` ? '✓ ' : '' }}{{ item.name }}</span>
+                  <span class="truncate min-w-0 flex-1">{{ item.name }}</span>
                 </button>
+                <Transition name="copied">
+                  <span
+                    v-if="copiedKey === `${room}-${npc}-${item.id}`"
+                    class="copied-tooltip absolute left-7 top-full mt-1 z-20 px-2 py-0.5 rounded bg-[#5DCFE0] text-[#0A2530] text-[10px] font-bold uppercase tracking-[0.05em] whitespace-nowrap shadow-md pointer-events-none"
+                  >Item copié</span>
+                </Transition>
               </li>
             </ul>
           </section>
@@ -180,4 +186,12 @@ async function copyItem(name: string, key: string): Promise<void> {
 <style scoped>
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+.copied-enter-active, .copied-leave-active {
+  transition: opacity 120ms ease-out, transform 120ms ease-out;
+}
+.copied-enter-from, .copied-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
 </style>
