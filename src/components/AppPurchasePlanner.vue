@@ -71,7 +71,7 @@ async function copyItem(name: string, key: string): Promise<void> {
 </script>
 
 <template>
-  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1] bg-bg-page no-scrollbar">
+  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1] no-scrollbar">
     <!-- Empty global state -->
     <div v-if="!hasAnything" class="h-full flex flex-col items-center justify-center gap-4 text-center px-6">
       <p class="font-sans font-semibold text-[13px] text-text-muted tracking-[0.06em] uppercase max-w-md">
@@ -113,8 +113,12 @@ async function copyItem(name: string, key: string): Promise<void> {
         </button>
       </nav>
 
-      <!-- Flat table: NPC label | wrapped item names. Click-to-copy on each name. -->
-      <div class="mx-4 mt-5 mb-4">
+      <!-- Flat table: NPC label | wrapped item names. Click-to-copy on each name.
+           Wrapper mirrors the header / minimap floating-panel treatment. -->
+      <div
+        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-3"
+        style="background: rgba(8,8,8,0.55);"
+      >
         <div
           v-for="(npc, idx) in orderedNpcsForActiveRoom"
           :key="npc"
