@@ -115,6 +115,7 @@ function onClearDofus(index: number): void {
       <EquipmentSlot
         v-for="entry in slotItems"
         :key="entry.slot"
+        class="flex-1 min-h-0 max-h-14 overflow-hidden"
         :slot="entry.slot"
         :item="entry.item"
         :card-level="card.level"
@@ -122,7 +123,7 @@ function onClearDofus(index: number): void {
         @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
         @clear="onClearSlot(entry.slot)"
       />
-      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4">
+      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
         <DofusCell
           v-for="entry in dofusItems"
           :key="entry.index"

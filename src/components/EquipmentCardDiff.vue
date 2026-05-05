@@ -152,7 +152,7 @@ function clearDofus(index: number): void {
       <div
         v-for="entry in slotEntries"
         :key="entry.slot"
-        class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer transition-opacity"
+        class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer transition-opacity flex-1 min-h-0 max-h-14 overflow-hidden"
         :class="entry.changed
           ? 'bg-accent/[0.03] -mx-1 px-1'
           : 'opacity-35 hover:opacity-60'"
@@ -217,7 +217,7 @@ function clearDofus(index: number): void {
         </template>
       </div>
 
-      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4">
+      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
         <button
           v-for="entry in dofusEntries"
           :key="entry.index"
