@@ -141,16 +141,16 @@ function importBuild() {
         draggable="false"
       />
     </div>
-    <nav class="mode-toggle relative grid grid-cols-3 items-center justify-self-center bg-gradient-to-b from-white/[0.04] to-white/[0.01] border border-white/10 rounded-md p-1 h-9 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] w-[300px]">
+    <nav class="mode-toggle relative grid grid-cols-3 items-center justify-self-center bg-white/[0.04] border border-white/10 rounded-md p-1 h-9 w-[300px]">
       <div
-        class="toggle-pill absolute top-1 bottom-1 rounded bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_1px_2px_rgba(0,0,0,0.35)] transition-[left,width] duration-300 ease-out"
+        class="toggle-pill absolute top-1 bottom-1 rounded bg-[#5DCFE0] transition-[left,width] duration-300 ease-out"
         :style="togglePillStyle"
       />
       <button
         v-for="page in TOGGLE_PAGES"
         :key="page.mode"
         type="button"
-        class="h-7 relative z-10 inline-flex items-center justify-center font-sans font-semibold text-[11px] tracking-[0.05em] uppercase rounded transition-colors duration-300"
+        class="h-7 relative z-10 inline-flex items-center justify-center font-sans font-bold text-[11px] tracking-[0.06em] uppercase rounded transition-colors duration-300"
         :class="ui.viewMode === page.mode
           ? 'text-[#0A2530]'
           : 'text-text-muted hover:text-[#8AE0EE]'"
@@ -161,12 +161,12 @@ function importBuild() {
     <div class="actions flex items-center gap-2 justify-self-end">
       <button
         type="button"
-        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#8AE0EE]/[0.18] hover:to-[#8AE0EE]/[0.04] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-all"
+        class="w-9 h-9 inline-flex items-center justify-center bg-white/[0.06] text-text-default border border-white/15 rounded-md cursor-pointer hover:bg-[#8AE0EE]/[0.12] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-colors"
         @click="importBuild"
         aria-label="Importer un build"
         title="Importer un build"
       >
-        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 4v12" />
           <polyline points="6 10 12 16 18 10" />
           <path d="M4 20h16" />
@@ -174,12 +174,12 @@ function importBuild() {
       </button>
       <button
         type="button"
-        class="w-9 h-9 inline-flex items-center justify-center bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-[#8AE0EE]/[0.18] hover:to-[#8AE0EE]/[0.04] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-all"
+        class="w-9 h-9 inline-flex items-center justify-center bg-white/[0.06] text-text-default border border-white/15 rounded-md cursor-pointer hover:bg-[#8AE0EE]/[0.12] hover:border-[#8AE0EE]/40 hover:text-[#8AE0EE] active:translate-y-[1px] transition-colors"
         @click="exportBuild"
         aria-label="Exporter le build"
         title="Exporter le build"
       >
-        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 20V8" />
           <polyline points="6 14 12 8 18 14" />
           <path d="M4 4h16" />
@@ -187,11 +187,11 @@ function importBuild() {
       </button>
       <button
         type="button"
-        class="h-9 inline-flex items-center gap-1.5 bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] border border-[#8AE0EE] rounded-md px-3.5 font-sans text-[11px] font-bold uppercase tracking-[0.05em] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.55),0_2px_6px_rgba(0,0,0,0.45)] hover:brightness-[1.05] active:translate-y-[1px] transition-all"
+        class="h-9 inline-flex items-center gap-1.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-3.5 font-sans text-[11px] font-bold uppercase tracking-[0.06em] cursor-pointer hover:bg-[#8AE0EE] hover:border-[#8AE0EE] active:translate-y-[1px] transition-colors"
         @click="newBuild"
         aria-label="Nouveau build"
       >
-        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 5v14M5 12h14" />
         </svg>
         Nouveau build

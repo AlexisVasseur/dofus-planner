@@ -47,20 +47,20 @@ function gotoCard(index: number, cardId: string) {
     class="minimap mx-4 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex items-center gap-3 px-5 py-2.5 relative z-[4]"
     style="background: rgba(8,8,8,0.55);"
   >
-    <div class="font-sans font-medium text-[11px] text-text-faint tracking-[0.05em] uppercase shrink-0">Timeline</div>
+    <div class="font-sans font-bold text-[11px] text-text-faint tracking-[0.06em] uppercase shrink-0">Timeline</div>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <div class="absolute inset-1 flex gap-[3px]">
         <div
-          class="active-pill absolute top-0 bottom-0 z-0 rounded-sm bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] shadow-[0_0_8px_rgba(93,207,224,0.45)] transition-[left,width] duration-300 ease-out"
+          class="active-pill absolute top-0 bottom-0 z-0 rounded-sm bg-[#5DCFE0] transition-[left,width] duration-300 ease-out"
           :style="pillStyle"
         />
         <button
           v-for="(card, idx) in build.cards"
           :key="card.id"
           type="button"
-          class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
+          class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono font-bold text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
           :class="idx === activeIndex
-            ? 'bg-transparent text-[#0A2530] font-semibold'
+            ? 'bg-transparent text-[#0A2530]'
             : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
           :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
           @click="gotoCard(idx, card.id)"
