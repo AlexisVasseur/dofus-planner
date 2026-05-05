@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import ClassThumbnail from '@/components/ClassThumbnail.vue';
-import { getClassAssets } from '@/composables/useClassAssets';
 import type { ClassId } from '@/types/classes';
 
 const props = defineProps<{
@@ -26,7 +25,6 @@ const levelInputRef = ref<HTMLInputElement | null>(null);
 const titleInputRef = ref<HTMLInputElement | null>(null);
 
 const showCta = computed(() => props.classId === null);
-const heroUrl = computed(() => getClassAssets(props.classId)?.hero ?? null);
 
 async function startEditLevel() {
   if (editingLevel.value) return;
@@ -90,21 +88,8 @@ function onRemove() {
 </script>
 
 <template>
-  <header class="header relative p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface overflow-hidden">
-    <div
-      v-if="heroUrl"
-      class="hero-bg absolute inset-0 pointer-events-none"
-      :style="{
-        backgroundImage: `url('${heroUrl}')`,
-        backgroundSize: 'auto 165%',
-        backgroundPosition: 'left top',
-        backgroundRepeat: 'no-repeat',
-        opacity: 0.55,
-        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0) 100%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0) 100%)',
-      }"
-    />
-    <div class="relative z-10 flex items-center gap-4 w-full">
+  <header class="header relative p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+    <div class="flex items-center gap-4 w-full">
       <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
         <ClassThumbnail :class-id="classId" :size="56" />
       </button>
@@ -156,7 +141,7 @@ function onRemove() {
     </div>
     <button
       type="button"
-      class="card-delete-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
+      class="card-delete-btn absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
       @click="onRemove"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
