@@ -93,7 +93,7 @@ async function copyItem(name: string, key: string): Promise<void> {
       <!-- All rooms stacked vertically (even empty ones, with a centered placeholder).
            Each room is its own floating panel; the bottom timeline minimap drives
            which room is in view by setting ui.activeCardId. -->
-      <div class="flex flex-col gap-6 pt-3 pb-12">
+      <div class="flex flex-col gap-6 pt-6 pb-12">
         <div
           v-for="room in visibleRooms"
           :key="room"
