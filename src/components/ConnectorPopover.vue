@@ -43,12 +43,12 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   <Teleport to="body">
     <div
       ref="popoverRef"
-      class="popover fixed bg-bg-surface border border-border-default rounded-lg p-1 flex flex-col min-w-[200px] shadow-[0_8px_24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(91,211,168,0.15)] z-[60]"
+      class="popover fixed bg-bg-surface border border-border-default rounded-lg p-1 flex flex-col min-w-[200px] shadow-[0_8px_24px_rgba(0,0,0,0.6),0_0_0_1px_rgba(255,255,255,0.06)] z-[60]"
       :style="style"
     >
       <button
         type="button"
-        class="text-left px-3 py-2 rounded text-text-default text-[12px] flex items-center justify-between hover:bg-bg-elev hover:text-accent"
+        class="text-left px-3 py-2 rounded text-text-default text-[12px] flex items-center justify-between hover:bg-bg-elev hover:text-white"
         @click="emit('empty')"
       >
         <span>Card vide</span>
@@ -57,7 +57,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
       <div class="h-px bg-border-subtle my-0.5"></div>
       <button
         type="button"
-        class="text-left px-3 py-2 rounded text-text-default text-[12px] flex items-center justify-between hover:bg-bg-elev hover:text-accent"
+        class="text-left px-3 py-2 rounded text-text-default text-[12px] flex items-center justify-between hover:bg-bg-elev hover:text-white"
         @click="emit('copy')"
       >
         <span>Copier la précédente</span>
