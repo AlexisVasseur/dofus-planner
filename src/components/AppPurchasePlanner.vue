@@ -113,35 +113,39 @@ async function copyItem(name: string, key: string): Promise<void> {
         </button>
       </nav>
 
-      <!-- Flat table: NPC label | wrapped item names. Click-to-copy on each name.
+      <!-- Columns of NPCs (one per column) with items stacked vertically.
            Wrapper mirrors the header / minimap floating-panel treatment. -->
       <div
-        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-3"
-        style="background: rgba(8,8,8,0.55);"
+        class="mx-4 mt-3 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 grid gap-x-6 gap-y-5"
+        style="background: rgba(8,8,8,0.55); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
       >
-        <div
-          v-for="(npc, idx) in orderedNpcsForActiveRoom"
-          :key="npc"
-          class="grid gap-x-6 py-3"
-          :class="idx > 0 && 'border-t border-border-subtle'"
-          style="grid-template-columns: 120px 1fr;"
-        >
-          <div class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase pt-0.5">
+        <section v-for="npc in orderedNpcsForActiveRoom" :key="npc">
+          <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
             {{ NPC_LABEL[npc] }}
-          </div>
-          <div class="flex flex-wrap gap-x-5 gap-y-2">
-            <button
-              v-for="item in list.rooms[activeRoom][npc]!"
-              :key="item.id"
-              type="button"
-              data-testid="item-name"
-              class="text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
-              :class="copiedKey === `${npc}-${item.id}` && '!text-[#5DCFE0]'"
-              :title="copiedKey === `${npc}-${item.id}` ? 'Copié !' : 'Cliquer pour copier'"
-              @click="copyItem(item.name, `${npc}-${item.id}`)"
-            >{{ copiedKey === `${npc}-${item.id}` ? '✓ ' : '' }}{{ item.name }}</button>
-          </div>
-        </div>
+          </h3>
+          <ul class="flex flex-col gap-1">
+            <li v-for="item in list.rooms[activeRoom][npc]!" :key="item.id">
+              <button
+                type="button"
+                data-testid="item-name"
+                class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
+                :class="copiedKey === `${npc}-${item.id}` && '!text-[#5DCFE0]'"
+                :title="copiedKey === `${npc}-${item.id}` ? 'Copié !' : 'Cliquer pour copier'"
+                @click="copyItem(item.name, `${npc}-${item.id}`)"
+              >
+                <img
+                  v-if="item.iconUrl"
+                  :src="item.iconUrl"
+                  :alt="''"
+                  class="w-5 h-5 flex-shrink-0 rounded-sm"
+                  loading="lazy"
+                />
+                <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                <span class="truncate min-w-0">{{ copiedKey === `${npc}-${item.id}` ? '✓ ' : '' }}{{ item.name }}</span>
+              </button>
+            </li>
+          </ul>
+        </section>
       </div>
     </template>
   </section>
