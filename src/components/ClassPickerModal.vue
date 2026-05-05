@@ -3,7 +3,6 @@ import { computed } from 'vue';
 import { CLASSES } from '@/data/classes';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
-import ClassThumbnail from './ClassThumbnail.vue';
 import { getClassAssets } from '@/composables/useClassAssets';
 
 const ui = useUiStore();
@@ -55,27 +54,32 @@ window.addEventListener('keydown', (e) => {
     >
       <div class="modal bg-bg-surface border border-border-default rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] max-w-[720px] w-full mx-4 overflow-hidden">
         <header class="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-          <h2 class="font-display text-base text-text-default tracking-[0.2em] uppercase">Choisir une classe</h2>
+          <h2 class="font-sans font-semibold text-base text-text-default tracking-[0.05em] uppercase">Choisir une classe</h2>
           <button @click="close" class="font-mono text-[9px] text-text-faint border border-border-default rounded px-1.5 py-0.5">esc</button>
         </header>
         <div class="grid grid-cols-6 gap-3 p-5">
           <button
             v-for="c in CLASSES"
             :key="c.id"
-            class="cell aspect-square bg-bg-elev border rounded-[10px] flex flex-col items-center justify-center gap-1.5 px-1.5 py-2.5 transition-all"
+            class="cell relative aspect-square overflow-hidden border rounded-[10px] transition-all"
             :class="card?.classId === c.id
               ? 'is-selected'
               : 'border-border-subtle is-pickable hover:-translate-y-0.5'"
             :style="cellStyle(c.id, card?.classId === c.id)"
             @click="pick(c.id)"
           >
-            <ClassThumbnail :class-id="c.id" :size="44" />
-            <span class="font-display text-[11px] tracking-[0.18em] uppercase">{{ c.name }}</span>
+            <img
+              v-if="getClassAssets(c.id)"
+              :src="getClassAssets(c.id)!.thumbnail"
+              :alt="c.name"
+              class="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              loading="lazy"
+              decoding="async"
+            />
+            <div class="absolute inset-x-0 bottom-0 h-3/5 bg-gradient-to-t from-black via-black/60 to-transparent pointer-events-none"></div>
+            <span class="absolute inset-x-1 bottom-1.5 font-sans font-semibold text-[11px] tracking-[0.05em] uppercase text-white text-center drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)] pointer-events-none">{{ c.name }}</span>
           </button>
         </div>
-        <footer class="border-t border-border-subtle px-5 py-2.5 text-center text-[10px] text-text-faint">
-          Sélection appliquée à <span class="text-white/80">cette card</span> uniquement · les vrais logos sont chargés depuis DofusDB
-        </footer>
       </div>
     </div>
   </Transition>
