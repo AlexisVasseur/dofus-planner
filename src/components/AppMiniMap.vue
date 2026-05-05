@@ -12,6 +12,20 @@ const scrollElRef = toRef(props, 'scrollRef');
 
 const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.activeCardId));
 
+// Sliding pill geometry. Cells are flex-1 inside a 3px-gap row. With N cells:
+//   cell_width = (100% - (N-1)*3) / N
+//   pill_left(i) = i * (cell_width + 3) = i * (100% + 3px) / N
+const CELL_GAP_PX = 3;
+const pillStyle = computed(() => {
+  const n = build.cards.length;
+  const i = activeIndex.value;
+  if (n === 0 || i < 0) return { display: 'none' };
+  return {
+    left: `calc(${i} * (100% + ${CELL_GAP_PX}px) / ${n})`,
+    width: `calc((100% - ${(n - 1) * CELL_GAP_PX}px) / ${n})`,
+  };
+});
+
 // Card geometry — must match AppTimeline / EquipmentCard / Connector widths
 const CARD_WIDTH = 320;
 const CONNECTOR_WIDTH = 52;
@@ -36,14 +50,18 @@ function gotoCard(index: number, cardId: string) {
     <div class="font-sans font-medium text-[11px] text-text-faint tracking-[0.05em] uppercase shrink-0">Timeline</div>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <div class="absolute inset-1 flex gap-[3px]">
+        <div
+          class="active-pill absolute top-0 bottom-0 z-0 rounded-sm bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] shadow-[0_0_8px_rgba(93,207,224,0.45)] transition-[left,width] duration-300 ease-out"
+          :style="pillStyle"
+        />
         <button
           v-for="(card, idx) in build.cards"
           :key="card.id"
           type="button"
-          class="h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-all duration-200 ease-out cursor-pointer origin-center"
+          class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
           :class="idx === activeIndex
-            ? 'flex-[2] scale-100 bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[0_0_8px_rgba(93,207,224,0.45)] font-semibold'
-            : 'flex-1 scale-90 bg-border-default text-text-muted hover:scale-95 hover:bg-bg-elev hover:text-text-default'"
+            ? 'bg-transparent text-[#0A2530] font-semibold'
+            : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
           :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
           @click="gotoCard(idx, card.id)"
         >
