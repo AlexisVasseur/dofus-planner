@@ -158,13 +158,13 @@ async function copyItem(name: string, key: string): Promise<void> {
             class="grid gap-x-6 gap-y-5"
             style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
           >
-            <section v-for="npc in npcsForRoom(room)" :key="`${room}-${npc}`" class="min-w-0">
+            <section v-for="npc in npcsForRoom(room)" :key="`${room}-${npc}`" class="min-w-0 flex flex-col min-h-[8rem]">
               <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
                 {{ NPC_LABEL[npc] }}
               </h3>
               <p
                 v-if="itemsForCell(room, npc).length === 0"
-                class="text-[12px] font-sans text-text-faint italic"
+                class="flex-1 flex items-center justify-center text-[12px] font-sans text-text-faint italic"
               >Aucun item</p>
               <ul v-else class="flex flex-col gap-1">
                 <li v-for="item in itemsForCell(room, npc)" :key="item.id" class="relative min-w-0">
