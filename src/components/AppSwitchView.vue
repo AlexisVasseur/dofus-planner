@@ -129,7 +129,7 @@ const nextLevelLabel = computed(() => {
       <!-- ACTIVE card. Old + new overlap in the same grid cell so they animate concurrently.
            Entering covers leaving via z-index; leaving fades out fast so the brief overlap
            is barely perceptible. pointer-events-none → purely visual. -->
-      <div class="active-stage grid place-items-stretch h-full" style="grid-template-areas: 'stack';">
+      <div class="active-stage grid place-items-stretch h-full" style="grid-template-rows: 1fr; grid-template-columns: 1fr; grid-template-areas: 'stack';">
         <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
