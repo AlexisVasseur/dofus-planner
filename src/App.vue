@@ -77,13 +77,10 @@ onMounted(() => {
         </div>
       </Transition>
     </div>
-    <Transition name="dock">
-      <AppMiniMap
-        :key="ui.viewMode"
-        :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
-        class="relative z-20"
-      />
-    </Transition>
+    <AppMiniMap
+      :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
+      class="relative z-20"
+    />
     <ItemPickerSheet />
     <ClassPickerModal />
   </div>

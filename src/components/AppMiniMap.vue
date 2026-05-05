@@ -92,25 +92,36 @@ function gotoCell(cell: Cell, idx: number): void {
   >
     <div class="font-sans font-bold text-[11px] text-text-faint tracking-[0.06em] uppercase shrink-0">Timeline</div>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
-      <div class="absolute inset-1 flex gap-[3px]">
-        <div
-          class="active-pill absolute top-0 bottom-0 z-0 rounded-sm bg-[#5DCFE0] transition-[left,width] duration-300 ease-out"
-          :style="pillStyle"
-        />
-        <button
-          v-for="(cell, idx) in cells"
-          :key="cell.key"
-          type="button"
-          class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono font-bold text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
-          :class="idx === activeCellIdx
-            ? 'bg-transparent text-[#0A2530]'
-            : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
-          :aria-label="cell.ariaLabel"
-          @click="gotoCell(cell, idx)"
-        >
-          {{ cell.label }}
-        </button>
-      </div>
+      <Transition name="cells" mode="out-in">
+        <div :key="ui.viewMode" class="absolute inset-1 flex gap-[3px]">
+          <div
+            class="active-pill absolute top-0 bottom-0 z-0 rounded-sm bg-[#5DCFE0] transition-[left,width] duration-300 ease-out"
+            :style="pillStyle"
+          />
+          <button
+            v-for="(cell, idx) in cells"
+            :key="cell.key"
+            type="button"
+            class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono font-bold text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
+            :class="idx === activeCellIdx
+              ? 'bg-transparent text-[#0A2530]'
+              : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
+            :aria-label="cell.ariaLabel"
+            @click="gotoCell(cell, idx)"
+          >
+            {{ cell.label }}
+          </button>
+        </div>
+      </Transition>
     </div>
   </footer>
 </template>
+
+<style scoped>
+.cells-enter-active, .cells-leave-active {
+  transition: opacity 180ms ease;
+}
+.cells-enter-from, .cells-leave-to {
+  opacity: 0;
+}
+</style>
