@@ -148,17 +148,17 @@ function importBuild() {
       </div>
       <button
         type="button"
-        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-white/60 hover:text-white"
+        class="bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-white/[0.16] hover:to-white/[0.06] hover:border-white/30 active:translate-y-[1px] transition-all"
         @click="importBuild"
       >Importer</button>
       <button
         type="button"
-        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-white/60 hover:text-white"
+        class="bg-gradient-to-b from-white/[0.10] to-white/[0.02] text-text-default border border-white/15 rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_1px_2px_rgba(0,0,0,0.35)] hover:from-white/[0.16] hover:to-white/[0.06] hover:border-white/30 active:translate-y-[1px] transition-all"
         @click="exportBuild"
       >Exporter</button>
       <button
         type="button"
-        class="bg-white text-[#0a0a0a] border border-white rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:brightness-95"
+        class="bg-gradient-to-b from-white to-neutral-200 text-[#0a0a0a] border border-white rounded-md px-3.5 py-1.5 font-sans text-[11px] font-bold uppercase tracking-[0.05em] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.7),0_2px_6px_rgba(0,0,0,0.45)] hover:from-white hover:to-white hover:brightness-[1.02] active:translate-y-[1px] transition-all"
         @click="newBuild"
       >Nouveau build</button>
     </div>
