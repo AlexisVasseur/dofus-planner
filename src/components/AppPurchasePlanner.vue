@@ -42,7 +42,7 @@ function backToBuild(): void {
 </script>
 
 <template>
-  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1]">
+  <section class="purchase-planner flex-1 overflow-y-auto relative z-[1] bg-bg-page no-scrollbar">
     <!-- Empty global state -->
     <div v-if="!hasAnything" class="h-full flex flex-col items-center justify-center gap-4 text-center px-6">
       <p class="font-display text-[14px] text-text-muted tracking-[0.2em] uppercase max-w-md">
@@ -99,3 +99,8 @@ function backToBuild(): void {
     </template>
   </section>
 </template>
+
+<style scoped>
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+</style>
