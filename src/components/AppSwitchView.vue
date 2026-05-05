@@ -108,21 +108,23 @@ const nextLevelLabel = computed(() => {
       <button
         v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev relative flex flex-col items-end justify-center cursor-pointer opacity-40 hover:opacity-70 origin-right h-full flex-shrink-0"
+        class="peek peek-prev group relative flex flex-col items-end justify-center cursor-pointer origin-right h-full flex-shrink-0"
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
-        <div class="peek-stack flex flex-col gap-1.5 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-2 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-4 py-2 font-sans text-[14px] font-bold tracking-[0.06em] uppercase">
-            <span class="text-[18px] leading-none">‹</span>
+        <div class="peek-stack flex flex-col gap-3 pointer-events-none" style="width: 576px;">
+          <div class="peek-label inline-flex items-center justify-center gap-2.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-5 py-2.5 font-sans text-[18px] font-bold tracking-[0.06em] uppercase">
+            <span class="text-[24px] leading-none">‹</span>
             <span>Précédent · {{ prevLevelLabel }}</span>
           </div>
-          <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
-          <EquipmentCardDiff
-            v-else-if="beforePrevCard"
-            :card="previousCard"
-            :previous="beforePrevCard"
-          />
+          <div class="opacity-40 group-hover:opacity-70 transition-opacity">
+            <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
+            <EquipmentCardDiff
+              v-else-if="beforePrevCard"
+              :card="previousCard"
+              :previous="beforePrevCard"
+            />
+          </div>
         </div>
       </button>
 
@@ -149,20 +151,22 @@ const nextLevelLabel = computed(() => {
       <button
         v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next relative flex flex-col items-start justify-center cursor-pointer opacity-40 hover:opacity-70 origin-left h-full flex-shrink-0"
+        class="peek peek-next group relative flex flex-col items-start justify-center cursor-pointer origin-left h-full flex-shrink-0"
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
-        <div class="peek-stack flex flex-col gap-1.5 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-2 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-4 py-2 font-sans text-[14px] font-bold tracking-[0.06em] uppercase">
+        <div class="peek-stack flex flex-col gap-3 pointer-events-none" style="width: 576px;">
+          <div class="peek-label inline-flex items-center justify-center gap-2.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-5 py-2.5 font-sans text-[18px] font-bold tracking-[0.06em] uppercase">
             <span>Suivant · {{ nextLevelLabel }}</span>
-            <span class="text-[18px] leading-none">›</span>
+            <span class="text-[24px] leading-none">›</span>
           </div>
-          <EquipmentCardDiff
-            v-if="activeCard"
-            :card="nextCard"
-            :previous="activeCard"
-          />
+          <div class="opacity-40 group-hover:opacity-70 transition-opacity">
+            <EquipmentCardDiff
+              v-if="activeCard"
+              :card="nextCard"
+              :previous="activeCard"
+            />
+          </div>
         </div>
       </button>
     </div>
