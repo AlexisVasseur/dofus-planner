@@ -217,7 +217,10 @@ function clearDofus(index: number): void {
         </template>
       </div>
 
-      <h3 class="font-display text-[14px] text-accent/85 tracking-[0.3em] uppercase mb-3 mt-4">Dofus &amp; Trophées</h3>
+      <h3
+        class="font-display text-[14px] tracking-[0.3em] uppercase mb-3 mt-4"
+        :style="{ color: 'var(--class-accent, rgba(255,255,255,0.7))' }"
+      >Dofus &amp; Trophées</h3>
       <div class="grid grid-cols-6 gap-1.5">
         <button
           v-for="entry in dofusEntries"
