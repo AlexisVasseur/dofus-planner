@@ -70,6 +70,24 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   if (e.key === 'ArrowRight') { e.preventDefault(); goNext(); }
 });
 
+// Wheel = navigate. Each "tick" of the wheel triggers one prev/next; we lock briefly
+// after each move to match the slide animation (~260ms) so spinning the wheel doesn't
+// race ahead of the visual transition.
+let wheelLockUntil = 0;
+const WHEEL_LOCK_MS = 280;
+const WHEEL_THRESHOLD = 6;
+function onWheel(e: WheelEvent): void {
+  if (ui.itemPickerTarget !== null || ui.classPickerCardId !== null) return;
+  const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+  if (Math.abs(delta) < WHEEL_THRESHOLD) return;
+  e.preventDefault();
+  const now = performance.now();
+  if (now < wheelLockUntil) return;
+  if (delta > 0) goNext();
+  else goPrev();
+  wheelLockUntil = now + WHEEL_LOCK_MS;
+}
+
 const prevLevelLabel = computed(() => {
   const lvl = previousCard.value?.level;
   return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
@@ -81,7 +99,10 @@ const nextLevelLabel = computed(() => {
 </script>
 
 <template>
-  <div class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden">
+  <div
+    class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+    @wheel="onWheel"
+  >
     <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 576px;">
       <!-- PREV peek -->
       <button
