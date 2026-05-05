@@ -2,6 +2,7 @@
 import { computed, toRef } from 'vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
+import { ROOM_ORDER, levelToRoom, type RoomId } from '@/types/rooms';
 
 const props = defineProps<{ scrollRef: HTMLElement | null }>();
 
@@ -10,15 +11,50 @@ const ui = useUiStore();
 
 const scrollElRef = toRef(props, 'scrollRef');
 
-const activeIndex = computed(() => build.cards.findIndex((c) => c.id === ui.activeCardId));
+interface Cell {
+  key: string;
+  label: string;
+  // payload: cardId in builder/reader; roomId in shopping
+  payload: string;
+  ariaLabel: string;
+}
+
+// Builder/Reader = one cell per card (Lv X). Shopping = one cell per room (1-50, 51-100…)
+// so the navigator stays the same flat pill bar across all three pages.
+const cells = computed<Cell[]>(() => {
+  if (ui.viewMode === 'purchase') {
+    return ROOM_ORDER.map((r) => ({
+      key: r,
+      label: r,
+      payload: r,
+      ariaLabel: `Aller à la salle ${r}`,
+    }));
+  }
+  return build.cards.map((c, idx) => ({
+    key: c.id,
+    label: c.level === null ? '—' : `Lv ${c.level}`,
+    payload: c.id,
+    ariaLabel: c.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${c.level}`,
+  }));
+});
+
+// Active cell index. In shopping the active room is derived from the active card's level.
+const activeCellIdx = computed(() => {
+  if (ui.viewMode === 'purchase') {
+    const card = build.cards.find((c) => c.id === ui.activeCardId);
+    if (!card || card.level === null) return -1;
+    return ROOM_ORDER.indexOf(levelToRoom(card.level));
+  }
+  return build.cards.findIndex((c) => c.id === ui.activeCardId);
+});
 
 // Sliding pill geometry. Cells are flex-1 inside a 3px-gap row. With N cells:
 //   cell_width = (100% - (N-1)*3) / N
 //   pill_left(i) = i * (cell_width + 3) = i * (100% + 3px) / N
 const CELL_GAP_PX = 3;
 const pillStyle = computed(() => {
-  const n = build.cards.length;
-  const i = activeIndex.value;
+  const n = cells.value.length;
+  const i = activeCellIdx.value;
   if (n === 0 || i < 0) return { display: 'none' };
   return {
     left: `calc(${i} * (100% + ${CELL_GAP_PX}px) / ${n})`,
@@ -26,17 +62,24 @@ const pillStyle = computed(() => {
   };
 });
 
-// Card geometry — must match AppTimeline / EquipmentCard / Connector widths
+// Card geometry — must match AppTimeline / EquipmentCard / Connector widths.
 const CARD_WIDTH = 320;
 const CONNECTOR_WIDTH = 52;
 const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
 
-function gotoCard(index: number, cardId: string) {
-  // Always update the active card so Switch view (no scroll) reacts.
-  ui.setActiveCard(cardId);
+function gotoCell(cell: Cell, idx: number): void {
+  if (ui.viewMode === 'purchase') {
+    // Click on a room pill: find the first card whose level falls in that room and
+    // make it active. AppPurchasePlanner watches the derived active room and scrolls.
+    const room = cell.payload as RoomId;
+    const target = build.cards.find((c) => c.level !== null && levelToRoom(c.level) === room);
+    if (target) ui.setActiveCard(target.id);
+    return;
+  }
+  ui.setActiveCard(cell.payload);
   const el = scrollElRef.value;
-  if (!el) return; // no timeline to scroll (Switch mode passes null)
-  const cardCenter = PADDING_LEFT + index * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
+  if (!el) return; // Reader passes null
+  const cardCenter = PADDING_LEFT + idx * (CARD_WIDTH + CONNECTOR_WIDTH) + CARD_WIDTH / 2;
   const target = cardCenter - el.clientWidth / 2;
   el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
@@ -55,17 +98,17 @@ function gotoCard(index: number, cardId: string) {
           :style="pillStyle"
         />
         <button
-          v-for="(card, idx) in build.cards"
-          :key="card.id"
+          v-for="(cell, idx) in cells"
+          :key="cell.key"
           type="button"
           class="flex-1 h-full relative z-10 rounded-sm flex items-center justify-center font-mono font-bold text-[10px] tracking-tight transition-colors duration-300 cursor-pointer"
-          :class="idx === activeIndex
+          :class="idx === activeCellIdx
             ? 'bg-transparent text-[#0A2530]'
             : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
-          :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
-          @click="gotoCard(idx, card.id)"
+          :aria-label="cell.ariaLabel"
+          @click="gotoCell(cell, idx)"
         >
-          {{ card.level === null ? '—' : `Lv ${card.level}` }}
+          {{ cell.label }}
         </button>
       </div>
     </div>
