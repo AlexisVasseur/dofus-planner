@@ -34,7 +34,7 @@ const themeStyle = computed(() => {
   }
   if (isActive.value) {
     const accent = a?.colors.accent ?? FALLBACK_ACCENT;
-    base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 32px ${accent}33, 0 4px 32px rgba(0,0,0,0.4)`;
+    base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 12px ${accent}22, 0 4px 32px rgba(0,0,0,0.4)`;
   } else {
     base.boxShadow = '0 4px 32px rgba(0,0,0,0.4)';
   }
