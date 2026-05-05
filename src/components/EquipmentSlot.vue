@@ -71,16 +71,16 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
 <style scoped>
 .slot-row.is-empty:hover .icon {
   border-style: solid;
-  border-color: theme('colors.accent.DEFAULT');
-  color: theme('colors.accent.DEFAULT');
-  background-color: rgba(91, 211, 168, 0.06);
+  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
+  color: var(--class-accent, theme('colors.accent.DEFAULT'));
+  background-color: color-mix(in srgb, var(--class-dominant, #5BD3A8) 6%, transparent);
 }
 .slot-row.is-empty:hover .label {
   color: theme('colors.text.muted');
 }
 .slot-row.is-filled:hover .icon {
-  border-color: theme('colors.accent.DEFAULT');
-  box-shadow: 0 0 0 1px rgba(91, 211, 168, 0.4);
+  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--class-accent, #5BD3A8) 60%, transparent);
 }
 .slot-row.is-over-lvl .icon {
   background-color: #2a1414;
@@ -89,12 +89,12 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
   box-shadow: 0 0 0 1px rgba(220, 38, 38, 0.25), 0 0 8px rgba(220, 38, 38, 0.15);
 }
 .slot-row.is-active {
-  background-color: rgba(91, 211, 168, 0.05);
-  box-shadow: inset 0 0 0 1px rgba(91, 211, 168, 0.5);
+  background-color: color-mix(in srgb, var(--class-dominant, #5BD3A8) 5%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--class-accent, #5BD3A8) 50%, transparent);
 }
 .slot-row.is-active .icon {
-  border-color: theme('colors.accent.DEFAULT');
+  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
   background-color: theme('colors.bg-slot-filled');
-  box-shadow: 0 0 0 1px theme('colors.accent.DEFAULT'), 0 0 16px rgba(91, 211, 168, 0.4);
+  box-shadow: 0 0 0 1px var(--class-accent, theme('colors.accent.DEFAULT')), 0 0 16px color-mix(in srgb, var(--class-accent, #5BD3A8) 40%, transparent);
 }
 </style>
