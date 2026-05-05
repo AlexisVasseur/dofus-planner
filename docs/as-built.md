@@ -1,40 +1,49 @@
 # Dofus level planner — As-Built
 
-Status: V1 + V2 shipped. **41 tests** passing (30 V1 + 7 useShoppingList + 4 ItemRow), typecheck clean, prod build green (137 KB JS / 26 KB CSS, gzipped 49 KB / 5 KB).
-Last updated: 2026-05-04.
+Status: V1 + V2 + V2.1 + V3 + V3.1 shipped. **43 tests** passing, typecheck clean, prod build green (~150 KB JS / ~33 KB CSS, gzipped 53 KB / 7 KB; per-class assets ~6.8 MB total but loaded lazily).
+Last updated: 2026-05-05.
 
 This document reflects what was actually built. Original design specs:
 - `superpowers/specs/2026-05-03-v1-visual-design.md` — V1 timeline + Switch
 - `superpowers/specs/2026-05-04-purchase-planner-design.md` — V2 purchase planner
+- `superpowers/specs/2026-05-05-class-themed-cards-design.md` — V3 per-class theming + neutral chrome
 
-Where any spec disagrees with this doc, **this doc wins**.
+Where any spec disagrees with this doc, **this doc wins**. V3.1 (turquoise theme, floating chrome, glassmorphism, sliding pills, page transitions, rebrand) was iterative polish not formally spec'd — captured in the [V3.1 section](#v31--design-refresh-turquoise-theme--floating-chrome) below.
 
 ## Stack
 
 - Vue 3.5 + Vite 6 + TypeScript 5
 - Pinia 2 (build store + UI store)
-- Tailwind 3 (custom theme tokens)
+- Tailwind 3 (custom turquoise theme tokens)
 - VueUse 11 (`useElementBounding`, `useEventListener`, `useDebounceFn`, `onClickOutside`, `useWindowSize`)
-- Vitest 2 + @vue/test-utils + jsdom (41 unit/component tests)
-- Fonts: Bebas Neue + Inter via Google Fonts
+- Vitest 2 + @vue/test-utils + jsdom (43 unit/component tests)
+- Fonts: **Rowdies** (display) + **Roboto** (sans) via Google Fonts
+- 19 classes (Iop … Forgelance — added in V3) with bundled hero + thumbnail + colors.json each
 - No `uuid` dep — `crypto.randomUUID()` with fallback
 
 ## File map
 
 ```
 src/
-├── App.vue                          root layout (TopBar + conditional Timeline+MiniMap | Planner + Pickers)
+├── App.vue                          root layout: floating TopBar + page-stage (Transition view)
+│                                    + floating MiniMap; teal bg-tint + animated particles
 ├── main.ts                          createApp + Pinia + usePersistence bootstrap
 ├── style.css                        tailwind + base layer
 ├── env.d.ts                         vite client + .vue module decl
+├── assets/
+│   ├── dofus-planner.png            brand logo (used in topbar)
+│   └── classes/<id>/                19 folders: iop, cra, sram, …, forgelance
+│       ├── hero.jpg                 large landscape art (per-class background candidate)
+│       ├── thumbnail.jpg            square portrait (header + class picker grid)
+│       └── colors.json              { dominant, soft, accent } palette for color-mix
 ├── types/
-│   ├── classes.ts                   ClassId union (18 classes), ClassDef
+│   ├── classes.ts                   ClassId union (19 classes incl. forgelance), ClassDef
 │   ├── slots.ts                     SlotType union (10 slots), SLOT_ORDER, DOFUS_COUNT, SLOT_LABEL
 │   ├── build.ts                     ItemRef, Card, Build (version: 1)
 │   └── rooms.ts                     RoomId, NpcId, ROOM_ORDER, NPC_ORDER, NPC_LABEL,
 │                                    ROOM_NPCS, TYPE_ID_DOFUS, TYPE_ID_TROPHEE, slotToNpc, levelToRoom
 ├── data/
-│   ├── classes.ts                   18 ClassDef entries
+│   ├── classes.ts                   19 ClassDef entries
 │   ├── slot-icons.ts                10 inline SVG glyphs per slot type
 │   ├── npc-icons.ts                 11 NPC SVG glyphs (reuse slot ones + bespoke trophée/dofus)
 │   └── dofusdb.ts                   client: fetchItemsBySlot, fetchDofusOrTrophees,
@@ -51,25 +60,30 @@ src/
 │   ├── useItemCatalog.ts            useItemSearch, ensureItem, ensureItems,
 │   │                                getCachedItem, populateCache, isOverLeveled
 │   ├── useDragScroll.ts             generic pointer drag-to-scroll (currently unused)
-│   └── useShoppingList.ts           bucketing computed: ShoppingList from build cards
+│   ├── useShoppingList.ts           bucketing computed: ShoppingList from build cards
+│   └── useClassAssets.ts            sync getClassAssets(classId) → { hero, thumbnail, colors }
+│                                    via Vite import.meta.glob (eager, hashed asset URLs)
 ├── components/
-│   ├── AppTopBar.vue                brand + Build|Switch|Achats toggle + Importer/Exporter/Nv build
-│   ├── AppTimeline.vue              Build-only horizontal scroll area, exposes scrollRef
-│   ├── AppSwitchView.vue            Switch carousel: peek-prev | active card | peek-next
-│   ├── AppMiniMap.vue               clickable cells (Lv N), always sets active card; scrollTo only if scrollRef
-│   ├── AppPurchasePlanner.vue       V2 screen: header + room tabs + NPC grid
-│   ├── EquipmentCard.vue            full card (Build mode + first card in Switch carousel)
-│   ├── EquipmentCardDiff.vue        diff card (Switch carousel, idx >= 1)
-│   ├── CardHeader.vue               class logo + editable level + optional title + delete
-│   ├── ClassLogo.vue                hex frame, pulse on null classId, configurable size
-│   ├── EquipmentSlot.vue            full slot row (6 states, dblclick clears)
+│   ├── AppTopBar.vue                floating header: logo (absolute h-20) + sliding-pill toggle
+│   │                                (Builder / Reader / Shopping) + flat Importer/Exporter/CTA
+│   ├── AppTimeline.vue              Builder horizontal scroll area, exposes scrollRef
+│   ├── AppSwitchView.vue            Reader carousel: peek-prev | active card | peek-next
+│   ├── AppMiniMap.vue               floating timeline footer; cells = cards (Builder/Reader)
+│   │                                or rooms (Shopping); single sliding pill, mode crossfade
+│   ├── AppPurchasePlanner.vue       Shopping screen: all rooms stacked, click-to-copy items
+│   ├── EquipmentCard.vue            full card (Builder + first card in Reader); h-full max-h-[660px]
+│   ├── EquipmentCardDiff.vue        diff card (Reader, idx >= 1); same theming as EquipmentCard
+│   ├── CardHeader.vue               ClassThumbnail + title (top, light) + Niv (bottom, bold)
+│   ├── ClassThumbnail.vue           img(thumbnail.jpg) when classId set; falls back to ClassLogo
+│   ├── ClassLogo.vue                hex placeholder used only when no class is chosen
+│   ├── EquipmentSlot.vue            full slot row (flex-1 max-h-14, hover via --class-accent)
 │   ├── DofusCell.vue                small slot variant (div+role, dblclick or Del/Backspace clears)
-│   ├── Connector.vue                "+" pill (36×36 circle), useElementBounding
+│   ├── Connector.vue                "+" pill (36×36 round), turquoise outline → fill on hover
 │   ├── ConnectorPopover.vue         Teleport to body, viewport-clamped fixed position
-│   ├── ItemPickerSheet.vue          right side sheet 540px (search + filters + list)
-│   ├── ClassPickerModal.vue         centered modal 6×3 grid of 18 classes
-│   ├── NpcCard.vue                  V2 NPC header + count + ItemRow list
-│   └── ItemRow.vue                  V2 item line with copy-to-clipboard ⧉ + ✓ feedback
+│   ├── ItemPickerSheet.vue          right side sheet 540px, glass bg, turquoise filter pills
+│   ├── ClassPickerModal.vue         centered modal, glassmorphism, 6×N grid (full-bleed thumbs)
+│   ├── NpcCard.vue                  legacy V2 (no longer rendered; kept for ItemRow tests)
+│   └── ItemRow.vue                  legacy V2 (kept for tests)
 └── utils/
     └── id.ts                        randomId() wrapper
 
@@ -79,6 +93,7 @@ tests/
 ├── composables/usePersistence.spec  5 tests on load/save/debounce/version/corrupt
 ├── composables/useDragScroll.spec   4 tests on pure scroll math
 ├── composables/useShoppingList.spec 7 tests on V2 bucketing rules
+├── composables/useClassAssets.spec  2 tests on V3 asset bundling (happy path + null fallback)
 ├── data/dofusdb.spec.ts             6 tests on URL building + mapping + dofus fetch
 └── components/
     ├── EquipmentSlot.spec.ts        4 tests on over-leveled state
@@ -230,11 +245,13 @@ Tailwind theme tokens in `tailwind.config.ts`:
 | `border-subtle` | `#1a1a1a` |
 | `border-dashed-empty` | `#2a2a2a` |
 | `border-slot-filled` | `#374151` |
-| `accent` (`DEFAULT`/`deep`/`deeper`) | `#5BD3A8` / `#2a8568` / `#1a3d2e` |
+| `accent` (`DEFAULT`/`bright`/`deep`/`deeper`) | `#5DCFE0` / `#8AE0EE` / `#2D9DB1` / `#143E48` |
 | `danger` (`DEFAULT`/`soft`) | `#b91c1c` / `#f87171` |
 | `text` (`default`/`muted`/`dim`/`faint`/`ghost`) | `#fafafa` / `#a3a3a3` / `#737373` / `#525252` / `#404040` |
 
-Fonts: `font-display` = Bebas Neue (level numbers, section headers, brand wordmark, slot empty labels, NPC labels, room tab labels), `font-sans` = Inter (item names, body), `font-mono` = ui-monospace (level prefix, item level badges, count badges, kbd hints).
+V3 derived the accent from the dofus-planner logo (turquoise blue). Inline literals reused throughout: `#5DCFE0` (active fill), `#8AE0EE` (hover/bright text), `#0A2530` (dark text on turquoise fill). Diff "added/changed" green inside `EquipmentCardDiff` is the only remaining mint usage and is semantic.
+
+Fonts: `font-display` = **Rowdies** (only "Niv" + level number in CardHeader), `font-sans` = **Roboto** (everything else — chrome, body, labels), `font-mono` = ui-monospace (minimap "Lv X" cells, level number badges, kbd hints).
 
 ## Layout & sizing
 
@@ -289,13 +306,97 @@ Fonts: `font-display` = Bebas Neue (level numbers, section headers, brand wordma
 12. **V2 no "Copy all"** per NPC or per room. Per-item copy only.
 13. **V2 no "mark as bought" workflow** — the planner is a snapshot, not a tracker.
 
+## V3 — Class theming + neutral chrome
+
+Per-class visual identity on the equipment cards driven by bundled assets:
+- `useClassAssets(classId)` returns `{ hero, thumbnail, colors }` synchronously (Vite `import.meta.glob` eager). Map keyed on the folder segment from `src/assets/classes/<id>/`. Returns `null` for `null`/unknown id.
+- `ClassThumbnail` renders the per-class `thumbnail.jpg` at 56×56 in the card header (replaces the hex `ClassLogo`, which is now only the no-class placeholder).
+- Card root sets `--class-dominant`, `--class-soft`, `--class-accent` CSS vars from `colors.json` via the `themeStyle` computed. The article bg uses `color-mix(in srgb, #0a0a0a 92%, var(--class-dominant) 8%)` and the border `color-mix(in srgb, #262626 70%, var(--class-dominant) 30%)`. Active state turns the box-shadow into a class-tinted ring (`accent`) that softly glows.
+- Slots & dofus cells consume `var(--class-accent)` for hover/active borders + `color-mix` for tinted backgrounds.
+
+19 classes total (added Forgelance). The hero asset is bundled but no longer composited into the header — kept for future surfaces.
+
+## V3.1 — Design refresh (turquoise theme + floating chrome)
+
+Iterative polish on top of V3. No formal spec; captured here.
+
+### Palette
+Replaced the V1/V2 mint accent (`#5BD3A8`) and V3's neutral white-on-dark chrome with a turquoise palette derived from the project logo. See the `accent.*` tokens in the table above.
+
+### Typography
+- Bebas Neue → **Rowdies** (display)
+- Inter → **Roboto** (sans)
+- All chrome labels: `font-sans font-bold uppercase tracking-[0.06em]` (toggle, minimap labels, peek pill, room tabs)
+- Card title: `font-display font-light text-[14px]` ; "Niv X" below it: `font-display font-bold text-[36px]` (mono level number aligned via `leading-none`).
+
+### Floating chrome layout
+Top bar, central content stage, and minimap are three separate floating panels stacked vertically with consistent rhythm:
+
+```
+.app (h-full flex flex-col)
+├── AppTopBar         z-20  — mx-4 mt-3 rounded-xl border + backdrop-blur-md
+├── page-stage        z-10  — flex-1 min-h-0 overflow-hidden (reserves space; pages mount as absolute inset-0 inside)
+│   └── <Transition name="view" mode="out-in">
+│       └── one of: AppTimeline | AppSwitchView | AppPurchasePlanner
+└── AppMiniMap        z-20  — mx-4 mb-3 rounded-xl border + backdrop-blur-md
+```
+
+All three share `bg: rgba(8,8,8,0.55) + backdrop-blur-md + shadow-[0_8px_32px_rgba(0,0,0,0.55)]`. The page-stage prevents layout shift between view transitions (header and minimap don't move; only the central content fades + slides 12px on Y).
+
+### Sliding-pill button group pattern
+Used in three places (topbar mode-toggle, minimap, ItemPickerSheet filters via static turquoise tints):
+- Container: `relative grid grid-cols-N items-center bg-white/[0.04] border border-white/10 rounded-md p-1 h-9`
+- Pill: `absolute top-1 bottom-1 z-0 rounded bg-[#5DCFE0] transition-[left,width] duration-300 ease-out`, `left/width` calc'd from active index
+- Buttons: `relative z-10 h-7 inline-flex items-center justify-center font-bold text-[11px] tracking-[0.06em] uppercase`. Active: `text-[#0A2530]`. Inactive: `text-text-muted hover:text-[#8AE0EE]`.
+
+The minimap reuses the pattern with two adaptations:
+- Cell content branches on `viewMode`: `font-mono` "Lv X" tag in Builder/Reader, `font-sans uppercase` "1-50" in Shopping (drives a `<Transition name="cells" mode="out-in">` 180ms opacity crossfade between modes).
+- In Shopping the active cell is derived via `levelToRoom(activeCard.level)` — clicking a room pill calls `setActiveCard` on the first card whose level falls in that room, which then fires Shopping's `scrollIntoView` watch.
+
+### Animations
+- View transitions: opacity + `translateY(12px → 0)` enter / `translateY(-8px)` leave, 220ms ease, `mode="out-in"`.
+- Pill slide: `transition-[left,width] duration-300 ease-out`.
+- Background particles: 90 tiny dots (1.5–5px, alpha 0.25–0.50, color `rgba(150,220,230,X)`) drifting via 4 keyframe variants over 25–55s, on a `rgba(13,50,65,0.55)` teal-blue tint. Honors `prefers-reduced-motion`.
+- Click feedback: `active:translate-y-[1px]` on raised buttons.
+
+### Rebrand
+Top-bar mode toggle internal ids unchanged (`build` / `switch` / `purchase`) — only the labels were renamed to **Builder / Reader / Shopping**. No localStorage migration needed.
+
+### Pickers refresh
+- **ItemPickerSheet**: glass background (`rgba(8,8,8,0.85) + backdrop-blur-md`), turquoise left border, filter/sort pills DRY-ed via v-for with turquoise active tint, selected item row uses `bg-[#5DCFE0]/[0.10] + inset 1px ring`. Title in `text-[#8AE0EE]`. esc-chip → round X with turquoise hover.
+- **ClassPickerModal**: stronger glassmorphism (backdrop blur 10px + modal `rgba(15,15,18,0.55) + backdrop-blur-xl`). Cell thumbnails fill 100% with bottom gradient overlay for label legibility. esc-chip → round X.
+- **Connector "+"**: white-inverted pill replaced with turquoise outline (closed) → filled (hover/open) with class-tinted glow.
+
+### Shopping (rebrand of Achats)
+- All rooms (1-50, 51-100, 101-150, 151-199, 200) rendered stacked vertically as floating panels with a `[#5DCFE0]/40` border. Empty rooms show a centered "Aucun item". Empty NPC columns show italic "Aucun item" placeholders so the structure stays visible at all times.
+- Each NPC column has `min-h-[8rem]` for breathing room.
+- Items rendered as click-to-copy bordered mini-cards. On copy, a small "Item copié" floating tooltip pops below the row for 1.2s.
+- Pill tabs removed; the bottom timeline (AppMiniMap with room cells in Shopping mode) is now the single navigator across all three pages.
+
 ## How to run
 
 ```bash
 npm install            # one-time
 npm run dev            # http://localhost:5173/
 npm run typecheck      # vue-tsc, must exit 0
-npm run test:run       # vitest, 41 tests
-npm run build          # vue-tsc + vite build, dist/ → 137 KB JS / 26 KB CSS
+npm run test:run       # vitest, 43 tests
+npm run build          # vue-tsc + vite build, dist/ → ~150 KB JS / ~33 KB CSS
 npm run preview        # serve dist/
 ```
+
+## Deployment (Vercel)
+
+This is a static SPA — no SSR, no server runtime. Vercel auto-detects Vite and runs `npm run build` to `dist/`. A `vercel.json` at the repo root provides:
+- SPA rewrites (every route falls back to `index.html`).
+- Long-lived cache headers on `/assets/*` (immutable hashed filenames from Vite).
+
+To deploy:
+```bash
+# one-time link
+npx vercel link
+
+# deploy
+npx vercel deploy --prod
+```
+
+Or push the repo to a GitHub remote and connect it via the Vercel dashboard for push-to-deploy.

@@ -6,5 +6,6 @@ dist/
 .env.*.local
 .superpowers/
 .vite/
+.vercel/
 coverage/
 *.log
