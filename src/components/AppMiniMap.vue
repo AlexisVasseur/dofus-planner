@@ -42,9 +42,7 @@ function gotoCard(index: number, cardId: string) {
     style="background: rgba(8,8,8,0.55);"
   >
     <div class="font-display text-[11px] text-text-faint tracking-[0.25em] uppercase shrink-0">Timeline</div>
-    <div
-      class="flex-1 h-9 bg-bg-surface border border-border-subtle rounded-md relative overflow-hidden"
-    >
+    <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <div class="absolute inset-1 flex gap-[3px]">
         <button
           v-for="(card, idx) in build.cards"
@@ -52,7 +50,7 @@ function gotoCard(index: number, cardId: string) {
           type="button"
           class="flex-1 h-full rounded-sm flex items-center justify-center font-mono text-[10px] tracking-tight transition-colors cursor-pointer"
           :class="idx === activeIndex
-            ? 'bg-white text-[#0a0a0a] shadow-[0_0_8px_rgba(255,255,255,0.35)] font-semibold'
+            ? 'bg-gradient-to-b from-[#8AE0EE] to-[#5DCFE0] text-[#0A2530] shadow-[0_0_8px_rgba(93,207,224,0.45)] font-semibold'
             : 'bg-border-default text-text-muted hover:bg-bg-elev hover:text-text-default'"
           :aria-label="card.level === null ? `Aller à l'étape ${idx + 1}` : `Aller à l'étape niveau ${card.level}`"
           @click="gotoCard(idx, card.id)"
@@ -62,7 +60,7 @@ function gotoCard(index: number, cardId: string) {
       </div>
     </div>
     <div class="font-mono text-[10px] text-text-dim shrink-0">
-      <span class="text-white/85">Lv {{ lastLevel }}</span>
+      <span class="text-[#8AE0EE]">Lv {{ lastLevel }}</span>
       · {{ build.cards.length }} cards · {{ lastLevel }} lvls
     </div>
   </footer>
