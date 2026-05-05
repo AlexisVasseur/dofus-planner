@@ -119,11 +119,11 @@ function importBuild() {
     class="topbar flex items-center justify-between px-5 py-2.5 mx-4 mt-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] relative z-[5]"
     style="background: rgba(8,8,8,0.85);"
   >
-    <div class="brand flex items-center">
+    <div class="brand relative w-44 h-10">
       <img
         :src="logoUrl"
         alt="Dofus Planner"
-        class="h-10 w-auto select-none"
+        class="absolute left-0 top-1/2 -translate-y-1/2 h-20 w-auto select-none pointer-events-none drop-shadow-[0_4px_12px_rgba(0,0,0,0.55)]"
         draggable="false"
       />
     </div>
