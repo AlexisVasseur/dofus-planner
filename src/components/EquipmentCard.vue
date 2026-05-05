@@ -8,12 +8,32 @@ import { useUiStore } from '@/stores/ui';
 import { SLOT_ORDER, DOFUS_COUNT } from '@/types/slots';
 import type { Card } from '@/types/build';
 import { getCachedItem } from '@/composables/useItemCatalog';
+import { getClassAssets } from '@/composables/useClassAssets';
 
 const props = defineProps<{ card: Card }>();
 const build = useBuildStore();
 const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
+
+const themeStyle = computed(() => {
+  const a = getClassAssets(props.card.classId);
+  const base: Record<string, string> = { width: 'var(--card-width, 320px)' };
+  if (a) {
+    base['--class-dominant'] = a.colors.dominant;
+    base['--class-soft'] = a.colors.soft;
+    base['--class-accent'] = a.colors.accent;
+    base.backgroundColor = `color-mix(in srgb, #0a0a0c 92%, ${a.colors.dominant} 8%)`;
+    base.borderColor = `color-mix(in srgb, #2a2a2e 70%, ${a.colors.dominant} 30%)`;
+  }
+  if (isActive.value) {
+    const accent = a?.colors.accent ?? '#5BD3A8';
+    base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 32px ${accent}33, 0 4px 32px rgba(0,0,0,0.4)`;
+  } else {
+    base.boxShadow = '0 4px 32px rgba(0,0,0,0.4)';
+  }
+  return base;
+});
 
 function onRemoveCard() {
   // Clear active/picker if they pointed at this card
@@ -70,9 +90,10 @@ function onClearDofus(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 bg-bg-surface border border-border-default rounded-xl shadow-[0_4px_32px_rgba(0,0,0,0.4)] overflow-hidden transition-all"
-    :style="{ width: 'var(--card-width, 320px)' }"
-    :class="{ 'ring-1 ring-accent shadow-[0_0_0_1px_rgba(91,211,168,0.4),0_0_32px_rgba(91,211,168,0.15)]': isActive }"
+    class="equipment-card select-none text-left flex-shrink-0 bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
+    :style="themeStyle"
+    :class="{ 'is-active': isActive }"
+    :data-class-id="card.classId ?? ''"
     @mouseenter="ui.setActiveCard(card.id)"
   >
     <CardHeader
