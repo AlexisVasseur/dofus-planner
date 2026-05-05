@@ -119,7 +119,7 @@ function importBuild() {
     style="background: rgba(5,5,5,0.8);"
   >
     <div class="brand flex items-center gap-2.5 font-display text-base text-text-default tracking-[0.18em] uppercase">
-      <span class="dot w-2 h-2 rounded-full bg-accent shadow-[0_0_10px_rgba(91,211,168,0.6)]"></span>
+      <span class="dot w-2 h-2 rounded-full bg-white/85 shadow-[0_0_10px_rgba(255,255,255,0.45)]"></span>
       Dofus level planner
     </div>
     <div class="actions flex items-center gap-2">
@@ -127,38 +127,38 @@ function importBuild() {
         <button
           type="button"
           class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
-          :class="ui.viewMode === 'build' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          :class="ui.viewMode === 'build' ? 'bg-white text-[#0a0a0a]' : 'text-text-muted hover:text-text-default'"
           @click="ui.setViewMode('build')"
           aria-label="Mode Build (équipement complet)"
         >Build</button>
         <button
           type="button"
           class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
-          :class="ui.viewMode === 'switch' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          :class="ui.viewMode === 'switch' ? 'bg-white text-[#0a0a0a]' : 'text-text-muted hover:text-text-default'"
           @click="ui.setViewMode('switch')"
           aria-label="Mode Switch (uniquement les changements)"
         >Switch</button>
         <button
           type="button"
           class="px-2.5 py-1 font-display text-[11px] tracking-[0.18em] uppercase rounded transition-colors"
-          :class="ui.viewMode === 'purchase' ? 'bg-accent text-[#061a13]' : 'text-text-muted hover:text-text-default'"
+          :class="ui.viewMode === 'purchase' ? 'bg-white text-[#0a0a0a]' : 'text-text-muted hover:text-text-default'"
           @click="ui.setViewMode('purchase')"
           aria-label="Mode Achats (planificateur d'achat)"
         >Achats</button>
       </div>
       <button
         type="button"
-        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-accent hover:text-accent"
+        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-white/60 hover:text-white"
         @click="importBuild"
       >Importer</button>
       <button
         type="button"
-        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-accent hover:text-accent"
+        class="bg-transparent text-text-muted border border-border-default rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:border-white/60 hover:text-white"
         @click="exportBuild"
       >Exporter</button>
       <button
         type="button"
-        class="bg-accent text-[#061a13] border border-accent rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:brightness-110"
+        class="bg-white text-[#0a0a0a] border border-white rounded-md px-3 py-1.5 font-sans text-[11px] font-semibold cursor-pointer hover:brightness-95"
         @click="newBuild"
       >Nouveau build</button>
     </div>
