@@ -116,7 +116,7 @@ const nextLevelLabel = computed(() => {
           <span class="text-[28px] leading-none">‹</span>
           <span>Précédent · {{ prevLevelLabel }}</span>
         </div>
-        <div class="pointer-events-none flex-1 min-h-0 w-full flex justify-end">
+        <div class="pointer-events-none flex-1 min-h-0 w-full flex items-center justify-end">
           <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
           <EquipmentCardDiff
             v-else-if="beforePrevCard"
@@ -133,7 +133,7 @@ const nextLevelLabel = computed(() => {
           <div
             v-if="activeCard"
             :key="activeCard.id"
-            class="active-card pointer-events-none absolute inset-0"
+            class="active-card pointer-events-none absolute inset-0 flex items-center justify-center"
           >
             <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
             <EquipmentCardDiff
@@ -157,7 +157,7 @@ const nextLevelLabel = computed(() => {
           <span>Suivant · {{ nextLevelLabel }}</span>
           <span class="text-[28px] leading-none">›</span>
         </div>
-        <div class="pointer-events-none flex-1 min-h-0 w-full">
+        <div class="pointer-events-none flex-1 min-h-0 w-full flex items-center">
           <EquipmentCardDiff
             v-if="activeCard"
             :card="nextCard"
