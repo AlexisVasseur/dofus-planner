@@ -108,7 +108,7 @@ const nextLevelLabel = computed(() => {
       <button
         v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-right h-full"
+        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-right h-full flex-shrink-0"
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
@@ -128,7 +128,7 @@ const nextLevelLabel = computed(() => {
 
       <!-- ACTIVE card. Old + new overlap in the stage via absolute positioning so they
            animate concurrently. Entering covers leaving via z-index. -->
-      <div class="active-stage relative h-full">
+      <div class="active-stage relative h-full flex-shrink-0">
         <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
@@ -149,7 +149,7 @@ const nextLevelLabel = computed(() => {
       <button
         v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-left h-full"
+        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-left h-full flex-shrink-0"
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
