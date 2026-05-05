@@ -51,7 +51,7 @@ async function copyName(): Promise<void> {
     </div>
     <span
       data-testid="item-name"
-      class="flex-1 min-w-0 truncate text-text-default cursor-pointer hover:text-accent"
+      class="flex-1 min-w-0 truncate text-text-default cursor-pointer hover:text-white"
       :title="item.name"
       @click="copyName"
     >{{ item.name }}</span>
@@ -60,8 +60,8 @@ async function copyName(): Promise<void> {
       type="button"
       class="w-6 h-6 rounded border bg-bg-page text-text-muted text-[12px] flex items-center justify-center transition-colors"
       :class="copied
-        ? 'bg-accent text-[#061a13] border-accent'
-        : 'border-border-default hover:border-accent hover:text-accent'"
+        ? 'bg-white text-[#0a0a0a] border-white'
+        : 'border-border-default hover:border-white/60 hover:text-white'"
       aria-label="Copier le nom"
       @click="copyName"
     >{{ copied ? '✓' : '⧉' }}</button>

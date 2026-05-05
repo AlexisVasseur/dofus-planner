@@ -50,7 +50,7 @@ function backToBuild(): void {
       </p>
       <button
         type="button"
-        class="bg-accent text-[#061a13] border border-accent rounded-md px-4 py-2 font-sans text-[12px] font-semibold hover:brightness-110"
+        class="bg-white text-[#0a0a0a] border border-white rounded-md px-4 py-2 font-sans text-[12px] font-semibold hover:brightness-95"
         @click="backToBuild"
       >← Retour à Build</button>
     </div>
@@ -76,7 +76,7 @@ function backToBuild(): void {
           class="px-4 py-2.5 font-display text-[13px] tracking-[0.18em] uppercase rounded-t-md flex items-center gap-2 transition-colors"
           :class="[
             activeRoom === room
-              ? 'bg-bg-surface text-text-default border-b-2 border-accent -mb-[1px]'
+              ? 'bg-bg-surface text-text-default border-b-2 border-white/80 -mb-[1px]'
               : 'text-text-faint hover:text-text-default',
             list.totals.perRoom[room] === 0 && 'opacity-40 cursor-not-allowed hover:text-text-faint',
           ]"

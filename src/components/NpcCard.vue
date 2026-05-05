@@ -40,7 +40,7 @@ const fallbackSlot = computed<SlotType | undefined>(() => {
       <div class="w-[26px] h-[26px] rounded-[5px] flex items-center justify-center bg-bg-slot-filled border border-border-slot-filled text-text-muted">
         <svg viewBox="0 0 24 24" class="w-4 h-4" v-html="iconSvg" />
       </div>
-      <h3 class="font-display text-[12px] text-accent/85 tracking-[0.2em] uppercase flex-1 min-w-0 truncate">{{ label }}</h3>
+      <h3 class="font-display text-[12px] text-white/75 tracking-[0.2em] uppercase flex-1 min-w-0 truncate">{{ label }}</h3>
       <span class="text-[10px] font-mono text-text-faint bg-bg-page border border-border-default rounded-full px-1.5 py-[1px]">×{{ items.length }}</span>
     </header>
     <div class="flex flex-col">
