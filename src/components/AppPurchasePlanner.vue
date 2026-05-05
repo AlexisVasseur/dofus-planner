@@ -99,7 +99,7 @@ async function copyItem(name: string, key: string): Promise<void> {
           :key="room"
           :ref="(el) => setRoomSection(room, el as HTMLElement | null)"
           class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
-          style="background: rgba(8,8,8,0.8);"
+          style="background: rgba(8,8,8,0.2);"
         >
           <header class="mb-3">
             <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
