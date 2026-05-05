@@ -38,8 +38,8 @@ function gotoCard(index: number, cardId: string) {
 
 <template>
   <footer
-    class="minimap border-t border-border-subtle backdrop-blur-md flex items-center gap-3 px-5 py-2.5 relative z-[4]"
-    style="background: rgba(5,5,5,0.9);"
+    class="minimap mx-4 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex items-center gap-3 px-5 py-2.5 relative z-[4]"
+    style="background: rgba(8,8,8,0.55);"
   >
     <div class="font-display text-[11px] text-text-faint tracking-[0.25em] uppercase shrink-0">Timeline</div>
     <div
