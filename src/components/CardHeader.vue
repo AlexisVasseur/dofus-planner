@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
-import ClassLogo from './ClassLogo.vue';
+import ClassThumbnail from '@/components/ClassThumbnail.vue';
+import { getClassAssets } from '@/composables/useClassAssets';
 import type { ClassId } from '@/types/classes';
 
 const props = defineProps<{
@@ -25,6 +26,7 @@ const levelInputRef = ref<HTMLInputElement | null>(null);
 const titleInputRef = ref<HTMLInputElement | null>(null);
 
 const showCta = computed(() => props.classId === null);
+const heroUrl = computed(() => getClassAssets(props.classId)?.hero ?? null);
 
 async function startEditLevel() {
   if (editingLevel.value) return;
@@ -88,58 +90,72 @@ function onRemove() {
 </script>
 
 <template>
-  <header class="header relative flex items-center gap-4 p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
-    <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
-      <ClassLogo :class-id="classId" :pulse="classId === null" :size="62" />
-    </button>
-    <div class="right flex-1 min-w-0">
-      <div class="flex items-baseline">
-        <span class="font-display text-[16px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
+  <header class="header relative p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface overflow-hidden">
+    <div
+      v-if="heroUrl"
+      class="hero-bg absolute inset-0 pointer-events-none"
+      :style="{
+        backgroundImage: `url('${heroUrl}')`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center 30%',
+        opacity: 0.55,
+        maskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0) 100%)',
+        WebkitMaskImage: 'linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.85) 60%, rgba(0,0,0,0) 100%)',
+      }"
+    />
+    <div class="relative z-10 flex items-center gap-4 w-full">
+      <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
+        <ClassThumbnail :class-id="classId" :size="56" />
+      </button>
+      <div class="right flex-1 min-w-0">
+        <div class="flex items-baseline">
+          <span class="font-display text-[16px] text-text-faint uppercase tracking-[0.25em] mr-2 leading-none">Lv</span>
+          <input
+            v-if="editingLevel"
+            ref="levelInputRef"
+            v-model="levelDraft"
+            type="text"
+            inputmode="numeric"
+            maxlength="3"
+            class="font-display text-[36px] leading-none bg-transparent text-text-default w-20 outline-none border-b border-dashed border-white/60"
+            @blur="commitLevel"
+            @keydown.enter.prevent="commitLevel"
+            @keydown.esc.prevent="cancelLevel"
+          />
+          <button
+            v-else
+            type="button"
+            @click="startEditLevel"
+            class="font-display text-[36px] leading-none text-text-default border-b border-dashed border-border-default hover:border-white/60 cursor-text"
+          >{{ level ?? '—' }}</button>
+        </div>
         <input
-          v-if="editingLevel"
-          ref="levelInputRef"
-          v-model="levelDraft"
-          type="text"
-          inputmode="numeric"
-          maxlength="3"
-          class="font-display text-[36px] leading-none bg-transparent text-text-default w-20 outline-none border-b border-dashed border-accent"
-          @blur="commitLevel"
-          @keydown.enter.prevent="commitLevel"
-          @keydown.esc.prevent="cancelLevel"
+          v-if="editingTitle"
+          ref="titleInputRef"
+          v-model="titleDraft"
+          maxlength="30"
+          class="block mt-1.5 bg-transparent font-display text-[16px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-white/60"
+          @blur="commitTitle"
+          @keydown.enter.prevent="commitTitle"
+          @keydown.esc.prevent="cancelTitle"
         />
+        <button
+          v-else-if="showCta"
+          type="button"
+          class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-white/90 hover:text-white text-left"
+          @click="emit('open-class-picker')"
+        >Choisir une classe</button>
         <button
           v-else
           type="button"
-          @click="startEditLevel"
-          class="font-display text-[36px] leading-none text-text-default border-b border-dashed border-border-default hover:border-accent cursor-text"
-        >{{ level ?? '—' }}</button>
+          class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
+          @click="startEditTitle"
+        >{{ title ?? 'Ajouter un titre' }}</button>
       </div>
-      <input
-        v-if="editingTitle"
-        ref="titleInputRef"
-        v-model="titleDraft"
-        maxlength="30"
-        class="block mt-1.5 bg-transparent font-display text-[16px] tracking-[0.18em] uppercase text-text-muted outline-none w-full border-b border-dashed border-accent"
-        @blur="commitTitle"
-        @keydown.enter.prevent="commitTitle"
-        @keydown.esc.prevent="cancelTitle"
-      />
-      <button
-        v-else-if="showCta"
-        type="button"
-        class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-accent text-left"
-        @click="emit('open-class-picker')"
-      >Choisir une classe</button>
-      <button
-        v-else
-        type="button"
-        class="block mt-1.5 font-display text-[16px] tracking-[0.18em] uppercase text-text-muted hover:text-text-default text-left w-full truncate"
-        @click="startEditTitle"
-      >{{ title ?? 'Ajouter un titre' }}</button>
     </div>
     <button
       type="button"
-      class="card-delete-btn absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
+      class="card-delete-btn absolute top-2 right-2 z-10 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
       @click="onRemove"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
