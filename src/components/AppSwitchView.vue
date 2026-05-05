@@ -100,7 +100,7 @@ const nextLevelLabel = computed(() => {
 
 <template>
   <div
-    class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden py-6"
+    class="switch-view flex-1 min-h-0 flex flex-col items-center justify-center relative overflow-hidden py-6"
     @wheel="onWheel"
   >
     <div class="carousel relative flex flex-1 items-stretch justify-center gap-32 w-full min-h-0" style="--card-width: 576px;">
