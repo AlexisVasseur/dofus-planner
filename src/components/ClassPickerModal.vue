@@ -49,13 +49,25 @@ window.addEventListener('keydown', (e) => {
     <div
       v-if="open"
       class="fixed inset-0 z-[60] flex items-center justify-center"
-      style="background: rgba(0,0,0,0.6); backdrop-filter: blur(2px);"
+      style="background: rgba(0,0,0,0.45); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);"
       @click.self="close"
     >
-      <div class="modal bg-bg-surface border border-border-default rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(255,255,255,0.06)] max-w-[720px] w-full mx-4 overflow-hidden">
-        <header class="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-          <h2 class="font-sans font-semibold text-base text-text-default tracking-[0.05em] uppercase">Choisir une classe</h2>
-          <button @click="close" class="font-mono text-[9px] text-text-faint border border-border-default rounded px-1.5 py-0.5">esc</button>
+      <div
+        class="modal border border-white/10 rounded-xl shadow-[0_24px_64px_rgba(0,0,0,0.7),0_0_0_1px_rgba(93,207,224,0.10)] max-w-[720px] w-full mx-4 overflow-hidden backdrop-blur-xl"
+        style="background: rgba(15,15,18,0.55);"
+      >
+        <header class="flex items-center justify-between px-5 py-4 border-b border-white/10">
+          <h2 class="font-sans font-bold text-base text-text-default tracking-[0.06em] uppercase">Choisir une classe</h2>
+          <button
+            type="button"
+            @click="close"
+            aria-label="Fermer"
+            class="w-8 h-8 inline-flex items-center justify-center rounded-full border border-white/10 text-text-faint hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
+          >
+            <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
         </header>
         <div class="grid grid-cols-6 gap-3 p-5">
           <button
