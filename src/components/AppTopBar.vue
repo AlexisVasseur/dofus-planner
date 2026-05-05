@@ -4,6 +4,7 @@ import { useUiStore } from '@/stores/ui';
 import { getCachedItem, populateCache, ensureItems } from '@/composables/useItemCatalog';
 import type { Card } from '@/types/build';
 import type { Item } from '@/data/dofusdb';
+import logoUrl from '@/assets/dofus-planner.png';
 
 const build = useBuildStore();
 const ui = useUiStore();
@@ -118,9 +119,13 @@ function importBuild() {
     class="topbar flex items-center justify-between px-5 py-2.5 mx-4 mt-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] relative z-[5]"
     style="background: rgba(8,8,8,0.85);"
   >
-    <div class="brand flex items-center gap-2.5 font-display text-base text-text-default tracking-[0.18em] uppercase">
-      <span class="dot w-2 h-2 rounded-full bg-white/85 shadow-[0_0_10px_rgba(255,255,255,0.45)]"></span>
-      Dofus level planner
+    <div class="brand flex items-center">
+      <img
+        :src="logoUrl"
+        alt="Dofus Planner"
+        class="h-10 w-auto select-none"
+        draggable="false"
+      />
     </div>
     <div class="actions flex items-center gap-2">
       <div class="mode-toggle flex bg-bg-page border border-border-default rounded-md p-0.5 mr-1">
