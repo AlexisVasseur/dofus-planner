@@ -2,7 +2,7 @@ export type ClassId =
   | 'iop' | 'cra' | 'sram' | 'eniripsa' | 'sadida' | 'enutrof'
   | 'sacrieur' | 'ecaflip' | 'feca' | 'xelor' | 'pandawa'
   | 'osamodas' | 'roublard' | 'zobal' | 'steamer' | 'eliotrope'
-  | 'huppermage' | 'ouginak';
+  | 'huppermage' | 'ouginak' | 'forgelance';
 
 export interface ClassDef {
   id: ClassId;

@@ -19,6 +19,7 @@ export const CLASSES: readonly ClassDef[] = [
   { id: 'eliotrope',  name: 'Eliotrope',  abbrev: 'ELI' },
   { id: 'huppermage', name: 'Huppermage', abbrev: 'HUP' },
   { id: 'ouginak',    name: 'Ouginak',    abbrev: 'OUG' },
+  { id: 'forgelance', name: 'Forgelance', abbrev: 'FGL' },
 ] as const;
 
 export const CLASSES_BY_ID: Record<string, ClassDef> = Object.fromEntries(
