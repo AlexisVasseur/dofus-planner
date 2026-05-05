@@ -100,15 +100,15 @@ const nextLevelLabel = computed(() => {
 
 <template>
   <div
-    class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden"
+    class="switch-view flex-1 flex flex-col items-center justify-center relative overflow-hidden py-6"
     @wheel="onWheel"
   >
-    <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 576px;">
+    <div class="carousel relative flex flex-1 items-stretch justify-center gap-32 w-full min-h-0" style="--card-width: 576px;">
       <!-- PREV peek -->
       <button
         v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-right"
+        class="peek peek-prev relative flex flex-col items-end gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-right h-full"
         :aria-label="`Étape précédente — ${prevLevelLabel}`"
         @click="goPrev"
       >
@@ -116,7 +116,7 @@ const nextLevelLabel = computed(() => {
           <span class="text-[28px] leading-none">‹</span>
           <span>Précédent · {{ prevLevelLabel }}</span>
         </div>
-        <div class="pointer-events-none">
+        <div class="pointer-events-none flex-1 min-h-0 w-full flex justify-end">
           <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
           <EquipmentCardDiff
             v-else-if="beforePrevCard"
@@ -129,12 +129,12 @@ const nextLevelLabel = computed(() => {
       <!-- ACTIVE card. Old + new overlap in the same grid cell so they animate concurrently.
            Entering covers leaving via z-index; leaving fades out fast so the brief overlap
            is barely perceptible. pointer-events-none → purely visual. -->
-      <div class="active-stage grid place-items-center" style="grid-template-areas: 'stack';">
+      <div class="active-stage grid place-items-stretch h-full" style="grid-template-areas: 'stack';">
         <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
             :key="activeCard.id"
-            class="active-card pointer-events-none flex-shrink-0"
+            class="active-card pointer-events-none flex-shrink-0 h-full"
             style="grid-area: stack;"
           >
             <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
@@ -151,7 +151,7 @@ const nextLevelLabel = computed(() => {
       <button
         v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-left"
+        class="peek peek-next relative flex flex-col items-start gap-3 cursor-pointer opacity-40 hover:opacity-70 origin-left h-full"
         :aria-label="`Étape suivante — ${nextLevelLabel}`"
         @click="goNext"
       >
@@ -159,7 +159,7 @@ const nextLevelLabel = computed(() => {
           <span>Suivant · {{ nextLevelLabel }}</span>
           <span class="text-[28px] leading-none">›</span>
         </div>
-        <div class="pointer-events-none">
+        <div class="pointer-events-none flex-1 min-h-0 w-full">
           <EquipmentCardDiff
             v-if="activeCard"
             :card="nextCard"
