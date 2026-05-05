@@ -93,7 +93,7 @@ const nextLevelLabel = computed(() => {
       {{ positionLabel }}
     </div>
 
-    <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 720px;">
+    <div class="carousel relative flex items-center justify-center gap-32 w-full" style="--card-width: 576px;">
       <!-- PREV peek -->
       <button
         v-if="canGoBack && previousCard"
@@ -174,7 +174,7 @@ const nextLevelLabel = computed(() => {
 
 /* Active card stage — needs explicit width because the grid stack collapses to children. */
 .active-stage {
-  width: 720px;
+  width: 576px;
 }
 
 /* Slide animations:
