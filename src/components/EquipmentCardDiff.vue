@@ -120,7 +120,7 @@ function clearDofus(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 h-full flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
+    class="equipment-card select-none text-left flex-shrink-0 h-full max-h-[660px] flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-all"
     :style="themeStyle"
     :class="{ 'is-active': isActive }"
     :data-class-id="card.classId ?? ''"
