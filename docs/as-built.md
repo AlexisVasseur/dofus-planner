@@ -54,11 +54,12 @@ src/
 │   └── useShoppingList.ts           bucketing computed: ShoppingList from build cards
 ├── components/
 │   ├── AppTopBar.vue                brand + Build|Switch|Achats toggle + Importer/Exporter/Nv build
-│   ├── AppTimeline.vue              horizontal scroll area, exposes scrollRef
-│   ├── AppMiniMap.vue               clickable cells (Lv N), centers card via scrollTo
+│   ├── AppTimeline.vue              Build-only horizontal scroll area, exposes scrollRef
+│   ├── AppSwitchView.vue            Switch carousel: peek-prev | active card | peek-next
+│   ├── AppMiniMap.vue               clickable cells (Lv N), always sets active card; scrollTo only if scrollRef
 │   ├── AppPurchasePlanner.vue       V2 screen: header + room tabs + NPC grid
-│   ├── EquipmentCard.vue            full card (Build mode + first card in Switch)
-│   ├── EquipmentCardDiff.vue        diff card (Switch mode, idx >= 1)
+│   ├── EquipmentCard.vue            full card (Build mode + first card in Switch carousel)
+│   ├── EquipmentCardDiff.vue        diff card (Switch carousel, idx >= 1)
 │   ├── CardHeader.vue               class logo + editable level + optional title + delete
 │   ├── ClassLogo.vue                hex frame, pulse on null classId, configurable size
 │   ├── EquipmentSlot.vue            full slot row (6 states, dblclick clears)
@@ -91,15 +92,17 @@ The app has three top-level view modes selected from the segmented control in th
 ### Build mode
 Each card renders as `EquipmentCard`: full equipment list (10 slot rows + 6 dofus cells). All slots clickable to open the item picker; double-click clears.
 
-### Switch mode (planning view)
-The first card always renders as `EquipmentCard` (it's the baseline). Cards 1+ render as `EquipmentCardDiff`, comparing against the previous card:
+### Switch mode (carousel planning view)
+Switch is **not** the timeline. It's a **carousel** centered on the active card with peeks of prev/next on either side, navigated with arrow buttons, the keyboard, or the mini-map.
 
-- **Same vertical layout as Build** (10 slot rows + 6 dofus cells), so card heights stay consistent across modes.
-- **Unchanged slots**: dimmed at `opacity-35` (hover lifts to `opacity-60`).
-- **Changed slots**: full opacity, side-by-side `[icon] OldName → [icon] NewName`. Old in red `text-danger-soft #f87171` (line-through), new in mint `text-accent #5BD3A8`.
-- **Class change**: a compact hint at the top of the card body with the same red/green pattern.
-- **Dofus row**: same 6-cell layout, changed cells get a mint border + `0 0 0 1px` mint glow. Tooltip on hover shows the previous item.
-- **All rows clickable** in Switch mode too — clicking a slot opens the picker, double-click clears.
+- **Active card** centered, **576px wide** (vs 320px in Build), rendered as `EquipmentCard` for the first card (the baseline) or `EquipmentCardDiff` (vs the previous card) for any other.
+- **Prev / Next peeks**: same card content, `transform: scale(0.55)` + `opacity-40` (60% on hover), clickable to navigate. Peek labels above each: `‹ Précédent · Lv X` / `Suivant · Lv Y ›` in Bebas Neue 20px mint.
+- **Active card is `pointer-events-none`**: purely visual in Switch mode. No editing, no slot clicks, no header clicks. The × delete button is hidden (`:deep(.card-delete-btn) { display: none }`).
+- **Slide+fade transition** between cards (260ms slide on entering with z-index 2, 100ms fade-out on leaving with z-index 1, no transform on leaving). Direction inferred via a `flush: 'sync'` watch on `activeIndex` so it's correct for both arrow clicks AND mini-map jumps.
+- **Card width is CSS-var driven** (`--card-width`), set on the carousel container. Build mode keeps the default 320px.
+- **Mini-map at the bottom** (same component as Build mode, click to jump): the `gotoCard` action always calls `ui.setActiveCard` and only scrolls if a `scrollRef` was passed (Build), so it natively works in Switch with `:scroll-ref="null"`.
+- **Diff card content**: same red-old/green-new visual as before — `[icon] OldName → [icon] NewName` for changed slots, dimmed `opacity-35` for unchanged ones, dofus changes flagged with mint border + tooltip.
+- **Card text always left-aligned** (`text-left` on the card root) — fixes a default `text-align: center` inheritance from the peek `<button>` parent that was centering item names in the side cards.
 
 ### Achats mode (V2 purchase planner)
 Replaces the timeline area entirely (mini-map hidden). Layout:
@@ -249,10 +252,13 @@ Fonts: `font-display` = Bebas Neue (level numbers, section headers, brand wordma
 
 - **No global zoom**. Tried `zoom: 1.2` on body (broke popover positioning) then on `#app` (clipped content off-viewport) and reverted. Cards instead use bumped CSS values directly.
 - **`Lv` prefix uses Bebas Neue 16px** instead of Inter 9px — more legible at small size.
-- **Mini-map shows `Lv N` inside each cell**, no viewport indicator, no drag-scroll. Click smooth-scrolls.
+- **Mini-map shows `Lv N` inside each cell**, no viewport indicator, no drag-scroll. Click smooth-scrolls (Build) or just sets active (Switch).
 - **Connector pill is a 36×36 circle**, no level node, no chip, no "Ajouter" label expansion.
 - **DofusCell wrapper is a `<div role="button">`** not a `<button>` — fixes nested-button HTML invalidity.
-- **Per-card delete (×)** in the header top-right with confirm prompt.
+- **Per-card delete (×)** in the header top-right with confirm prompt; hidden in Switch (read-only mode).
+- **Switch is a carousel**, not a sub-mode of the timeline. The original spec assumed a horizontal-timeline-with-diff-cards; user feedback drove the redesign to a centered carousel + arrow nav.
+- **No "Équipement" section header** inside the cards (the slot icons make it obvious).
+- **No "Étape X / Y · Lv X" position label** in Switch view — the active card and mini-map are enough orientation.
 
 ## Features added beyond original V1 spec
 
@@ -265,6 +271,7 @@ Fonts: `font-display` = Bebas Neue (level numbers, section headers, brand wordma
 - Editable level / title with focus management
 - Class picker modal (per-card scope)
 - **V2 — Purchase planner (Achats mode)** with bucketing, room tabs, copy-to-clipboard
+- **V2.1 — Switch redesigned as a carousel**: 576px central card (CSS-var width), peek-prev / peek-next, slide-fade transition, keyboard nav, mini-map jump, purely visual (read-only)
 
 ## Known limitations / future candidates
 
