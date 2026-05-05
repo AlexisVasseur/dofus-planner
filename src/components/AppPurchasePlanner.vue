@@ -21,14 +21,17 @@ watchEffect(() => {
 
 const hasAnything = computed(() => list.value.totals.items > 0);
 
-const visibleRooms = computed(() =>
-  ROOM_ORDER.filter((r) => list.value.totals.perRoom[r] > 0),
-);
+// Show every room (even empty) so users always see the full structure.
+const visibleRooms = computed(() => [...ROOM_ORDER]);
 
+// All NPCs configured for the room (regardless of whether there are items in them yet).
 function npcsForRoom(room: RoomId): NpcId[] {
   const npcs = ROOM_NPCS[room];
-  const cell = list.value.rooms[room];
-  return NPC_ORDER.filter((n) => npcs.includes(n) && (cell[n]?.length ?? 0) > 0);
+  return NPC_ORDER.filter((n) => npcs.includes(n));
+}
+
+function itemsForCell(room: RoomId, npc: NpcId) {
+  return list.value.rooms[room][npc] ?? [];
 }
 
 // Sliding pill behind the active tab. Same pattern as the topbar mode-toggle.
@@ -126,17 +129,17 @@ async function copyItem(name: string, key: string): Promise<void> {
         </button>
       </nav>
 
-      <!-- All rooms stacked vertically. Each room is its own floating panel with the
-           previous NPC-as-columns layout. Pill tabs above scroll-jump to a room. -->
+      <!-- All rooms stacked vertically (even empty ones, with a centered placeholder).
+           Each room is its own floating panel; tabs above scroll-jump to it. -->
       <div class="flex flex-col gap-3">
         <div
           v-for="room in visibleRooms"
           :key="room"
           :ref="(el) => setRoomSection(room, el as HTMLElement | null)"
-          class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 grid gap-x-6 gap-y-5 scroll-mt-16"
-          style="background: rgba(8,8,8,0.55); grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
+          class="mx-4 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
+          style="background: rgba(8,8,8,0.55);"
         >
-          <header class="col-span-full flex items-baseline gap-3 -mb-2">
+          <header class="flex items-baseline gap-3 mb-3">
             <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
               Salle {{ room }}
             </h2>
@@ -144,39 +147,55 @@ async function copyItem(name: string, key: string): Promise<void> {
               {{ list.totals.perRoom[room] }} item{{ list.totals.perRoom[room] > 1 ? 's' : '' }}
             </span>
           </header>
-          <section v-for="npc in npcsForRoom(room)" :key="`${room}-${npc}`" class="min-w-0">
-            <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
-              {{ NPC_LABEL[npc] }}
-            </h3>
-            <ul class="flex flex-col gap-1">
-              <li v-for="item in list.rooms[room][npc]!" :key="item.id" class="relative min-w-0">
-                <button
-                  type="button"
-                  data-testid="item-name"
-                  class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
-                  :class="copiedKey === `${room}-${npc}-${item.id}` && '!text-[#5DCFE0]'"
-                  :title="`Cliquer pour copier — ${item.name}`"
-                  @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
-                >
-                  <img
-                    v-if="item.iconUrl"
-                    :src="item.iconUrl"
-                    alt=""
-                    class="w-5 h-5 flex-shrink-0 rounded-sm"
-                    loading="lazy"
-                  />
-                  <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                  <span class="truncate min-w-0 flex-1">{{ item.name }}</span>
-                </button>
-                <Transition name="copied">
-                  <span
-                    v-if="copiedKey === `${room}-${npc}-${item.id}`"
-                    class="copied-tooltip absolute left-7 top-full mt-1 z-20 px-2 py-0.5 rounded bg-[#5DCFE0] text-[#0A2530] text-[10px] font-bold uppercase tracking-[0.05em] whitespace-nowrap shadow-md pointer-events-none"
-                  >Item copié</span>
-                </Transition>
-              </li>
-            </ul>
-          </section>
+
+          <p
+            v-if="list.totals.perRoom[room] === 0"
+            class="text-center font-sans font-semibold text-[12px] text-text-faint tracking-[0.06em] uppercase py-8"
+          >Aucun item</p>
+
+          <div
+            v-else
+            class="grid gap-x-6 gap-y-5"
+            style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));"
+          >
+            <section v-for="npc in npcsForRoom(room)" :key="`${room}-${npc}`" class="min-w-0">
+              <h3 class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase mb-2 pb-1.5 border-b border-border-subtle">
+                {{ NPC_LABEL[npc] }}
+              </h3>
+              <p
+                v-if="itemsForCell(room, npc).length === 0"
+                class="text-[12px] font-sans text-text-faint italic"
+              >Aucun item</p>
+              <ul v-else class="flex flex-col gap-1">
+                <li v-for="item in itemsForCell(room, npc)" :key="item.id" class="relative min-w-0">
+                  <button
+                    type="button"
+                    data-testid="item-name"
+                    class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default hover:text-[#8AE0EE] transition-colors cursor-pointer"
+                    :class="copiedKey === `${room}-${npc}-${item.id}` && '!text-[#5DCFE0]'"
+                    :title="`Cliquer pour copier — ${item.name}`"
+                    @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
+                  >
+                    <img
+                      v-if="item.iconUrl"
+                      :src="item.iconUrl"
+                      alt=""
+                      class="w-5 h-5 flex-shrink-0 rounded-sm"
+                      loading="lazy"
+                    />
+                    <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
+                    <span class="truncate min-w-0 flex-1">{{ item.name }}</span>
+                  </button>
+                  <Transition name="copied">
+                    <span
+                      v-if="copiedKey === `${room}-${npc}-${item.id}`"
+                      class="copied-tooltip absolute left-7 top-full mt-1 z-20 px-2 py-0.5 rounded bg-[#5DCFE0] text-[#0A2530] text-[10px] font-bold uppercase tracking-[0.05em] whitespace-nowrap shadow-md pointer-events-none"
+                    >Item copié</span>
+                  </Transition>
+                </li>
+              </ul>
+            </section>
+          </div>
         </div>
       </div>
     </template>
