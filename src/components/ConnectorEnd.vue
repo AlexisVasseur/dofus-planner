@@ -23,24 +23,24 @@ function addEmpty(): void {
   >
     <button
       type="button"
-      class="group flex-1 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-white/10 bg-white/[0.02] hover:bg-[#5DCFE0]/[0.06] hover:border-[#5DCFE0]/40 transition-colors"
+      class="flex-1 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.10] hover:bg-[#5DCFE0]/[0.18] hover:border-[#5DCFE0]/60 transition-colors"
       @click="addCopy"
     >
-      <svg class="w-7 h-7 text-text-faint group-hover:text-[#8AE0EE] transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg class="w-7 h-7 text-[#8AE0EE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <rect x="9" y="9" width="11" height="11" rx="2" />
         <path d="M5 15V5a2 2 0 0 1 2-2h10" />
       </svg>
-      <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-text-muted group-hover:text-[#8AE0EE] transition-colors">Copier le précédent</span>
+      <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Copier le stuff précédent</span>
     </button>
     <button
       type="button"
-      class="group flex-1 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.10] hover:bg-[#5DCFE0]/[0.18] hover:border-[#5DCFE0]/60 transition-colors"
+      class="flex-1 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.10] hover:bg-[#5DCFE0]/[0.18] hover:border-[#5DCFE0]/60 transition-colors"
       @click="addEmpty"
     >
       <svg class="w-7 h-7 text-[#8AE0EE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M12 5v14M5 12h14" />
       </svg>
-      <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Nouveau</span>
+      <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Nouveau stuff</span>
     </button>
   </article>
 </template>
