@@ -121,6 +121,10 @@ const slotForQuery = computed<SearchTarget>(() => {
 });
 const search = ref('');
 
+// Skeleton placeholder rows shown while items load. Widths varied so the
+// shimmer doesn't read as 6 identical bars.
+const SKELETON_NAME_WIDTHS = ['w-4/5', 'w-3/5', 'w-3/4', 'w-2/3', 'w-4/6', 'w-3/4', 'w-2/3', 'w-3/5'];
+
 const filterMode = ref<'all' | 'eligible' | 'over'>('all');
 const sortMode = ref<'level' | 'name'>('level');
 
@@ -268,10 +272,27 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
         >{{ opt.label }}</button>
       </div>
       <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll">
-        <p v-if="loading" class="text-text-dim text-xs px-3 py-4">Chargement…</p>
-        <p v-else-if="error" class="text-danger-soft text-xs px-3 py-4">Erreur : {{ error }}</p>
+        <!-- Loading skeleton: 8 placeholder rows mimicking the real item-row layout
+             so when results land they replace the skeletons without flicker. -->
+        <template v-if="loading">
+          <div
+            v-for="(w, i) in SKELETON_NAME_WIDTHS"
+            :key="`sk-${i}`"
+            class="flex items-center gap-3 px-3 py-2.5 rounded-md w-full animate-pulse"
+            aria-hidden="true"
+          >
+            <div class="w-9 h-9 rounded-md bg-white/[0.06] border border-white/10 shrink-0"></div>
+            <div class="flex-1 min-w-0">
+              <div class="h-3 bg-white/[0.06] rounded" :class="w"></div>
+              <div class="h-2 bg-white/[0.04] rounded w-1/3 mt-1.5"></div>
+            </div>
+            <div class="w-9 h-4 bg-white/[0.04] rounded border border-white/10"></div>
+          </div>
+        </template>
+        <p v-else-if="error" class="text-danger-soft text-xs px-3 py-4">Erreur&nbsp;: {{ error }}</p>
         <p v-else-if="filtered.length === 0" class="text-text-dim text-xs px-3 py-4">Aucun item.</p>
         <button
+          v-else
           v-for="it in filtered"
           :key="it.id"
           type="button"
