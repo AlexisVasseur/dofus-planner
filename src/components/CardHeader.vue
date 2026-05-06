@@ -86,17 +86,33 @@ const confirming = ref(false);
 const deleteBtnRef = ref<HTMLElement | null>(null);
 const confirmRef = ref<HTMLElement | null>(null);
 const CONFIRM_W = 220;
-const CONFIRM_GAP = 6;
-const confirmPosition = ref<{ top: number; left: number }>({ top: 0, left: 0 });
+const CONFIRM_GAP = 8;
+const confirmPosition = ref<{ top: number; left: number; side: 'right' | 'left' }>({
+  top: 0,
+  left: 0,
+  side: 'right',
+});
 
 function recomputeConfirmPosition(): void {
   const btn = deleteBtnRef.value;
   if (!btn) return;
   const r = btn.getBoundingClientRect();
-  confirmPosition.value = {
-    top: r.bottom + CONFIRM_GAP,
-    left: Math.max(8, r.right - CONFIRM_W),
-  };
+  // Default: to the right of the × button, top-aligned. Flip to the left if there
+  // isn't enough horizontal room before the viewport edge.
+  const fitsRight = window.innerWidth - (r.right + CONFIRM_GAP) >= CONFIRM_W + 8;
+  if (fitsRight) {
+    confirmPosition.value = {
+      top: r.top,
+      left: r.right + CONFIRM_GAP,
+      side: 'right',
+    };
+  } else {
+    confirmPosition.value = {
+      top: r.top,
+      left: Math.max(8, r.left - CONFIRM_GAP - CONFIRM_W),
+      side: 'left',
+    };
+  }
 }
 
 watch(confirming, async (v) => {
@@ -223,6 +239,7 @@ function confirmDelete() {
           left: confirmPosition.left + 'px',
           width: CONFIRM_W + 'px',
           background: 'rgba(8,8,8,0.85)',
+          '--enter-x': confirmPosition.side === 'right' ? '-4px' : '4px',
         }"
         role="dialog"
         aria-label="Confirmer la suppression"
@@ -254,6 +271,6 @@ function confirmDelete() {
 }
 .confirm-pop-enter-from, .confirm-pop-leave-to {
   opacity: 0;
-  transform: translateY(-4px);
+  transform: translateX(var(--enter-x, -4px));
 }
 </style>
