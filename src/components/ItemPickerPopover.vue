@@ -188,6 +188,14 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
 
 <template>
   <Teleport to="body">
+    <Transition name="backdrop">
+      <div
+        v-if="target && position.mode === 'modal'"
+        class="fixed inset-0 z-[54] backdrop-blur-sm"
+        style="background: rgba(0,0,0,0.5);"
+        @click="close"
+      />
+    </Transition>
     <Transition name="popover">
       <aside
         v-if="target"
@@ -304,5 +312,11 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
 .popover-enter-from, .popover-leave-to {
   opacity: 0;
   transform: translateX(var(--enter-x, -6px));
+}
+.backdrop-enter-active, .backdrop-leave-active {
+  transition: opacity 150ms ease;
+}
+.backdrop-enter-from, .backdrop-leave-to {
+  opacity: 0;
 }
 </style>
