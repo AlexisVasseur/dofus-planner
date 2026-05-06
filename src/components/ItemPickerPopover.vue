@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch, nextTick } from 'vue';
-import { useEventListener, useWindowSize } from '@vueuse/core';
+import { useEventListener, useWindowSize, onClickOutside } from '@vueuse/core';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
 import { useItemSearch, isOverLeveled, type SearchTarget } from '@/composables/useItemCatalog';
@@ -172,7 +172,16 @@ function pick(itemId: number) {
 
 function close() { ui.closeItemPicker(); }
 
-window.addEventListener('keydown', (e) => {
+// Outside-click closes — but ignore the trigger elements (slot rows / dofus cells)
+// so clicking another slot in the same or another card switches the target instead
+// of closing+reopening the popover.
+onClickOutside(popoverRef, (e) => {
+  const t = e.target as HTMLElement | null;
+  if (t && t.closest('.slot-row, .dofus-cell')) return;
+  close();
+});
+
+useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   if (e.key === 'Escape' && ui.itemPickerTarget) close();
 });
 </script>
