@@ -288,7 +288,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
             class="it-ic w-9 h-9 rounded-md flex items-center justify-center shrink-0"
             :class="isOverLeveled(it.levelRequired, card?.level ?? null)
               ? 'bg-[#2a1414] border border-danger text-danger-soft shadow-[0_0_0_1px_rgba(220,38,38,0.25)]'
-              : 'bg-bg-slot-filled border border-border-slot-filled text-text-muted'"
+              : 'bg-white/[0.06] border border-white/15 text-text-muted'"
           >
             <img v-if="it.iconUrl" :src="it.iconUrl" :alt="it.name" class="w-6 h-6" />
             <span v-else>○</span>

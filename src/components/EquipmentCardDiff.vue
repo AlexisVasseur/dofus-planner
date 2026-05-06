@@ -198,8 +198,8 @@ function clearDofus(index: number): void {
           <div
             class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0"
             :class="entry.newRef
-              ? 'bg-bg-slot-filled border border-border-slot-filled'
-              : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
+              ? 'bg-white/[0.06] border border-white/15'
+              : 'bg-white/[0.02] border border-dashed border-white/10'"
           >
             <img
               v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
@@ -227,8 +227,8 @@ function clearDofus(index: number): void {
           :class="entry.changed
             ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(93,207,224,0.3)]'
             : entry.newRef
-              ? 'bg-bg-slot-filled border border-border-slot-filled opacity-35 hover:opacity-60'
-              : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty opacity-35 hover:opacity-60'"
+              ? 'bg-white/[0.06] border border-white/15 opacity-35 hover:opacity-60'
+              : 'bg-white/[0.02] border border-dashed border-white/10 opacity-35 hover:opacity-60'"
           :title="entry.changed ? `Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}` : ''"
           @click="pickDofus(entry.index)"
           @dblclick.stop="clearDofus(entry.index)"

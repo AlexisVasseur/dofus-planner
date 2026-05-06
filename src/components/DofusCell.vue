@@ -19,8 +19,8 @@ const overLvl = computed(() => props.item !== null && isOverLeveled(props.item.l
   <div
     class="dofus-cell aspect-square rounded-md transition-colors flex items-center justify-center group relative cursor-pointer outline-none focus-visible:ring-1 focus-visible:ring-accent"
     :class="filled
-      ? 'bg-bg-slot-filled border border-border-slot-filled'
-      : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
+      ? 'bg-white/[0.06] border border-white/15'
+      : 'bg-white/[0.02] border border-dashed border-white/10'"
     :data-over-lvl="overLvl"
     :data-active="active"
     role="button"

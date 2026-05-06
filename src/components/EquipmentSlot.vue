@@ -38,7 +38,7 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
   >
     <div
       class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 transition-colors"
-      :class="filled ? 'bg-bg-slot-filled border border-border-slot-filled' : 'bg-bg-slot-empty border border-dashed border-border-dashed-empty'"
+      :class="filled ? 'bg-white/[0.06] border border-white/15' : 'bg-white/[0.02] border border-dashed border-white/10'"
     >
       <img v-if="filled && item!.iconUrl" :src="item!.iconUrl" :alt="label" class="w-[26px] h-[26px]" />
       <svg
