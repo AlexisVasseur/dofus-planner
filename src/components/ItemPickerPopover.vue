@@ -63,9 +63,13 @@ function recomputePosition(): void {
   if (!cardEl) return;
   const r = cardEl.getBoundingClientRect();
 
+  // Popover matches the card's actual rendered size for visual symmetry.
+  const popW = r.width;
+  const popH = r.height;
+
   // Horizontal: right of card by default, flip to left if it would overflow
-  const fitsRight = viewportW.value - (r.right + GAP) >= POP_W + MARGIN_X;
-  const fitsLeft = r.left - GAP >= POP_W + MARGIN_X;
+  const fitsRight = viewportW.value - (r.right + GAP) >= popW + MARGIN_X;
+  const fitsLeft = r.left - GAP >= popW + MARGIN_X;
 
   let side: 'right' | 'left';
   let left: number;
@@ -74,19 +78,19 @@ function recomputePosition(): void {
     left = r.right + GAP;
   } else if (fitsLeft) {
     side = 'left';
-    left = r.left - GAP - POP_W;
+    left = r.left - GAP - popW;
   } else {
     // Degenerate small viewport: clamp to right edge with margin
     side = 'right';
-    left = Math.max(MARGIN_X, viewportW.value - POP_W - MARGIN_X);
+    left = Math.max(MARGIN_X, viewportW.value - popW - MARGIN_X);
   }
 
   // Vertical: top-align with card, then clamp into viewport (avoid header + minimap)
   const minTop = CHROME_TOP + MARGIN_Y;
-  const maxTop = viewportH.value - CHROME_BOTTOM - POP_H - MARGIN_Y;
+  const maxTop = viewportH.value - CHROME_BOTTOM - popH - MARGIN_Y;
   const top = Math.max(minTop, Math.min(maxTop, r.top));
 
-  position.value = { mode: 'anchored', top, left, width: POP_W, height: POP_H, side };
+  position.value = { mode: 'anchored', top, left, width: popW, height: popH, side };
 }
 
 // Recompute when the target changes (open or switch); next tick ensures the anchor card
