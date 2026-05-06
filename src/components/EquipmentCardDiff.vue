@@ -94,6 +94,16 @@ function className(classId: string | null): string {
   return CLASSES_BY_ID[classId]?.name ?? classId;
 }
 
+function onCardClick(e: MouseEvent): void {
+  ui.setActiveCard(props.card.id);
+  // Always centre the card horizontally — even if already active.
+  (e.currentTarget as HTMLElement).scrollIntoView({
+    behavior: 'smooth',
+    inline: 'center',
+    block: 'nearest',
+  });
+}
+
 function pickSlot(slot: SlotType): void {
   ui.openItemPicker({ kind: 'slot', cardId: props.card.id, slot });
 }
@@ -128,7 +138,7 @@ function clearDofus(index: number): void {
     :data-card-id="card.id"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
-    @click="ui.setActiveCard(card.id)"
+    @click="onCardClick"
   >
     <CardHeader
       :class-id="card.classId"

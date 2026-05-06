@@ -42,6 +42,19 @@ const themeStyle = computed(() => {
   return base;
 });
 
+function onCardClick(e: MouseEvent): void {
+  ui.setActiveCard(props.card.id);
+  // Always centre the card horizontally — even if it was already active. The
+  // setActiveCard watcher in AppTimeline only fires on value change, so a click
+  // on the already-active card wouldn't otherwise scroll. inline:'center'
+  // handles that.
+  (e.currentTarget as HTMLElement).scrollIntoView({
+    behavior: 'smooth',
+    inline: 'center',
+    block: 'nearest',
+  });
+}
+
 function onRemoveCard() {
   // Clear active/picker if they pointed at this card
   if (ui.activeCardId === props.card.id) ui.setActiveCard(null);
@@ -104,7 +117,7 @@ function onClearDofus(index: number): void {
     :data-card-id="card.id"
     @mouseenter="hovered = true"
     @mouseleave="hovered = false"
-    @click="ui.setActiveCard(card.id)"
+    @click="onCardClick"
   >
     <CardHeader
       :class-id="card.classId"
