@@ -172,6 +172,9 @@ watch(() => ui.itemPickerTarget, (t) => {
   showSkeletonFor(500);
 });
 watch([filterMode, sortMode], () => { showSkeletonFor(500); });
+// Search keystrokes also trigger the skeleton so stale results disappear
+// immediately while the debounced fetch is still in flight.
+watch(search, () => { showSkeletonFor(500); });
 
 const showSkeleton = computed(() => loading.value || forceSkeleton.value);
 
