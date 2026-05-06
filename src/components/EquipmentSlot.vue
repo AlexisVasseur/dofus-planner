@@ -71,16 +71,15 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
 <style scoped>
 .slot-row.is-empty:hover .icon {
   border-style: solid;
-  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
-  color: var(--class-accent, theme('colors.accent.DEFAULT'));
-  background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 6%, transparent);
+  border-color: color-mix(in srgb, var(--class-accent, #5DCFE0) 35%, transparent);
+  color: color-mix(in srgb, var(--class-accent, #5DCFE0) 70%, transparent);
+  background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 4%, transparent);
 }
 .slot-row.is-empty:hover .label {
   color: theme('colors.text.muted');
 }
 .slot-row.is-filled:hover .icon {
-  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--class-accent, #5DCFE0) 60%, transparent);
+  border-color: color-mix(in srgb, var(--class-accent, #5DCFE0) 35%, transparent);
 }
 .slot-row.is-over-lvl .icon {
   background-color: #2a1414;

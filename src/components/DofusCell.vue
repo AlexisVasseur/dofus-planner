@@ -52,8 +52,8 @@ const overLvl = computed(() => props.item !== null && isOverLeveled(props.item.l
 <style scoped>
 .dofus-cell:hover:not([data-active='true']) {
   border-style: solid;
-  border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
-  background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 6%, transparent);
+  border-color: color-mix(in srgb, var(--class-accent, #5DCFE0) 35%, transparent);
+  background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 4%, transparent);
 }
 .dofus-cell[data-over-lvl='true'] {
   background-color: #2a1414;
