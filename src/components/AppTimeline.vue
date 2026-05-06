@@ -27,7 +27,7 @@ onMounted(() => {
     ref="scrollRef"
     class="timeline-area flex-1 overflow-x-auto overflow-y-hidden relative z-[1] py-6 no-scrollbar"
   >
-    <div class="row flex items-center gap-0 pl-16 pr-32 h-full">
+    <div class="row flex items-center gap-0 pl-16 pr-[50vw] h-full">
       <template v-for="(card, idx) in build.cards" :key="card.id">
         <EquipmentCard :card="card" />
         <!-- "+" pill between cards only — the last position uses the ghost-card ConnectorEnd below -->
