@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, nextTick } from 'vue';
+import { ref, computed, nextTick, watch } from 'vue';
+import { useEventListener, onClickOutside } from '@vueuse/core';
 import ClassThumbnail from '@/components/ClassThumbnail.vue';
 import type { ClassId } from '@/types/classes';
 
@@ -80,10 +81,56 @@ function cancelTitle() {
   editingTitle.value = false;
 }
 
+// Floating delete-confirm popover anchored to the × button.
+const confirming = ref(false);
+const deleteBtnRef = ref<HTMLElement | null>(null);
+const confirmRef = ref<HTMLElement | null>(null);
+const CONFIRM_W = 220;
+const CONFIRM_GAP = 6;
+const confirmPosition = ref<{ top: number; left: number }>({ top: 0, left: 0 });
+
+function recomputeConfirmPosition(): void {
+  const btn = deleteBtnRef.value;
+  if (!btn) return;
+  const r = btn.getBoundingClientRect();
+  confirmPosition.value = {
+    top: r.bottom + CONFIRM_GAP,
+    left: Math.max(8, r.right - CONFIRM_W),
+  };
+}
+
+watch(confirming, async (v) => {
+  if (!v) return;
+  await nextTick();
+  recomputeConfirmPosition();
+});
+
+useEventListener(window, 'resize', () => { if (confirming.value) recomputeConfirmPosition(); });
+useEventListener(window, 'scroll', () => { if (confirming.value) recomputeConfirmPosition(); }, { passive: true, capture: true });
+
+// Click outside the confirm popover dismisses — but ignore clicks landing on
+// the × trigger itself so its own toggle handler runs.
+onClickOutside(confirmRef, (e) => {
+  const t = e.target as HTMLElement | null;
+  if (t && t.closest('.card-delete-btn')) return;
+  confirming.value = false;
+});
+
+useEventListener(window, 'keydown', (e: KeyboardEvent) => {
+  if (e.key === 'Escape' && confirming.value) confirming.value = false;
+});
+
 function onRemove() {
-  if (window.confirm('Supprimer cette étape ?')) {
-    emit('remove');
-  }
+  confirming.value = !confirming.value;
+}
+
+function cancelDelete() {
+  confirming.value = false;
+}
+
+function confirmDelete() {
+  confirming.value = false;
+  emit('remove');
 }
 </script>
 
@@ -156,11 +203,57 @@ function onRemove() {
       </div>
     </div>
     <button
+      ref="deleteBtnRef"
       type="button"
       class="card-delete-btn absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
+      :class="confirming && 'text-danger-soft border-danger/40 bg-danger/10'"
       @click="onRemove"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
     >×</button>
   </header>
+  <Teleport to="body">
+    <Transition name="confirm-pop">
+      <div
+        v-if="confirming"
+        ref="confirmRef"
+        class="fixed z-[55] flex flex-col rounded-lg border border-danger/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+        :style="{
+          top: confirmPosition.top + 'px',
+          left: confirmPosition.left + 'px',
+          width: CONFIRM_W + 'px',
+          background: 'rgba(8,8,8,0.85)',
+        }"
+        role="dialog"
+        aria-label="Confirmer la suppression"
+      >
+        <div class="px-3 py-2.5 text-[12px] font-sans font-medium text-text-default border-b border-white/10">
+          Supprimer cette étape&nbsp;?
+        </div>
+        <div class="flex">
+          <button
+            type="button"
+            class="flex-1 px-3 py-2.5 font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-text-dim hover:text-[#8AE0EE] transition-colors"
+            @click="cancelDelete"
+          >Annuler</button>
+          <div class="w-px bg-white/10" aria-hidden="true"></div>
+          <button
+            type="button"
+            class="flex-1 px-3 py-2.5 font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-danger-soft hover:bg-danger/15 transition-colors"
+            @click="confirmDelete"
+          >Supprimer</button>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
+
+<style scoped>
+.confirm-pop-enter-active, .confirm-pop-leave-active {
+  transition: opacity 120ms ease, transform 120ms ease;
+}
+.confirm-pop-enter-from, .confirm-pop-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+</style>
