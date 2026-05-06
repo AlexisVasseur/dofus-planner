@@ -10,3 +10,40 @@
     font-family: theme('fontFamily.sans');
   }
 }
+
+/* Thin turquoise scrollbar utility — applied to scrollable list areas in pickers.
+   Defined globally because Vue scoped CSS doesn't reliably reach the webkit
+   scrollbar pseudo-elements. */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 207, 224, 0.30) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track,
+.thin-scroll::-webkit-scrollbar-track-piece,
+.thin-scroll::-webkit-scrollbar-corner {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-button,
+.thin-scroll::-webkit-scrollbar-button:start,
+.thin-scroll::-webkit-scrollbar-button:end,
+.thin-scroll::-webkit-scrollbar-button:vertical:start:decrement,
+.thin-scroll::-webkit-scrollbar-button:vertical:start:increment,
+.thin-scroll::-webkit-scrollbar-button:vertical:end:decrement,
+.thin-scroll::-webkit-scrollbar-button:vertical:end:increment {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+  background: transparent !important;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(93, 207, 224, 0.30);
+  border-radius: 999px;
+  transition: background 150ms ease;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 224, 238, 0.55);
+}
