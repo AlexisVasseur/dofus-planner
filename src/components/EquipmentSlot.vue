@@ -26,7 +26,7 @@ const slotSvg = computed(() => getSlotIconSvg(props.slot));
 
 <template>
   <div
-    class="slot-row group flex items-center gap-3 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer"
+    class="slot-row group flex items-center gap-3 px-2 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer"
     :class="{
       'is-filled': filled,
       'is-empty': !filled,
