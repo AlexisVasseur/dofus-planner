@@ -149,7 +149,7 @@ const filtered = computed(() => {
     arr = arr.filter((it) => it.levelRequired > cardLvl);
   }
   arr.sort((a, b) => sortMode.value === 'level'
-    ? a.levelRequired - b.levelRequired
+    ? b.levelRequired - a.levelRequired   // descending: highest level first
     : a.name.localeCompare(b.name));
   return arr;
 });
@@ -240,8 +240,8 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
         <span class="w-px self-stretch bg-border-subtle mx-1" aria-hidden="true" />
         <button
           v-for="opt in [
-            { mode: 'level', label: 'Trier · niveau' },
-            { mode: 'name',  label: 'Trier · nom' },
+            { mode: 'level', label: 'Niveau ↓' },
+            { mode: 'name',  label: 'A-Z' },
           ]"
           :key="opt.mode"
           class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-2.5 py-1 rounded-full border transition-colors"
