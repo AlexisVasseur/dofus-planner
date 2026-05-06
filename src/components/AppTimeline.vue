@@ -3,6 +3,7 @@ import { ref, onMounted } from 'vue';
 import { useBuildStore } from '@/stores/build';
 import EquipmentCard from './EquipmentCard.vue';
 import Connector from './Connector.vue';
+import ConnectorEnd from './ConnectorEnd.vue';
 
 const build = useBuildStore();
 const scrollRef = ref<HTMLElement | null>(null);
@@ -29,8 +30,18 @@ onMounted(() => {
     <div class="row flex items-center gap-0 pl-16 h-full">
       <template v-for="(card, idx) in build.cards" :key="card.id">
         <EquipmentCard :card="card" />
-        <Connector :after-card-id="card.id" v-if="idx >= 0" />
+        <!-- "+" pill between cards only — the last position uses the ghost-card ConnectorEnd below -->
+        <Connector
+          v-if="idx < build.cards.length - 1"
+          :after-card-id="card.id"
+        />
       </template>
+      <!-- Trailing dashed-outline ghost card with 'Copier le précédent' / 'Nouveau' -->
+      <div v-if="build.cards.length > 0" class="w-[52px] flex-shrink-0" aria-hidden="true"></div>
+      <ConnectorEnd
+        v-if="build.cards.length > 0"
+        :after-card-id="build.cards[build.cards.length - 1].id"
+      />
       <div class="w-[50vw] flex-shrink-0" aria-hidden="true"></div>
     </div>
   </div>
