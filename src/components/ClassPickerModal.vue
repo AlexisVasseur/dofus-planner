@@ -242,6 +242,11 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   width: 6px;
   height: 6px;
 }
+.thin-scroll::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
 .thin-scroll::-webkit-scrollbar-track {
   background: transparent;
 }
