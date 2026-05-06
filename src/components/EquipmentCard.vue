@@ -100,6 +100,7 @@ function onClearDofus(index: number): void {
     :style="themeStyle"
     :class="{ 'is-active': isActive }"
     :data-class-id="card.classId ?? ''"
+    :data-card-id="card.id"
     @mouseenter="ui.setActiveCard(card.id)"
   >
     <CardHeader
