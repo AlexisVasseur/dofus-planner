@@ -90,7 +90,12 @@ function onRemove() {
 <template>
   <header class="header relative p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
     <div class="flex items-center gap-4 w-full">
-      <button type="button" @click="emit('open-class-picker')" aria-label="Choisir une classe">
+      <button
+        type="button"
+        class="class-picker-trigger"
+        @click="emit('open-class-picker')"
+        aria-label="Choisir une classe"
+      >
         <ClassThumbnail :class-id="classId" :size="56" />
       </button>
       <div
@@ -111,7 +116,7 @@ function onRemove() {
         <button
           v-else-if="showCta"
           type="button"
-          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left hover:opacity-80"
+          class="class-picker-trigger block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left hover:opacity-80"
           style="color: inherit;"
           @click="emit('open-class-picker')"
         >Choisir une classe</button>
