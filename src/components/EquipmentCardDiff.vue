@@ -96,12 +96,15 @@ function className(classId: string | null): string {
 
 function onCardClick(e: MouseEvent): void {
   ui.setActiveCard(props.card.id);
-  // Always centre the card horizontally — even if already active.
-  (e.currentTarget as HTMLElement).scrollIntoView({
-    behavior: 'smooth',
-    inline: 'center',
-    block: 'nearest',
-  });
+  // Always centre the card horizontally in the timeline scroller (if any).
+  const cardEl = e.currentTarget as HTMLElement;
+  const scroller = cardEl.closest('.timeline-area') as HTMLElement | null;
+  if (!scroller) return;
+  const cardRect = cardEl.getBoundingClientRect();
+  const scrollerRect = scroller.getBoundingClientRect();
+  const cardLeftInScroller = cardRect.left - scrollerRect.left + scroller.scrollLeft;
+  const target = cardLeftInScroller + cardRect.width / 2 - scroller.clientWidth / 2;
+  scroller.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
 
 function pickSlot(slot: SlotType): void {

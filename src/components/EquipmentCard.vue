@@ -44,15 +44,18 @@ const themeStyle = computed(() => {
 
 function onCardClick(e: MouseEvent): void {
   ui.setActiveCard(props.card.id);
-  // Always centre the card horizontally — even if it was already active. The
-  // setActiveCard watcher in AppTimeline only fires on value change, so a click
-  // on the already-active card wouldn't otherwise scroll. inline:'center'
-  // handles that.
-  (e.currentTarget as HTMLElement).scrollIntoView({
-    behavior: 'smooth',
-    inline: 'center',
-    block: 'nearest',
-  });
+  // Always centre the card horizontally in the timeline — even if already active.
+  // scrollIntoView({inline:'center'}) was unreliable near the trailing edge
+  // (browsers cap the scroll early), so we drive scrollTo directly on the
+  // .timeline-area scroll container using bounding rects (offsetParent-agnostic).
+  const cardEl = e.currentTarget as HTMLElement;
+  const scroller = cardEl.closest('.timeline-area') as HTMLElement | null;
+  if (!scroller) return;
+  const cardRect = cardEl.getBoundingClientRect();
+  const scrollerRect = scroller.getBoundingClientRect();
+  const cardLeftInScroller = cardRect.left - scrollerRect.left + scroller.scrollLeft;
+  const target = cardLeftInScroller + cardRect.width / 2 - scroller.clientWidth / 2;
+  scroller.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
 
 function onRemoveCard() {
