@@ -5,7 +5,7 @@ import AppTimeline from './components/AppTimeline.vue';
 import AppMiniMap from './components/AppMiniMap.vue';
 import AppPurchasePlanner from './components/AppPurchasePlanner.vue';
 import AppSwitchView from './components/AppSwitchView.vue';
-import ItemPickerSheet from './components/ItemPickerSheet.vue';
+import ItemPickerPopover from './components/ItemPickerPopover.vue';
 import ClassPickerModal from './components/ClassPickerModal.vue';
 import { useBuildStore } from './stores/build';
 import { useUiStore } from './stores/ui';
@@ -81,7 +81,7 @@ onMounted(() => {
       :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
       class="relative z-20"
     />
-    <ItemPickerSheet />
+    <ItemPickerPopover />
     <ClassPickerModal />
   </div>
 </template>
