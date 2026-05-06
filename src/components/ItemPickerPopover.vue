@@ -152,6 +152,29 @@ watch(target, (newTarget, oldTarget) => {
 
 const { results, loading, error } = useItemSearch(slotForFilter, search);
 
+// Force the skeleton on for at least 500ms after any user action that changes
+// what the list shows (target switch, filter change, sort change). Avoids the
+// previous flicker where stale items were briefly visible before the real
+// loading state kicked in, and gives the filter/sort interactions instant
+// visual feedback even though the actual filter/sort is client-side.
+const forceSkeleton = ref(false);
+let skeletonTimer: ReturnType<typeof setTimeout> | null = null;
+function showSkeletonFor(ms = 500): void {
+  forceSkeleton.value = true;
+  if (skeletonTimer !== null) clearTimeout(skeletonTimer);
+  skeletonTimer = setTimeout(() => {
+    forceSkeleton.value = false;
+    skeletonTimer = null;
+  }, ms);
+}
+watch(() => ui.itemPickerTarget, (t) => {
+  if (t === null) return;
+  showSkeletonFor(500);
+});
+watch([filterMode, sortMode], () => { showSkeletonFor(500); });
+
+const showSkeleton = computed(() => loading.value || forceSkeleton.value);
+
 const filtered = computed(() => {
   let arr = results.value.slice();
   const cardLvl = card.value?.level ?? null;
@@ -273,8 +296,9 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
       </div>
       <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll">
         <!-- Loading skeleton: 8 placeholder rows mimicking the real item-row layout
-             so when results land they replace the skeletons without flicker. -->
-        <template v-if="loading">
+             so when results land they replace the skeletons without flicker.
+             Forced on for 500ms after target/filter/sort changes for instant feedback. -->
+        <template v-if="showSkeleton">
           <div
             v-for="(w, i) in SKELETON_NAME_WIDTHS"
             :key="`sk-${i}`"
