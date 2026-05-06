@@ -20,6 +20,7 @@ const CHROME_BOTTOM = 60;  // ~ floating minimap height + mb-3
 const MOBILE_BREAKPOINT = 720;
 
 const popoverRef = ref<HTMLElement | null>(null);
+const listRef = ref<HTMLElement | null>(null);
 const { width: viewportW, height: viewportH } = useWindowSize();
 
 interface Position {
@@ -95,10 +96,13 @@ function recomputePosition(): void {
 
 // Recompute when the target changes (open or switch); next tick ensures the anchor card
 // is mounted (matters when the picker opens immediately after a card was added).
+// Also resets the item list scroll to the top — switching slots or reopening the picker
+// always shows the catalog from the start, never wherever the user last scrolled to.
 watch(() => ui.itemPickerTarget, async (t) => {
   if (t === null) return;
   await nextTick();
   recomputePosition();
+  if (listRef.value) listRef.value.scrollTop = 0;
 }, { immediate: true });
 
 // Recompute on viewport resize and on window scroll (Builder timeline scrolls).
@@ -263,7 +267,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           @click="sortMode = opt.mode as 'level' | 'name'"
         >{{ opt.label }}</button>
       </div>
-      <div class="flex-1 overflow-y-auto px-2 py-1.5">
+      <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5">
         <p v-if="loading" class="text-text-dim text-xs px-3 py-4">Chargement…</p>
         <p v-else-if="error" class="text-danger-soft text-xs px-3 py-4">Erreur : {{ error }}</p>
         <p v-else-if="filtered.length === 0" class="text-text-dim text-xs px-3 py-4">Aucun item.</p>
