@@ -85,34 +85,79 @@ function cancelTitle() {
 const confirming = ref(false);
 const deleteBtnRef = ref<HTMLElement | null>(null);
 const confirmRef = ref<HTMLElement | null>(null);
-const CONFIRM_W = 220;
-const CONFIRM_GAP = 8;
-const confirmPosition = ref<{ top: number; left: number; side: 'right' | 'left' }>({
+
+// Same positioning recipe as the class picker: anchored to the card, mirrors its
+// width, right by default with auto-flip to left, vertical clamp into viewport.
+// Height is auto (just enough for the question + 2 buttons).
+const POP_W_FALLBACK = 360;
+const GAP = 12;
+const MARGIN_X = 12;
+const MARGIN_Y = 12;
+const CHROME_TOP = 60;
+const CHROME_BOTTOM = 60;
+const MOBILE_BREAKPOINT = 720;
+const POP_H_ESTIMATE = 90; // used only for vertical clamp; actual height stays auto
+
+interface ConfirmPosition {
+  mode: 'anchored' | 'modal';
+  top: number;
+  left: number;
+  width: number;
+  side: 'right' | 'left';
+}
+
+const confirmPosition = ref<ConfirmPosition>({
+  mode: 'anchored',
   top: 0,
   left: 0,
+  width: POP_W_FALLBACK,
   side: 'right',
 });
 
 function recomputeConfirmPosition(): void {
   const btn = deleteBtnRef.value;
   if (!btn) return;
-  const r = btn.getBoundingClientRect();
-  // Default: to the right of the × button, top-aligned. Flip to the left if there
-  // isn't enough horizontal room before the viewport edge.
-  const fitsRight = window.innerWidth - (r.right + CONFIRM_GAP) >= CONFIRM_W + 8;
-  if (fitsRight) {
+
+  // Mobile / narrow viewports → centered modal
+  if (window.innerWidth < MOBILE_BREAKPOINT) {
+    const w = Math.min(window.innerWidth - 32, POP_W_FALLBACK);
     confirmPosition.value = {
-      top: r.top,
-      left: r.right + CONFIRM_GAP,
+      mode: 'modal',
+      width: w,
+      top: (window.innerHeight - POP_H_ESTIMATE) / 2,
+      left: (window.innerWidth - w) / 2,
       side: 'right',
     };
-  } else {
-    confirmPosition.value = {
-      top: r.top,
-      left: Math.max(8, r.left - CONFIRM_GAP - CONFIRM_W),
-      side: 'left',
-    };
+    return;
   }
+
+  // Anchored to the host card (× button lives inside a card with data-card-id)
+  const cardEl = btn.closest('[data-card-id]') as HTMLElement | null;
+  if (!cardEl) return;
+  const r = cardEl.getBoundingClientRect();
+  const popW = r.width;
+
+  const fitsRight = window.innerWidth - (r.right + GAP) >= popW + MARGIN_X;
+  const fitsLeft = r.left - GAP >= popW + MARGIN_X;
+
+  let side: 'right' | 'left';
+  let left: number;
+  if (fitsRight) {
+    side = 'right';
+    left = r.right + GAP;
+  } else if (fitsLeft) {
+    side = 'left';
+    left = r.left - GAP - popW;
+  } else {
+    side = 'right';
+    left = Math.max(MARGIN_X, window.innerWidth - popW - MARGIN_X);
+  }
+
+  const minTop = CHROME_TOP + MARGIN_Y;
+  const maxTop = window.innerHeight - CHROME_BOTTOM - POP_H_ESTIMATE - MARGIN_Y;
+  const top = Math.max(minTop, Math.min(maxTop, r.top));
+
+  confirmPosition.value = { mode: 'anchored', top, left, width: popW, side };
 }
 
 watch(confirming, async (v) => {
@@ -229,34 +274,42 @@ function confirmDelete() {
     >×</button>
   </header>
   <Teleport to="body">
+    <Transition name="backdrop">
+      <div
+        v-if="confirming && confirmPosition.mode === 'modal'"
+        class="fixed inset-0 z-[54] backdrop-blur-sm"
+        style="background: rgba(0,0,0,0.5);"
+        @click="cancelDelete"
+      />
+    </Transition>
     <Transition name="confirm-pop">
       <div
         v-if="confirming"
         ref="confirmRef"
-        class="fixed z-[55] flex flex-col rounded-lg border border-danger/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] overflow-hidden"
+        class="fixed z-[55] flex flex-col rounded-xl border border-danger/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] overflow-hidden"
         :style="{
           top: confirmPosition.top + 'px',
           left: confirmPosition.left + 'px',
-          width: CONFIRM_W + 'px',
+          width: confirmPosition.width + 'px',
           background: 'rgba(8,8,8,0.85)',
-          '--enter-x': confirmPosition.side === 'right' ? '-4px' : '4px',
+          '--enter-x': confirmPosition.side === 'right' ? '-6px' : '6px',
         }"
         role="dialog"
         aria-label="Confirmer la suppression"
       >
-        <div class="px-3 py-2.5 text-[12px] font-sans font-medium text-text-default border-b border-white/10">
+        <div class="px-4 py-3 text-[13px] font-sans font-medium text-text-default border-b border-white/10">
           Supprimer cette étape&nbsp;?
         </div>
         <div class="flex">
           <button
             type="button"
-            class="flex-1 px-3 py-2.5 font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-text-dim hover:text-[#8AE0EE] transition-colors"
+            class="flex-1 px-4 py-3 font-sans font-bold text-[11px] uppercase tracking-[0.06em] text-text-dim hover:text-[#8AE0EE] transition-colors"
             @click="cancelDelete"
           >Annuler</button>
           <div class="w-px bg-white/10" aria-hidden="true"></div>
           <button
             type="button"
-            class="flex-1 px-3 py-2.5 font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-danger-soft hover:bg-danger/15 transition-colors"
+            class="flex-1 px-4 py-3 font-sans font-bold text-[11px] uppercase tracking-[0.06em] text-danger-soft hover:bg-danger/15 transition-colors"
             @click="confirmDelete"
           >Supprimer</button>
         </div>
@@ -267,10 +320,17 @@ function confirmDelete() {
 
 <style scoped>
 .confirm-pop-enter-active, .confirm-pop-leave-active {
-  transition: opacity 120ms ease, transform 120ms ease;
+  transition: opacity 150ms ease, transform 150ms ease;
 }
 .confirm-pop-enter-from, .confirm-pop-leave-to {
   opacity: 0;
-  transform: translateX(var(--enter-x, -4px));
+  transform: translateX(var(--enter-x, -6px));
+}
+
+.backdrop-enter-active, .backdrop-leave-active {
+  transition: opacity 150ms ease;
+}
+.backdrop-enter-from, .backdrop-leave-to {
+  opacity: 0;
 }
 </style>
