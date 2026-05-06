@@ -267,7 +267,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           @click="sortMode = opt.mode as 'level' | 'name'"
         >{{ opt.label }}</button>
       </div>
-      <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5">
+      <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll">
         <p v-if="loading" class="text-text-dim text-xs px-3 py-4">Chargement…</p>
         <p v-else-if="error" class="text-danger-soft text-xs px-3 py-4">Erreur : {{ error }}</p>
         <p v-else-if="filtered.length === 0" class="text-text-dim text-xs px-3 py-4">Aucun item.</p>
@@ -313,6 +313,27 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
 <style scoped>
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Thin scrollbar in the app's turquoise tone (Firefox + WebKit) */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 207, 224, 0.30) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(93, 207, 224, 0.30);
+  border-radius: 999px;
+  transition: background 150ms ease;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 224, 238, 0.55);
+}
 
 .popover-enter-active, .popover-leave-active {
   transition: opacity 150ms ease, transform 150ms ease;

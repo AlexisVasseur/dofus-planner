@@ -182,7 +182,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
             </svg>
           </button>
         </header>
-        <div ref="listRef" class="flex-1 overflow-y-auto p-3">
+        <div ref="listRef" class="flex-1 overflow-y-auto p-3 thin-scroll">
           <div class="grid grid-cols-4 gap-2">
             <button
               v-for="c in CLASSES"
@@ -231,5 +231,26 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
 .cell.is-pickable:hover {
   border-color: var(--class-accent, theme('colors.accent.DEFAULT'));
   background-color: color-mix(in srgb, var(--class-dominant, #5DCFE0) 6%, transparent);
+}
+
+/* Thin scrollbar in the app's turquoise tone (Firefox + WebKit) */
+.thin-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 207, 224, 0.30) transparent;
+}
+.thin-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.thin-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scroll::-webkit-scrollbar-thumb {
+  background: rgba(93, 207, 224, 0.30);
+  border-radius: 999px;
+  transition: background 150ms ease;
+}
+.thin-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(138, 224, 238, 0.55);
 }
 </style>
