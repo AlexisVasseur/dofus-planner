@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
 import EquipmentSlot from './EquipmentSlot.vue';
 import DofusCell from './DofusCell.vue';
@@ -21,6 +21,7 @@ const build = useBuildStore();
 const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
+const hovered = ref(false); // visual glow on hover, does NOT change activeCardId
 
 const themeStyle = computed(() => {
   const a = getClassAssets(props.card.classId);
@@ -32,7 +33,7 @@ const themeStyle = computed(() => {
     base.backgroundColor = `color-mix(in srgb, ${SURFACE_BASE} 92%, ${a.colors.dominant} 8%)`;
     base.borderColor = `color-mix(in srgb, ${BORDER_BASE} 70%, ${a.colors.dominant} 30%)`;
   }
-  if (isActive.value) {
+  if (isActive.value || hovered.value) {
     const accent = a?.colors.accent ?? FALLBACK_ACCENT;
     base.boxShadow = `0 0 0 1px ${accent}aa, 0 0 12px ${accent}22, 0 4px 32px rgba(0,0,0,0.4)`;
   } else {
@@ -96,11 +97,13 @@ function onClearDofus(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 h-full max-h-[660px] flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden transition-transform duration-150 ease-out"
+    class="equipment-card select-none text-left flex-shrink-0 h-full max-h-[660px] flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden"
     :style="themeStyle"
-    :class="isActive ? 'is-active' : 'hover:-translate-y-0.5'"
+    :class="{ 'is-active': isActive }"
     :data-class-id="card.classId ?? ''"
     :data-card-id="card.id"
+    @mouseenter="hovered = true"
+    @mouseleave="hovered = false"
     @click="ui.setActiveCard(card.id)"
   >
     <CardHeader
