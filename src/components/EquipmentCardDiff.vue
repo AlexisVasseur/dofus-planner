@@ -268,6 +268,7 @@ function onItemLeave(): void {
       </div>
 
         </div>
+        <div class="w-px bg-white/10 self-stretch flex-shrink-0" aria-hidden="true"></div>
         <!-- Right column: dofus rows in the same slot-row diff style as equipment. Also a
              10-row grid so each row aligns with the equipment row on its left. -->
         <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">

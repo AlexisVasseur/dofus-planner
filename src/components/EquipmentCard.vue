@@ -158,7 +158,7 @@ function onDofusPick(index: number): void {
         <!-- Top: two columns — equipment slots (left) and dofus rows (right). Both use
              a 10-row CSS grid so a dofus row (6 items) gets the SAME row height as an
              equipment row (10 items) — the dofus column just leaves its last 4 grid
-             slots empty. -->
+             slots empty. A 1px divider separates the two columns. -->
         <div class="flex-1 flex min-h-0 p-4 gap-3">
           <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
             <EquipmentSlot
@@ -174,6 +174,7 @@ function onDofusPick(index: number): void {
               @clear="onClearSlot(entry.slot)"
             />
           </div>
+          <div class="w-px bg-white/10 self-stretch flex-shrink-0" aria-hidden="true"></div>
           <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
             <DofusRow
               v-for="entry in dofusItems"
