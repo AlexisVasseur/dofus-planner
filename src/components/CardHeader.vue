@@ -8,6 +8,8 @@ const props = defineProps<{
   level: number | null;
   title: string | null;
   confirmingDelete?: boolean;
+  /** Reader-mode flag: blocks edits (no level/title input, no class picker, no delete). */
+  readonly?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -28,7 +30,7 @@ const titleInputRef = ref<HTMLInputElement | null>(null);
 const showCta = computed(() => props.classId === null);
 
 async function startEditLevel() {
-  if (editingLevel.value) return;
+  if (props.readonly || editingLevel.value) return;
   levelDraft.value = props.level === null ? '' : String(props.level);
   editingLevel.value = true;
   await nextTick();
@@ -58,12 +60,21 @@ function cancelLevel() {
 }
 
 async function startEditTitle() {
-  if (editingTitle.value) return;
+  if (props.readonly || editingTitle.value) return;
   titleDraft.value = props.title ?? '';
   editingTitle.value = true;
   await nextTick();
   titleInputRef.value?.focus();
   titleInputRef.value?.select();
+}
+
+function onClassClick(): void {
+  if (props.readonly) return;
+  emit('open-class-picker');
+}
+function onRemoveClick(): void {
+  if (props.readonly) return;
+  emit('remove');
 }
 
 let commitTitleGuard = false;
@@ -87,7 +98,8 @@ function cancelTitle() {
       <button
         type="button"
         class="class-picker-trigger"
-        @click="emit('open-class-picker')"
+        :class="{ 'cursor-default': readonly }"
+        @click="onClassClick"
         aria-label="Choisir une classe"
       >
         <ClassThumbnail :class-id="classId" :size="56" />
@@ -110,14 +122,16 @@ function cancelTitle() {
         <button
           v-else-if="showCta"
           type="button"
-          class="class-picker-trigger block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left hover:opacity-80"
+          class="class-picker-trigger block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left"
+          :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
           style="color: inherit;"
-          @click="emit('open-class-picker')"
+          @click="onClassClick"
         >Choisir une classe</button>
         <button
           v-else
           type="button"
-          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left w-full truncate hover:opacity-80"
+          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left w-full truncate"
+          :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
           style="color: inherit;"
           @click="startEditTitle"
         >{{ title ?? 'Ajouter un titre' }}</button>
@@ -143,7 +157,10 @@ function cancelTitle() {
             v-else
             type="button"
             @click="startEditLevel"
-            class="font-display text-[36px] font-bold leading-none border-b border-dashed border-border-default hover:border-white/60 cursor-text"
+            class="font-display text-[36px] font-bold leading-none"
+            :class="readonly
+              ? 'cursor-default'
+              : 'border-b border-dashed border-border-default hover:border-white/60 cursor-text'"
             style="color: inherit;"
           >{{ level ?? '—' }}</button>
         </div>
@@ -152,12 +169,17 @@ function cancelTitle() {
     <!-- × emits 'remove'. Parent owns the confirming state and toggles it; the
          red-tinted danger state is driven by the confirmingDelete prop. -->
     <button
+      v-if="!readonly"
       type="button"
-      class="card-delete-btn absolute top-2 right-2 w-7 h-7 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 flex items-center justify-center text-[18px] leading-none transition-colors"
+      class="card-delete-btn absolute top-2.5 right-2.5 w-10 h-10 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 inline-flex items-center justify-center transition-colors"
       :class="confirmingDelete && 'text-danger-soft border-danger/40 bg-danger/10'"
-      @click="emit('remove')"
+      @click="onRemoveClick"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
-    >×</button>
+    >
+      <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6L6 18" />
+      </svg>
+    </button>
   </header>
 </template>

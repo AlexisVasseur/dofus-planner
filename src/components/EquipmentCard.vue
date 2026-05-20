@@ -3,7 +3,8 @@ import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
 import CardDeleteConfirm from './CardDeleteConfirm.vue';
 import EquipmentSlot from './EquipmentSlot.vue';
-import DofusCell from './DofusCell.vue';
+import DofusRow from './DofusRow.vue';
+import CardStatsPanel from './CardStatsPanel.vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { SLOT_ORDER, DOFUS_COUNT } from '@/types/slots';
@@ -17,7 +18,9 @@ const SURFACE_BASE = '#0a0a0a';
 const BORDER_BASE = '#262626';
 const FALLBACK_ACCENT = '#5DCFE0';
 
-const props = defineProps<{ card: Card }>();
+const props = withDefaults(defineProps<{ card: Card; readonly?: boolean }>(), {
+  readonly: false,
+});
 const build = useBuildStore();
 const ui = useUiStore();
 
@@ -27,7 +30,7 @@ const confirmingDelete = ref(false); // in-place delete confirm replaces the bod
 
 const themeStyle = computed(() => {
   const a = getClassAssets(props.card.classId);
-  const base: Record<string, string> = { width: 'var(--card-width, 320px)' };
+  const base: Record<string, string> = { width: 'var(--card-width, 700px)' };
   if (a) {
     base['--class-dominant'] = a.colors.dominant;
     base['--class-soft'] = a.colors.soft;
@@ -45,11 +48,13 @@ const themeStyle = computed(() => {
 });
 
 function onCardClick(): void {
+  if (props.readonly) return;
   // Scroll-to-centre is handled by AppTimeline watching ui.centerCardTick (bumped here).
   ui.setActiveCard(props.card.id);
 }
 
 function onHeaderRemove(): void {
+  if (props.readonly) return;
   // Toggle the in-place confirm panel. Subsequent × clicks dismiss.
   confirmingDelete.value = !confirmingDelete.value;
 }
@@ -89,6 +94,7 @@ function activeOnDofus(index: number): boolean {
 }
 
 function onClearSlot(slot: import('@/types/slots').SlotType): void {
+  if (props.readonly) return;
   build.setSlot(props.card.id, slot, null);
   // Close picker if it was opened on this slot by the same click that triggered the dblclick
   if (ui.itemPickerTarget?.kind === 'slot'
@@ -99,12 +105,22 @@ function onClearSlot(slot: import('@/types/slots').SlotType): void {
 }
 
 function onClearDofus(index: number): void {
+  if (props.readonly) return;
   build.setDofus(props.card.id, index, null);
   if (ui.itemPickerTarget?.kind === 'dofus'
       && ui.itemPickerTarget.cardId === props.card.id
       && ui.itemPickerTarget.index === index) {
     ui.closeItemPicker();
   }
+}
+
+function onSlotPick(slot: import('@/types/slots').SlotType): void {
+  if (props.readonly) return;
+  ui.openItemPicker({ kind: 'slot', cardId: props.card.id, slot });
+}
+function onDofusPick(index: number): void {
+  if (props.readonly) return;
+  ui.openItemPicker({ kind: 'dofus', cardId: props.card.id, index });
 }
 </script>
 
@@ -124,7 +140,8 @@ function onClearDofus(index: number): void {
       :level="card.level"
       :title="card.title"
       :confirming-delete="confirmingDelete"
-      @open-class-picker="ui.openClassPicker(card.id)"
+      :readonly="readonly"
+      @open-class-picker="readonly || ui.openClassPicker(card.id)"
       @update:level="(v) => build.setLevel(card.id, v)"
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="onHeaderRemove"
@@ -137,29 +154,43 @@ function onClearDofus(index: number): void {
         @cancel="confirmingDelete = false"
         @confirm="onConfirmDelete"
       />
-      <div v-else key="equipment" class="p-4 flex-1 flex flex-col min-h-0">
-        <EquipmentSlot
-          v-for="entry in slotItems"
-          :key="entry.slot"
-          class="flex-1 min-h-0 max-h-14 overflow-hidden"
-          :slot="entry.slot"
-          :item="entry.item"
-          :card-level="card.level"
-          :active="activeOnSlot(entry.slot)"
-          @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
-          @clear="onClearSlot(entry.slot)"
-        />
-        <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
-          <DofusCell
-            v-for="entry in dofusItems"
-            :key="entry.index"
-            :item="entry.item"
-            :card-level="card.level"
-            :active="activeOnDofus(entry.index)"
-            @pick="ui.openItemPicker({ kind: 'dofus', cardId: card.id, index: entry.index })"
-            @clear="onClearDofus(entry.index)"
-          />
+      <div v-else key="equipment" class="flex-1 flex flex-col min-h-0">
+        <!-- Top: two columns — equipment slots (left) and dofus rows (right). Both use
+             a 10-row CSS grid so a dofus row (6 items) gets the SAME row height as an
+             equipment row (10 items) — the dofus column just leaves its last 4 grid
+             slots empty. -->
+        <div class="flex-1 flex min-h-0 p-4 gap-3">
+          <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
+            <EquipmentSlot
+              v-for="entry in slotItems"
+              :key="entry.slot"
+              class="min-h-0 max-h-14 overflow-hidden"
+              :slot="entry.slot"
+              :item="entry.item"
+              :card-level="card.level"
+              :active="activeOnSlot(entry.slot)"
+              :readonly="readonly"
+              @pick="onSlotPick(entry.slot)"
+              @clear="onClearSlot(entry.slot)"
+            />
+          </div>
+          <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
+            <DofusRow
+              v-for="entry in dofusItems"
+              :key="entry.index"
+              class="min-h-0 max-h-14 overflow-hidden"
+              :index="entry.index"
+              :item="entry.item"
+              :card-level="card.level"
+              :active="activeOnDofus(entry.index)"
+              :readonly="readonly"
+              @pick="onDofusPick(entry.index)"
+              @clear="onClearDofus(entry.index)"
+            />
+          </div>
         </div>
+        <!-- Bottom: aggregated stats panel, full width, horizontal layout -->
+        <CardStatsPanel :card="card" />
       </div>
     </Transition>
   </article>

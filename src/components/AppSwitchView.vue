@@ -104,40 +104,56 @@ const nextLevelLabel = computed(() => {
     @wheel="onWheel"
   >
     <div class="carousel relative flex flex-1 items-center justify-center gap-32 w-full min-h-0" style="--card-width: 576px;">
-      <!-- PREV peek -->
+      <!-- PREV peek — always rendered to keep the active card centered. When there's no
+           previous card, the button is disabled (readonly) and the peek card preview is
+           omitted (no ghost card below the label). -->
       <button
-        v-if="canGoBack && previousCard"
         type="button"
-        class="peek peek-prev group relative flex flex-col items-end justify-center cursor-pointer origin-right h-full flex-shrink-0"
-        :aria-label="`Étape précédente — ${prevLevelLabel}`"
-        @click="goPrev"
+        class="peek peek-prev group relative flex flex-col items-end justify-center origin-right h-full flex-shrink-0"
+        :class="canGoBack ? 'cursor-pointer' : 'cursor-default opacity-40'"
+        :disabled="!canGoBack"
+        :aria-label="canGoBack ? `Étape précédente — ${prevLevelLabel}` : 'Aucune étape précédente'"
+        @click="canGoBack && goPrev()"
       >
         <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none">
+          <div
+            class="peek-label inline-flex items-center justify-center gap-3 rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none"
+            :class="canGoBack
+              ? 'bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0]'
+              : 'bg-white/[0.04] text-text-faint border border-white/10'"
+          >
             <span>‹</span>
             <span>Précédent · {{ prevLevelLabel }}</span>
           </div>
-          <div class="opacity-40 group-hover:opacity-70 transition-opacity">
-            <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" />
+          <div v-if="canGoBack && previousCard" class="opacity-40 group-hover:opacity-70 transition-opacity">
+            <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" :readonly="true" />
             <EquipmentCardDiff
               v-else-if="beforePrevCard"
               :card="previousCard"
               :previous="beforePrevCard"
             />
           </div>
+          <!-- Empty-state placeholder: same dimensions as a real card so the label above
+               stays in the same vertical position whether a card is available or not. -->
+          <div
+            v-else
+            class="placeholder w-full h-[660px] rounded-xl border-2 border-dashed border-white/10"
+          ></div>
         </div>
       </button>
 
       <!-- ACTIVE card. Old + new overlap in the stage via absolute positioning so they
-           animate concurrently. Entering covers leaving via z-index. -->
-      <div class="active-stage relative h-full flex-shrink-0">
+           animate concurrently. Entering covers leaving via z-index. The central card is
+           ~30% wider than the peeks so the stats panel + slot names fit comfortably.
+           Pointer events stay enabled so hover tooltips inside the card fire. -->
+      <div class="active-stage relative h-full flex-shrink-0" style="--card-width: 750px;">
         <Transition :name="direction === 'forward' ? 'slide-fwd' : 'slide-bwd'">
           <div
             v-if="activeCard"
             :key="activeCard.id"
-            class="active-card pointer-events-none absolute inset-0 flex items-center justify-center"
+            class="active-card absolute inset-0 flex items-center justify-center"
           >
-            <EquipmentCard v-if="activeIndex === 0" :card="activeCard" />
+            <EquipmentCard v-if="activeIndex === 0" :card="activeCard" :readonly="true" />
             <EquipmentCardDiff
               v-else-if="previousCard"
               :card="activeCard"
@@ -147,26 +163,36 @@ const nextLevelLabel = computed(() => {
         </Transition>
       </div>
 
-      <!-- NEXT peek -->
+      <!-- NEXT peek — always rendered to keep the active card centered. Same readonly
+           treatment as PREV when there's no next card. -->
       <button
-        v-if="canGoNext && nextCard"
         type="button"
-        class="peek peek-next group relative flex flex-col items-start justify-center cursor-pointer origin-left h-full flex-shrink-0"
-        :aria-label="`Étape suivante — ${nextLevelLabel}`"
-        @click="goNext"
+        class="peek peek-next group relative flex flex-col items-start justify-center origin-left h-full flex-shrink-0"
+        :class="canGoNext ? 'cursor-pointer' : 'cursor-default opacity-40'"
+        :disabled="!canGoNext"
+        :aria-label="canGoNext ? `Étape suivante — ${nextLevelLabel}` : 'Aucune étape suivante'"
+        @click="canGoNext && goNext()"
       >
         <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 576px;">
-          <div class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none">
+          <div
+            class="peek-label inline-flex items-center justify-center gap-3 rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none"
+            :class="canGoNext
+              ? 'bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0]'
+              : 'bg-white/[0.04] text-text-faint border border-white/10'"
+          >
             <span>Suivant · {{ nextLevelLabel }}</span>
             <span>›</span>
           </div>
-          <div class="opacity-40 group-hover:opacity-70 transition-opacity">
+          <div v-if="canGoNext && nextCard && activeCard" class="opacity-40 group-hover:opacity-70 transition-opacity">
             <EquipmentCardDiff
-              v-if="activeCard"
               :card="nextCard"
               :previous="activeCard"
             />
           </div>
+          <div
+            v-else
+            class="placeholder w-full h-[660px] rounded-xl border-2 border-dashed border-white/10"
+          ></div>
         </div>
       </button>
     </div>
@@ -184,9 +210,10 @@ const nextLevelLabel = computed(() => {
   display: none;
 }
 
-/* Active card stage — needs explicit width because the grid stack collapses to children. */
+/* Active card stage — needs explicit width because the grid stack collapses to children.
+   Matches the inline --card-width override so the active card is ~30% wider than peeks. */
 .active-stage {
-  width: 576px;
+  width: 750px;
 }
 
 /* Slide animations:

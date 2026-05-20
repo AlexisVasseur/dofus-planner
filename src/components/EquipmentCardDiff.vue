@@ -2,6 +2,8 @@
 import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
 import CardDeleteConfirm from './CardDeleteConfirm.vue';
+import CardStatsPanel from './CardStatsPanel.vue';
+import ItemStatsTooltip from './ItemStatsTooltip.vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { SLOT_ORDER, SLOT_LABEL, DOFUS_COUNT, type SlotType } from '@/types/slots';
@@ -10,6 +12,7 @@ import { CLASSES_BY_ID } from '@/data/classes';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getSlotIconSvg } from '@/data/slot-icons';
 import { getClassAssets } from '@/composables/useClassAssets';
+import type { Item } from '@/data/dofusdb';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
 // Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent=#5DCFE0.
@@ -40,7 +43,7 @@ function onConfirmDelete(): void {
 
 const themeStyle = computed(() => {
   const assets = getClassAssets(props.card.classId);
-  const base: Record<string, string> = { width: 'var(--card-width, 320px)' };
+  const base: Record<string, string> = { width: 'var(--card-width, 700px)' };
   if (assets) {
     base['--class-dominant'] = assets.colors.dominant;
     base['--class-soft'] = assets.colors.soft;
@@ -108,33 +111,32 @@ function className(classId: string | null): string {
   return CLASSES_BY_ID[classId]?.name ?? classId;
 }
 
-function onCardClick(): void {
-  // Scroll-to-centre is handled by AppTimeline watching ui.centerCardTick (bumped here).
-  ui.setActiveCard(props.card.id);
-}
+// Reader is read-only by design — no card-set-active on click, no picker, no clear.
+// We keep the click handler as a no-op so the article element doesn't error.
+function onCardClick(): void { /* readonly */ }
 
-function pickSlot(slot: SlotType): void {
-  ui.openItemPicker({ kind: 'slot', cardId: props.card.id, slot });
+// Hover tooltip: one shared ItemStatsTooltip anchored to whichever sub-element the cursor
+// is over. Each item area (old half, new half, dofus button) attaches its own mouseenter
+// with the right ItemRef. 300ms delay matches the Build mode behaviour.
+const hoveredItem = ref<Item | null>(null);
+const hoveredEl = ref<HTMLElement | null>(null);
+let hoverTimer: ReturnType<typeof setTimeout> | null = null;
+function onItemEnter(ref: ItemRef | null, e: MouseEvent): void {
+  if (!ref) return;
+  const item = getCachedItem(ref.itemId);
+  if (!item) return;
+  if (hoverTimer !== null) clearTimeout(hoverTimer);
+  const el = e.currentTarget as HTMLElement;
+  hoverTimer = setTimeout(() => {
+    hoveredItem.value = item;
+    hoveredEl.value = el;
+    hoverTimer = null;
+  }, 300);
 }
-function pickDofus(index: number): void {
-  ui.openItemPicker({ kind: 'dofus', cardId: props.card.id, index });
-}
-
-function clearSlot(slot: SlotType): void {
-  build.setSlot(props.card.id, slot, null);
-  if (ui.itemPickerTarget?.kind === 'slot'
-      && ui.itemPickerTarget.cardId === props.card.id
-      && ui.itemPickerTarget.slot === slot) {
-    ui.closeItemPicker();
-  }
-}
-function clearDofus(index: number): void {
-  build.setDofus(props.card.id, index, null);
-  if (ui.itemPickerTarget?.kind === 'dofus'
-      && ui.itemPickerTarget.cardId === props.card.id
-      && ui.itemPickerTarget.index === index) {
-    ui.closeItemPicker();
-  }
+function onItemLeave(): void {
+  if (hoverTimer !== null) { clearTimeout(hoverTimer); hoverTimer = null; }
+  hoveredItem.value = null;
+  hoveredEl.value = null;
 }
 </script>
 
@@ -154,9 +156,10 @@ function clearDofus(index: number): void {
       :level="card.level"
       :title="card.title"
       :confirming-delete="confirmingDelete"
-      @open-class-picker="ui.openClassPicker(card.id)"
-      @update:level="(v) => build.setLevel(card.id, v)"
-      @update:title="(v) => build.setTitle(card.id, v)"
+      :readonly="true"
+      @open-class-picker="() => {}"
+      @update:level="() => {}"
+      @update:title="() => {}"
       @remove="onHeaderRemove"
     />
     <Transition name="card-body" mode="out-in">
@@ -166,113 +169,189 @@ function clearDofus(index: number): void {
         @cancel="confirmingDelete = false"
         @confirm="onConfirmDelete"
       />
-      <div v-else key="equipment" class="p-4 flex-1 flex flex-col min-h-0">
-      <!-- Class hint when changed -->
-      <div
-        v-if="classChanged"
-        class="mb-3 flex items-center gap-2 text-[13px] cursor-pointer hover:bg-bg-elev rounded p-1.5 -m-1.5"
-        @click="ui.openClassPicker(card.id)"
-      >
-        <span class="font-display text-[13px] text-accent tracking-[0.25em] uppercase">Classe</span>
-        <span class="text-danger-soft line-through decoration-danger/60">{{ className(previous.classId) }}</span>
-        <span class="text-accent font-mono">→</span>
-        <span class="text-accent">{{ className(card.classId) }}</span>
-      </div>
-
+      <div v-else key="equipment" class="flex-1 flex flex-col min-h-0">
+        <!-- Class hint when changed — above both columns so it doesn't desync the grid. -->
+        <div
+          v-if="classChanged"
+          class="mx-4 mt-3 flex items-center gap-2 text-[13px] rounded p-1.5"
+        >
+          <span class="font-display text-[13px] text-accent tracking-[0.25em] uppercase">Classe</span>
+          <span class="text-danger-soft line-through decoration-danger/60">{{ className(previous.classId) }}</span>
+          <span class="text-accent font-mono">→</span>
+          <span class="text-accent">{{ className(card.classId) }}</span>
+        </div>
+        <div class="flex-1 flex min-h-0 p-4 gap-3">
+        <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
       <!-- Slot rows: same height as Build mode. Changed = red old → green new side-by-side. -->
       <div
         v-for="entry in slotEntries"
         :key="entry.slot"
-        class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 cursor-pointer transition-opacity flex-1 min-h-0 max-h-14 overflow-hidden"
+        class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 transition-opacity min-h-0 max-h-14 overflow-hidden"
         :class="entry.changed
           ? 'bg-accent/[0.03] -mx-1 px-1'
           : 'opacity-35 hover:opacity-60'"
-        @click="pickSlot(entry.slot)"
-        @dblclick.stop="clearSlot(entry.slot)"
       >
         <template v-if="entry.changed">
-          <!-- OLD (red) -->
-          <div
-            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
+          <!-- OLD half (icon + name) — wrapped so hovering either fires the same handler -->
+          <span
+            class="old-half flex items-center gap-2 flex-1 min-w-0"
+            @mouseenter="onItemEnter(entry.oldRef, $event)"
+            @mouseleave="onItemLeave"
           >
-            <img
-              v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
-              :src="itemDisplay(entry.oldRef)?.iconUrl"
-              :alt="itemDisplay(entry.oldRef)?.name ?? ''"
-              class="w-[26px] h-[26px]"
-            />
-            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
-          </div>
-          <span class="flex-1 min-w-0 truncate text-danger-soft text-[13px] line-through decoration-danger/60 decoration-from-font">
-            {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
+            <div
+              class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60"
+            >
+              <img
+                v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
+                :src="itemDisplay(entry.oldRef)?.iconUrl"
+                :alt="itemDisplay(entry.oldRef)?.name ?? ''"
+                class="w-[26px] h-[26px]"
+              />
+              <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-danger-soft" v-html="getSlotIconSvg(entry.slot)" />
+            </div>
+            <span class="flex-1 min-w-0 truncate text-danger-soft text-[13px] line-through decoration-danger/60 decoration-from-font">
+              {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
+            </span>
           </span>
           <span class="text-accent font-mono text-[15px] flex-shrink-0">→</span>
-          <!-- NEW (green) -->
-          <div
-            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
+          <!-- NEW half (icon + name) -->
+          <span
+            class="new-half flex items-center gap-2 flex-1 min-w-0"
+            @mouseenter="onItemEnter(entry.newRef, $event)"
+            @mouseleave="onItemLeave"
           >
-            <img
-              v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
-              :src="itemDisplay(entry.newRef)?.iconUrl"
-              :alt="itemDisplay(entry.newRef)?.name ?? ''"
-              class="w-[26px] h-[26px]"
-            />
-            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-accent" v-html="getSlotIconSvg(entry.slot)" />
-          </div>
-          <span class="flex-1 min-w-0 truncate text-accent text-[13px] font-medium">
-            {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
+            <div
+              class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent"
+            >
+              <img
+                v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+                :src="itemDisplay(entry.newRef)?.iconUrl"
+                :alt="itemDisplay(entry.newRef)?.name ?? ''"
+                class="w-[26px] h-[26px]"
+              />
+              <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px] text-accent" v-html="getSlotIconSvg(entry.slot)" />
+            </div>
+            <span class="flex-1 min-w-0 truncate text-accent text-[13px] font-medium">
+              {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
+            </span>
           </span>
         </template>
         <template v-else>
           <!-- Unchanged: standard single-item layout, dimmed -->
-          <div
-            class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0"
-            :class="entry.newRef
-              ? 'bg-white/[0.06] border border-white/15'
-              : 'bg-white/[0.02] border border-dashed border-white/10'"
-          >
-            <img
-              v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
-              :src="itemDisplay(entry.newRef)?.iconUrl"
-              :alt="itemDisplay(entry.newRef)?.name ?? ''"
-              class="w-[26px] h-[26px]"
-            />
-            <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px]" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
-          </div>
           <span
-            class="flex-1 truncate"
-            :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[13px]'"
+            class="item-half flex items-center gap-2 flex-1 min-w-0"
+            @mouseenter="onItemEnter(entry.newRef, $event)"
+            @mouseleave="onItemLeave"
           >
-            {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
+            <div
+              class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0"
+              :class="entry.newRef
+                ? 'bg-white/[0.06] border border-white/15'
+                : 'bg-white/[0.02] border border-dashed border-white/10'"
+            >
+              <img
+                v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+                :src="itemDisplay(entry.newRef)?.iconUrl"
+                :alt="itemDisplay(entry.newRef)?.name ?? ''"
+                class="w-[26px] h-[26px]"
+              />
+              <svg v-else viewBox="0 0 24 24" class="w-[26px] h-[26px]" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" v-html="getSlotIconSvg(entry.slot)" />
+            </div>
+            <span
+              class="flex-1 truncate"
+              :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[13px]'"
+            >
+              {{ itemDisplay(entry.newRef)?.name ?? SLOT_LABEL[entry.slot] }}
+            </span>
           </span>
         </template>
       </div>
 
-      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
-        <button
-          v-for="entry in dofusEntries"
-          :key="entry.index"
-          type="button"
-          class="aspect-square rounded-md flex items-center justify-center transition-opacity relative"
-          :class="entry.changed
-            ? 'bg-bg-slot-filled border border-accent shadow-[0_0_0_1px_rgba(93,207,224,0.3)]'
-            : entry.newRef
-              ? 'bg-white/[0.06] border border-white/15 opacity-35 hover:opacity-60'
-              : 'bg-white/[0.02] border border-dashed border-white/10 opacity-35 hover:opacity-60'"
-          :title="entry.changed ? `Avant : ${itemDisplay(entry.oldRef)?.name ?? 'vide'}` : ''"
-          @click="pickDofus(entry.index)"
-          @dblclick.stop="clearDofus(entry.index)"
-        >
-          <img
-            v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
-            :src="itemDisplay(entry.newRef)?.iconUrl"
-            :alt="itemDisplay(entry.newRef)?.name ?? ''"
-            class="w-3/4 h-3/4"
-          />
-          <span v-else-if="!entry.newRef" class="text-text-ghost text-[10px]">◇</span>
-        </button>
+        </div>
+        <!-- Right column: dofus rows in the same slot-row diff style as equipment. Also a
+             10-row grid so each row aligns with the equipment row on its left. -->
+        <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
+          <div
+            v-for="entry in dofusEntries"
+            :key="entry.index"
+            class="slot-row group flex items-center gap-2 py-1.5 rounded-md text-[14px] leading-8 transition-opacity min-h-0 max-h-14 overflow-hidden"
+            :class="entry.changed ? 'bg-accent/[0.03] -mx-1 px-1' : 'opacity-35 hover:opacity-60'"
+          >
+            <template v-if="entry.changed">
+              <!-- OLD half -->
+              <span
+                class="flex items-center gap-2 flex-1 min-w-0"
+                @mouseenter="onItemEnter(entry.oldRef, $event)"
+                @mouseleave="onItemLeave"
+              >
+                <div class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-[#2a1414] border border-danger/60">
+                  <img
+                    v-if="entry.oldRef && itemDisplay(entry.oldRef)?.iconUrl"
+                    :src="itemDisplay(entry.oldRef)?.iconUrl"
+                    :alt="itemDisplay(entry.oldRef)?.name ?? ''"
+                    class="w-[26px] h-[26px]"
+                  />
+                  <svg v-else viewBox="0 0 24 24" class="w-[20px] h-[20px] text-danger-soft" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3 L21 12 L12 21 L3 12 Z" /></svg>
+                </div>
+                <span class="flex-1 min-w-0 truncate text-danger-soft text-[13px] line-through decoration-danger/60 decoration-from-font">
+                  {{ itemDisplay(entry.oldRef)?.name ?? 'vide' }}
+                </span>
+              </span>
+              <span class="text-accent font-mono text-[15px] flex-shrink-0">→</span>
+              <!-- NEW half -->
+              <span
+                class="flex items-center gap-2 flex-1 min-w-0"
+                @mouseenter="onItemEnter(entry.newRef, $event)"
+                @mouseleave="onItemLeave"
+              >
+                <div class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0 bg-accent-deeper border border-accent">
+                  <img
+                    v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+                    :src="itemDisplay(entry.newRef)?.iconUrl"
+                    :alt="itemDisplay(entry.newRef)?.name ?? ''"
+                    class="w-[26px] h-[26px]"
+                  />
+                  <svg v-else viewBox="0 0 24 24" class="w-[20px] h-[20px] text-accent" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3 L21 12 L12 21 L3 12 Z" /></svg>
+                </div>
+                <span class="flex-1 min-w-0 truncate text-accent text-[13px] font-medium">
+                  {{ itemDisplay(entry.newRef)?.name ?? 'vide' }}
+                </span>
+              </span>
+            </template>
+            <template v-else>
+              <span
+                class="flex items-center gap-2 flex-1 min-w-0"
+                @mouseenter="onItemEnter(entry.newRef, $event)"
+                @mouseleave="onItemLeave"
+              >
+                <div
+                  class="icon w-9 h-9 rounded-[5px] flex items-center justify-center flex-shrink-0"
+                  :class="entry.newRef
+                    ? 'bg-white/[0.06] border border-white/15'
+                    : 'bg-white/[0.02] border border-dashed border-white/10'"
+                >
+                  <img
+                    v-if="entry.newRef && itemDisplay(entry.newRef)?.iconUrl"
+                    :src="itemDisplay(entry.newRef)?.iconUrl"
+                    :alt="itemDisplay(entry.newRef)?.name ?? ''"
+                    class="w-[26px] h-[26px]"
+                  />
+                  <svg v-else viewBox="0 0 24 24" class="w-[20px] h-[20px]" :class="entry.newRef ? 'text-text-muted' : 'text-text-ghost'" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M12 3 L21 12 L12 21 L3 12 Z" /></svg>
+                </div>
+                <span
+                  class="flex-1 truncate"
+                  :class="entry.newRef ? 'text-text-muted' : 'text-text-faint uppercase tracking-[0.1em] font-semibold text-[13px]'"
+                >
+                  {{ itemDisplay(entry.newRef)?.name ?? `Dofus ${entry.index + 1}` }}
+                </span>
+              </span>
+            </template>
+          </div>
+        </div>
+        </div>
+        <CardStatsPanel :card="card" />
+        <ItemStatsTooltip :open="hoveredItem !== null" :trigger-el="hoveredEl" :item="hoveredItem" />
       </div>
-    </div>
     </Transition>
   </article>
 </template>

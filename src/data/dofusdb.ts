@@ -1,11 +1,33 @@
 import type { SlotType } from '@/types/slots';
 
+/** Numeric effect data attached to an item. Translation happens at render time via the
+ * effect template (keyed by effectId) fetched from the /effects endpoint. The DofusDB
+ * /items response does NOT include rendered descriptions, only these numeric refs. */
+export interface RawEffect {
+  from: number;
+  to: number;
+  effectId: number;
+  characteristic?: number;
+}
+
+/** Effect description template, e.g. "#1{{~1~2 à }}#2 Vitalité". `#1` = from, `#2` = to,
+ * `{{~1~2 à }}` is the conditional range separator (collapses when from == to). */
+export interface EffectTemplate {
+  id: number;
+  descFr: string;
+}
+
 export interface Item {
   id: number;
   name: string;
   levelRequired: number;
   iconUrl: string;
+  /** Deprecated, kept for backwards-compat with old localStorage cache entries. Effects are
+   * the canonical source now and rendered at display time. */
   stats: string[];
+  /** Optional — legacy cache entries and minimal test fixtures may omit this. Display layer
+   * defaults to [] when missing; the on-load migration backfills from the API. */
+  effects?: RawEffect[];
   typeId: number;
 }
 
@@ -33,6 +55,13 @@ export const SLOT_TO_TYPE_IDS: Record<SlotType, number[]> = {
 
 const BASE_URL = (import.meta.env.VITE_DOFUSDB_BASE_URL as string | undefined) ?? 'https://api.dofusdb.fr';
 
+interface RawItemEffect {
+  from?: number;
+  to?: number;
+  effectId?: number;
+  characteristic?: number;
+}
+
 interface RawItem {
   id: number;
   name: { fr?: string; en?: string };
@@ -40,19 +69,25 @@ interface RawItem {
   img?: string;
   imgUrl?: string;
   typeId: number;
-  effects?: Array<{ description?: { fr?: string; en?: string } }>;
+  effects?: RawItemEffect[];
 }
 
 function mapItem(raw: RawItem): Item {
-  const stats = (raw.effects ?? [])
-    .map((e) => e.description?.fr ?? '')
-    .filter((s) => s.length > 0);
+  const effects: RawEffect[] = (raw.effects ?? [])
+    .filter((e): e is RawItemEffect & { effectId: number } => typeof e.effectId === 'number')
+    .map((e) => ({
+      from: e.from ?? 0,
+      to: e.to ?? 0,
+      effectId: e.effectId,
+      characteristic: e.characteristic,
+    }));
   return {
     id: raw.id,
     name: raw.name?.fr ?? raw.name?.en ?? `Item ${raw.id}`,
     levelRequired: raw.level ?? 0,
     iconUrl: raw.img ?? raw.imgUrl ?? '',
-    stats,
+    stats: [], // kept for backwards-compat; effects[] is the canonical source
+    effects,
     typeId: raw.typeId ?? 0,
   };
 }
@@ -107,4 +142,29 @@ export async function fetchItem(id: number): Promise<Item> {
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
   const raw = (await res.json()) as RawItem;
   return mapItem(raw);
+}
+
+interface RawEffectTemplate {
+  id: number;
+  description?: { fr?: string; en?: string };
+}
+
+/** Fetch effect description templates by id. Templates look like
+ *  "#1{{~1~2 à }}#2 Vitalité" and are cached forever by useItemCatalog. */
+export async function fetchEffectTemplates(ids: number[]): Promise<EffectTemplate[]> {
+  if (ids.length === 0) return [];
+  const params = new URLSearchParams();
+  // DofusDB caps each $in array; chunk if needed. Most item batches are well under 100 unique effect ids.
+  for (const id of ids) {
+    params.append('id[$in][]', String(id));
+  }
+  params.append('$limit', String(ids.length));
+  params.append('lang', 'fr');
+  const res = await fetch(`${BASE_URL}/effects?${params.toString()}`);
+  if (!res.ok) throw new Error(`DofusDB effects request failed: ${res.status}`);
+  const json = (await res.json()) as { data?: RawEffectTemplate[] };
+  return (json.data ?? []).map((d) => ({
+    id: d.id,
+    descFr: d.description?.fr ?? '',
+  }));
 }

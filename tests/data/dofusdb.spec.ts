@@ -10,9 +10,10 @@ const MOCK_RESPONSE = {
       level: 25,
       typeId: 16,
       img: 'https://api.dofusdb.fr/img/items/1234.png',
+      // DofusDB returns numeric effect refs only — descriptions live in /effects.
       effects: [
-        { description: { fr: '+10 Vitalité' } },
-        { description: { fr: '+5 Force' } },
+        { from: 8, to: 10, effectId: 125, characteristic: 11 },  // Vitalité
+        { from: 4, to: 5, effectId: 118, characteristic: 10 },   // Force
       ],
     },
     {
@@ -41,7 +42,13 @@ describe('dofusdb client', () => {
       name: 'Coiffe Bouftou',
       levelRequired: 25,
       iconUrl: 'https://api.dofusdb.fr/img/items/1234.png',
-      stats: ['+10 Vitalité', '+5 Force'],
+      // stats[] is the deprecated string list — empty now that we keep the numeric
+      // effects array and render strings at display time via effect templates.
+      stats: [],
+      effects: [
+        { from: 8, to: 10, effectId: 125, characteristic: 11 },
+        { from: 4, to: 5, effectId: 118, characteristic: 10 },
+      ],
       typeId: 16,
     });
   });

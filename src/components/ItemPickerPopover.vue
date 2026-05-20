@@ -3,9 +3,11 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { useEventListener, useWindowSize, onClickOutside } from '@vueuse/core';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
-import { useItemSearch, isOverLeveled, getCachedItem, type SearchTarget } from '@/composables/useItemCatalog';
+import { useItemSearch, isOverLeveled, getCachedItem, renderItemStatsMax, type SearchTarget } from '@/composables/useItemCatalog';
 import { SLOT_PICK_PHRASE } from '@/types/slots';
 import { useToast } from '@/composables/useToast';
+import ItemStatsTooltip from './ItemStatsTooltip.vue';
+import type { Item } from '@/data/dofusdb';
 
 const ui = useUiStore();
 const build = useBuildStore();
@@ -288,6 +290,30 @@ onClickOutside(popoverRef, (e) => {
 useEventListener(window, 'keydown', (e: KeyboardEvent) => {
   if (e.key === 'Escape' && ui.itemPickerTarget) close();
 });
+
+// Per-row hover tooltip in the search list: shared ItemStatsTooltip that anchors to
+// whichever row the cursor is currently over. Same 300ms delay as the builder slots.
+const rowRefs = ref<Record<number, HTMLElement | null>>({});
+function setRowRef(id: number, el: HTMLElement | null): void {
+  if (el === null) delete rowRefs.value[id];
+  else rowRefs.value[id] = el;
+}
+const hoveredItem = ref<Item | null>(null);
+const hoveredEl = computed<HTMLElement | null>(() => {
+  const it = hoveredItem.value;
+  return it ? rowRefs.value[it.id] ?? null : null;
+});
+let rowHoverTimer: ReturnType<typeof setTimeout> | null = null;
+function onRowEnter(it: Item): void {
+  if (rowHoverTimer !== null) clearTimeout(rowHoverTimer);
+  rowHoverTimer = setTimeout(() => { hoveredItem.value = it; rowHoverTimer = null; }, 300);
+}
+function onRowLeave(): void {
+  if (rowHoverTimer !== null) { clearTimeout(rowHoverTimer); rowHoverTimer = null; }
+  hoveredItem.value = null;
+}
+// Closing the picker or switching target dismisses any open tooltip.
+watch(target, () => { onRowLeave(); });
 </script>
 
 <template>
@@ -432,6 +458,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           v-else
           v-for="it in filtered"
           :key="it.id"
+          :ref="(el) => setRowRef(it.id, el as HTMLElement | null)"
           type="button"
           class="item flex items-center gap-3 px-3 py-2.5 rounded-md w-full transition-colors hover:bg-[#8AE0EE]/[0.06]"
           :class="{
@@ -441,6 +468,8 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
                 : target?.kind === 'dofus' ? card?.dofus[target.index]?.itemId === it.id : false
           }"
           @click="pick(it.id)"
+          @mouseenter="onRowEnter(it)"
+          @mouseleave="onRowLeave"
         >
           <div
             class="it-ic w-9 h-9 rounded-md flex items-center justify-center shrink-0"
@@ -453,7 +482,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           </div>
           <div class="it-info flex-1 min-w-0 text-left">
             <div class="text-text-default text-xs font-medium truncate">{{ it.name }}</div>
-            <div class="text-text-faint text-[10px] font-mono truncate" v-if="it.stats.length">{{ it.stats.join(' · ') }}</div>
+            <div class="text-text-faint text-[10px] font-mono truncate" v-if="renderItemStatsMax(it).length">{{ renderItemStatsMax(it).join(' · ') }}</div>
           </div>
           <span
             class="text-[10px] font-mono rounded px-2 py-0.5 border"
@@ -463,6 +492,8 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           >lv {{ it.levelRequired }}</span>
         </button>
       </div>
+      <!-- Shared hover tooltip for the rows in the search list -->
+      <ItemStatsTooltip :open="hoveredItem !== null" :trigger-el="hoveredEl" :item="hoveredItem" />
       </aside>
     </Transition>
   </Teleport>

@@ -19,7 +19,7 @@ function addEmpty(): void {
        Replaces the last "+" pill connector at the right end of the timeline. -->
   <article
     class="connector-end select-none flex-shrink-0 h-full max-h-[660px] flex flex-col gap-3 p-5 rounded-xl border-2 border-dashed border-white/15 hover:border-[#5DCFE0]/40 transition-colors"
-    :style="{ width: 'var(--card-width, 320px)' }"
+    :style="{ width: 'var(--card-width, 700px)' }"
   >
     <button
       type="button"
