@@ -5,6 +5,7 @@ import {
   ROOM_ORDER, type RoomId,
   type NpcId,
   TYPE_ID_DOFUS, TYPE_ID_TROPHEE,
+  MONTURE_TYPE_IDS,
   slotToNpc, levelToRoom,
 } from '@/types/rooms';
 import { SLOT_ORDER, DOFUS_COUNT } from '@/types/slots';
@@ -12,6 +13,11 @@ import type { Item } from '@/data/dofusdb';
 
 export interface ShoppingList {
   rooms: Record<RoomId, Partial<Record<NpcId, Item[]>>>;
+  // Required-quantity per itemId: the MAX number of times the item appears in any
+  // single card (across slots + dofus[]). Silimelle worn as anneau1+anneau2 on the
+  // same card → 2; worn as anneau1 on two different cards → 1 (re-used between
+  // checkpoints). View renders an "×N" badge when count > 1.
+  counts: Record<number, number>;
   totals: {
     items: number;
     activeRooms: number;
@@ -26,7 +32,7 @@ function emptyShoppingList(): ShoppingList {
     rooms[r] = {};
     perRoom[r] = 0;
   }
-  return { rooms, totals: { items: 0, activeRooms: 0, perRoom } };
+  return { rooms, counts: {}, totals: { items: 0, activeRooms: 0, perRoom } };
 }
 
 export function useShoppingList(): ComputedRef<ShoppingList> {
@@ -35,11 +41,32 @@ export function useShoppingList(): ComputedRef<ShoppingList> {
     const result = emptyShoppingList();
     const seen = new Set<number>(); // itemIds already bucketed (first-occurrence wins)
 
+    // First pass: compute per-item max occurrences in a single card.
     for (const card of build.cards) {
       if (card.level === null) continue;
-      const cardRoom = levelToRoom(card.level);
+      const localCounts = new Map<number, number>();
+      for (const slot of SLOT_ORDER) {
+        const ref = card.slots[slot];
+        if (ref) localCounts.set(ref.itemId, (localCounts.get(ref.itemId) ?? 0) + 1);
+      }
+      for (const ref of card.dofus) {
+        if (ref) localCounts.set(ref.itemId, (localCounts.get(ref.itemId) ?? 0) + 1);
+      }
+      for (const [itemId, n] of localCounts) {
+        const prev = result.counts[itemId] ?? 0;
+        if (n > prev) result.counts[itemId] = n;
+      }
+    }
 
-      // Equipment slots (10 slot types).
+    for (const card of build.cards) {
+      if (card.level === null) continue;
+
+      // Equipment slots (10 slot types). Each item lands in the room matching ITS OWN
+      // levelRequired — that's the NPC tier that sells it, regardless of which level
+      // the character will reach when wearing it.
+      // EXCEPTION: the familier slot holds Familier + Montilier + Dragodinde + Muldo +
+      // Volkorne. They are all sold in the level-agnostic Hub, split into two columns:
+      // 'familier' (typeIds 18 + 121) and 'monture' (typeIds 97 + 196 + 207).
       for (const slot of SLOT_ORDER) {
         const ref = card.slots[slot];
         if (!ref) continue;
@@ -50,8 +77,12 @@ export function useShoppingList(): ComputedRef<ShoppingList> {
           void ensureItem(ref.itemId).catch(() => {});
           continue;
         }
-        const npc = slotToNpc(slot);
-        bucket(result, cardRoom, npc, item);
+        if (slot === 'familier') {
+          const npc: NpcId = MONTURE_TYPE_IDS.includes(item.typeId) ? 'monture' : 'familier';
+          bucket(result, 'hub', npc, item);
+        } else {
+          bucket(result, levelToRoom(item.levelRequired), slotToNpc(slot), item);
+        }
         seen.add(ref.itemId);
       }
 
@@ -66,13 +97,13 @@ export function useShoppingList(): ComputedRef<ShoppingList> {
           continue;
         }
         let npc: NpcId;
-        let room: RoomId = cardRoom;
+        let room: RoomId = levelToRoom(item.levelRequired);
         if (item.typeId === TYPE_ID_DOFUS) {
           npc = 'dofus';
-          room = '200'; // forced
+          room = '200'; // forced — dofus are always sold at the 200-tier NPC
         } else if (item.typeId === TYPE_ID_TROPHEE) {
           npc = 'trophee';
-          if (room === '1-50') room = '51-100'; // bumped (no trophée NPC in 1-50)
+          if (room === '1-49') room = '50-99'; // bumped (no trophée NPC in 1-49)
         } else {
           // Unknown typeId in the dofus[] array — skip silently.
           continue;

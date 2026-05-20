@@ -3,11 +3,13 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { useEventListener, useWindowSize, onClickOutside } from '@vueuse/core';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
-import { useItemSearch, isOverLeveled, type SearchTarget } from '@/composables/useItemCatalog';
-import { SLOT_LABEL } from '@/types/slots';
+import { useItemSearch, isOverLeveled, getCachedItem, type SearchTarget } from '@/composables/useItemCatalog';
+import { SLOT_PICK_PHRASE } from '@/types/slots';
+import { useToast } from '@/composables/useToast';
 
 const ui = useUiStore();
 const build = useBuildStore();
+const toast = useToast();
 
 // Popover dimensions + viewport margins.
 const POP_W = 360;
@@ -125,8 +127,14 @@ const search = ref('');
 // shimmer doesn't read as 6 identical bars.
 const SKELETON_NAME_WIDTHS = ['w-4/5', 'w-3/5', 'w-3/4', 'w-2/3', 'w-4/6', 'w-3/4', 'w-2/3', 'w-3/5'];
 
-const filterMode = ref<'all' | 'eligible' | 'over'>('all');
+const filterMode = ref<'all' | 'eligible' | 'over'>('eligible');
 const sortMode = ref<'level' | 'name'>('level');
+
+// Bulk "tranche" mode: when ON, picking an item broadcasts it to every existing card
+// whose level lies in [rangeFrom, rangeTo] (and can equip it).
+const rangeMode = ref(false);
+const rangeFrom = ref(1);
+const rangeTo = ref(200);
 
 const card = computed(() => target.value
   ? build.cards.find((c) => c.id === target.value!.cardId) ?? null
@@ -135,6 +143,51 @@ const card = computed(() => target.value
 
 const slotForFilter = ref<SearchTarget>(null);
 watch(slotForQuery, (v) => { slotForFilter.value = v; }, { immediate: true });
+
+// Default range derived from the active card + the next card in the timeline.
+// Mental model: "this gear is worn from the current checkpoint until the next one".
+const rangeDefaults = computed<[number, number]>(() => {
+  const current = card.value;
+  if (!current || current.level === null) return [1, 200];
+  const next = build.cards
+    .filter((c) => c.level !== null && c.level > current.level!)
+    .sort((a, b) => a.level! - b.level!)[0];
+  const to = next && next.level !== null ? next.level - 1 : 200;
+  return [current.level, Math.max(current.level, to)];
+});
+
+// Flipping the toggle ON refills the inputs with the contextual defaults.
+watch(rangeMode, (on) => {
+  if (on) {
+    const [from, to] = rangeDefaults.value;
+    rangeFrom.value = from;
+    rangeTo.value = to;
+  }
+});
+
+// Switching the picker to a different slot or card resets the bulk-mode state.
+watch(target, (newT, oldT) => {
+  if (!newT) return;
+  const changed = !oldT
+    || oldT.cardId !== newT.cardId
+    || oldT.kind !== newT.kind
+    || (newT.kind === 'slot' && oldT.kind === 'slot' && oldT.slot !== newT.slot)
+    || (newT.kind === 'dofus' && oldT.kind === 'dofus' && oldT.index !== newT.index);
+  if (changed) {
+    rangeMode.value = false;
+  }
+});
+
+function clampLevel(n: number): number {
+  if (!Number.isFinite(n)) return 1;
+  return Math.min(200, Math.max(1, Math.round(n)));
+}
+function onRangeFromInput(e: Event): void {
+  rangeFrom.value = clampLevel(Number((e.target as HTMLInputElement).value));
+}
+function onRangeToInput(e: Event): void {
+  rangeTo.value = clampLevel(Number((e.target as HTMLInputElement).value));
+}
 
 watch(target, (newTarget, oldTarget) => {
   if (newTarget === null) return; // closing — leave search alone
@@ -194,18 +247,31 @@ const filtered = computed(() => {
 
 const sheetTitle = computed(() => {
   if (!target.value) return '';
-  if (target.value.kind === 'slot') return `Choisir une ${SLOT_LABEL[target.value.slot].toLowerCase()}`;
+  if (target.value.kind === 'slot') return `Choisir ${SLOT_PICK_PHRASE[target.value.slot]}`;
   return `Choisir un dofus / trophée`;
 });
 
 function pick(itemId: number) {
   if (!target.value) return;
-  if (target.value.kind === 'slot') {
-    build.setSlot(target.value.cardId, target.value.slot, { itemId });
-  } else {
-    build.setDofus(target.value.cardId, target.value.index, { itemId });
+  if (!rangeMode.value) {
+    if (target.value.kind === 'slot') {
+      build.setSlot(target.value.cardId, target.value.slot, { itemId });
+    } else {
+      build.setDofus(target.value.cardId, target.value.index, { itemId });
+    }
+    ui.closeItemPicker();
+    return;
   }
-  ui.closeItemPicker();
+  // Bulk-apply path: write to every in-range card and surface a toast.
+  // Picker stays open so the user can pick more items for the same range.
+  const range: [number, number] = [rangeFrom.value, rangeTo.value];
+  const count = target.value.kind === 'slot'
+    ? build.setSlotRange(target.value.slot, range, { itemId })
+    : build.setDofusRange(target.value.index, range, { itemId });
+  const [lo, hi] = range[0] <= range[1] ? range : [range[1], range[0]];
+  const name = getCachedItem(itemId)?.name ?? 'Item';
+  const plural = count > 1 ? 's' : '';
+  toast.show(`${name} : ${count} card${plural} mise${plural} à jour (${lo}–${hi})`);
 }
 
 function close() { ui.closeItemPicker(); }
@@ -261,6 +327,50 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           </svg>
         </button>
       </header>
+      <!-- Tranche (bulk-apply) toggle. OFF = single-card pick (current card only).
+           ON exposes two clamp-to-[1,200] number inputs pre-filled with the current
+           card's level → next card's level - 1 (or 200 if last). -->
+      <div class="px-5 py-3 border-b border-border-subtle flex items-center gap-3">
+        <button
+          type="button"
+          role="switch"
+          :aria-checked="rangeMode"
+          @click="rangeMode = !rangeMode"
+          class="relative inline-flex items-center h-5 w-9 rounded-full border transition-colors shrink-0"
+          :class="rangeMode
+            ? 'bg-[#5DCFE0] border-[#5DCFE0]'
+            : 'bg-white/[0.04] border-white/15 hover:border-[#8AE0EE]/40'"
+        >
+          <span
+            class="absolute top-[1px] w-[15px] h-[15px] rounded-full transition-all"
+            :class="rangeMode
+              ? 'left-[18px] bg-[#0A2530]'
+              : 'left-[1px] bg-white/60'"
+          />
+        </button>
+        <span class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-text-faint shrink-0">Tranche</span>
+        <template v-if="rangeMode">
+          <span class="font-sans text-[11px] text-text-dim">de</span>
+          <input
+            type="number"
+            min="1"
+            max="200"
+            :value="rangeFrom"
+            @input="onRangeFromInput"
+            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-[12px] font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
+          />
+          <span class="font-sans text-[11px] text-text-dim">à</span>
+          <input
+            type="number"
+            min="1"
+            max="200"
+            :value="rangeTo"
+            @input="onRangeToInput"
+            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-[12px] font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
+          />
+        </template>
+        <span v-else class="font-sans text-[11px] text-text-dim">Cette card uniquement</span>
+      </div>
       <div class="px-5 py-3 border-b border-border-subtle">
         <input
           v-model="search"

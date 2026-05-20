@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
+import CardDeleteConfirm from './CardDeleteConfirm.vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { SLOT_ORDER, SLOT_LABEL, DOFUS_COUNT, type SlotType } from '@/types/slots';
@@ -23,6 +24,19 @@ const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 const hovered = ref(false); // visual glow on hover, does NOT change activeCardId
+const confirmingDelete = ref(false); // in-place delete confirm replaces the body
+
+function onHeaderRemove(): void {
+  confirmingDelete.value = !confirmingDelete.value;
+}
+
+function onConfirmDelete(): void {
+  confirmingDelete.value = false;
+  if (ui.activeCardId === props.card.id) ui.setActiveCard(null);
+  if (ui.itemPickerTarget?.cardId === props.card.id) ui.closeItemPicker();
+  if (ui.classPickerCardId === props.card.id) ui.closeClassPicker();
+  build.removeCard(props.card.id);
+}
 
 const themeStyle = computed(() => {
   const assets = getClassAssets(props.card.classId);
@@ -94,17 +108,9 @@ function className(classId: string | null): string {
   return CLASSES_BY_ID[classId]?.name ?? classId;
 }
 
-function onCardClick(e: MouseEvent): void {
+function onCardClick(): void {
+  // Scroll-to-centre is handled by AppTimeline watching ui.centerCardTick (bumped here).
   ui.setActiveCard(props.card.id);
-  // Always centre the card horizontally in the timeline scroller (if any).
-  const cardEl = e.currentTarget as HTMLElement;
-  const scroller = cardEl.closest('.timeline-area') as HTMLElement | null;
-  if (!scroller) return;
-  const cardRect = cardEl.getBoundingClientRect();
-  const scrollerRect = scroller.getBoundingClientRect();
-  const cardLeftInScroller = cardRect.left - scrollerRect.left + scroller.scrollLeft;
-  const target = cardLeftInScroller + cardRect.width / 2 - scroller.clientWidth / 2;
-  scroller.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
 
 function pickSlot(slot: SlotType): void {
@@ -147,12 +153,20 @@ function clearDofus(index: number): void {
       :class-id="card.classId"
       :level="card.level"
       :title="card.title"
+      :confirming-delete="confirmingDelete"
       @open-class-picker="ui.openClassPicker(card.id)"
       @update:level="(v) => build.setLevel(card.id, v)"
       @update:title="(v) => build.setTitle(card.id, v)"
-      @remove="build.removeCard(card.id)"
+      @remove="onHeaderRemove"
     />
-    <div class="p-4 flex-1 flex flex-col min-h-0">
+    <Transition name="card-body" mode="out-in">
+      <CardDeleteConfirm
+        v-if="confirmingDelete"
+        key="confirm"
+        @cancel="confirmingDelete = false"
+        @confirm="onConfirmDelete"
+      />
+      <div v-else key="equipment" class="p-4 flex-1 flex flex-col min-h-0">
       <!-- Class hint when changed -->
       <div
         v-if="classChanged"
@@ -259,5 +273,15 @@ function clearDofus(index: number): void {
         </button>
       </div>
     </div>
+    </Transition>
   </article>
 </template>
+
+<style scoped>
+.card-body-enter-active, .card-body-leave-active {
+  transition: opacity 160ms ease;
+}
+.card-body-enter-from, .card-body-leave-to {
+  opacity: 0;
+}
+</style>

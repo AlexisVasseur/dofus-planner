@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
+import CardDeleteConfirm from './CardDeleteConfirm.vue';
 import EquipmentSlot from './EquipmentSlot.vue';
 import DofusCell from './DofusCell.vue';
 import { useBuildStore } from '@/stores/build';
@@ -22,6 +23,7 @@ const ui = useUiStore();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 const hovered = ref(false); // visual glow on hover, does NOT change activeCardId
+const confirmingDelete = ref(false); // in-place delete confirm replaces the body
 
 const themeStyle = computed(() => {
   const a = getClassAssets(props.card.classId);
@@ -42,23 +44,18 @@ const themeStyle = computed(() => {
   return base;
 });
 
-function onCardClick(e: MouseEvent): void {
+function onCardClick(): void {
+  // Scroll-to-centre is handled by AppTimeline watching ui.centerCardTick (bumped here).
   ui.setActiveCard(props.card.id);
-  // Always centre the card horizontally in the timeline — even if already active.
-  // scrollIntoView({inline:'center'}) was unreliable near the trailing edge
-  // (browsers cap the scroll early), so we drive scrollTo directly on the
-  // .timeline-area scroll container using bounding rects (offsetParent-agnostic).
-  const cardEl = e.currentTarget as HTMLElement;
-  const scroller = cardEl.closest('.timeline-area') as HTMLElement | null;
-  if (!scroller) return;
-  const cardRect = cardEl.getBoundingClientRect();
-  const scrollerRect = scroller.getBoundingClientRect();
-  const cardLeftInScroller = cardRect.left - scrollerRect.left + scroller.scrollLeft;
-  const target = cardLeftInScroller + cardRect.width / 2 - scroller.clientWidth / 2;
-  scroller.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
 }
 
-function onRemoveCard() {
+function onHeaderRemove(): void {
+  // Toggle the in-place confirm panel. Subsequent × clicks dismiss.
+  confirmingDelete.value = !confirmingDelete.value;
+}
+
+function onConfirmDelete(): void {
+  confirmingDelete.value = false;
   // Clear active/picker if they pointed at this card
   if (ui.activeCardId === props.card.id) ui.setActiveCard(null);
   if (ui.itemPickerTarget?.cardId === props.card.id) ui.closeItemPicker();
@@ -126,34 +123,53 @@ function onClearDofus(index: number): void {
       :class-id="card.classId"
       :level="card.level"
       :title="card.title"
+      :confirming-delete="confirmingDelete"
       @open-class-picker="ui.openClassPicker(card.id)"
       @update:level="(v) => build.setLevel(card.id, v)"
       @update:title="(v) => build.setTitle(card.id, v)"
-      @remove="onRemoveCard"
+      @remove="onHeaderRemove"
     />
-    <div class="p-4 flex-1 flex flex-col min-h-0">
-      <EquipmentSlot
-        v-for="entry in slotItems"
-        :key="entry.slot"
-        class="flex-1 min-h-0 max-h-14 overflow-hidden"
-        :slot="entry.slot"
-        :item="entry.item"
-        :card-level="card.level"
-        :active="activeOnSlot(entry.slot)"
-        @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
-        @clear="onClearSlot(entry.slot)"
+    <!-- Body crossfades between equipment view and in-place delete confirm. -->
+    <Transition name="card-body" mode="out-in">
+      <CardDeleteConfirm
+        v-if="confirmingDelete"
+        key="confirm"
+        @cancel="confirmingDelete = false"
+        @confirm="onConfirmDelete"
       />
-      <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
-        <DofusCell
-          v-for="entry in dofusItems"
-          :key="entry.index"
+      <div v-else key="equipment" class="p-4 flex-1 flex flex-col min-h-0">
+        <EquipmentSlot
+          v-for="entry in slotItems"
+          :key="entry.slot"
+          class="flex-1 min-h-0 max-h-14 overflow-hidden"
+          :slot="entry.slot"
           :item="entry.item"
           :card-level="card.level"
-          :active="activeOnDofus(entry.index)"
-          @pick="ui.openItemPicker({ kind: 'dofus', cardId: card.id, index: entry.index })"
-          @clear="onClearDofus(entry.index)"
+          :active="activeOnSlot(entry.slot)"
+          @pick="ui.openItemPicker({ kind: 'slot', cardId: card.id, slot: entry.slot })"
+          @clear="onClearSlot(entry.slot)"
         />
+        <div class="grid grid-cols-6 gap-1.5 mt-auto pt-4 flex-shrink-0">
+          <DofusCell
+            v-for="entry in dofusItems"
+            :key="entry.index"
+            :item="entry.item"
+            :card-level="card.level"
+            :active="activeOnDofus(entry.index)"
+            @pick="ui.openItemPicker({ kind: 'dofus', cardId: card.id, index: entry.index })"
+            @clear="onClearDofus(entry.index)"
+          />
+        </div>
       </div>
-    </div>
+    </Transition>
   </article>
 </template>
+
+<style scoped>
+.card-body-enter-active, .card-body-leave-active {
+  transition: opacity 160ms ease;
+}
+.card-body-enter-from, .card-body-leave-to {
+  opacity: 0;
+}
+</style>

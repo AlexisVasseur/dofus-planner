@@ -4,6 +4,7 @@ import type { Card, ItemRef } from '@/types/build';
 import type { ClassId } from '@/types/classes';
 import { SLOT_ORDER, type SlotType, DOFUS_COUNT } from '@/types/slots';
 import { randomId } from '@/utils/id';
+import { getCachedItem } from '@/composables/useItemCatalog';
 
 function emptySlots(): Record<SlotType, ItemRef | null> {
   const result = {} as Record<SlotType, ItemRef | null>;
@@ -64,6 +65,52 @@ export const useBuildStore = defineStore('build', () => {
     cards.value[idx].dofus[index] = item;
   }
 
+  /**
+   * Bulk-apply an item to the same slot on every card whose level lies in [from, to]
+   * AND can equip the item (card.level >= item.levelRequired). Skipped cards: those
+   * with a null level, out-of-range, or under-leveled. Range bounds are auto-swapped
+   * if from > to. Returns the count of cards actually updated.
+   */
+  function setSlotRange(
+    slot: SlotType,
+    range: [number, number],
+    item: ItemRef,
+  ): number {
+    const [from, to] = range[0] <= range[1] ? range : [range[1], range[0]];
+    const minLevel = getCachedItem(item.itemId)?.levelRequired ?? 0;
+    let updated = 0;
+    for (const card of cards.value) {
+      if (card.level === null) continue;
+      if (card.level < from || card.level > to) continue;
+      if (card.level < minLevel) continue;
+      card.slots[slot] = { ...item };
+      updated++;
+    }
+    return updated;
+  }
+
+  /** Same as setSlotRange but for the positional dofus[index] cell. */
+  function setDofusRange(
+    index: number,
+    range: [number, number],
+    item: ItemRef,
+  ): number {
+    if (index < 0 || index >= DOFUS_COUNT) {
+      throw new Error(`Dofus index out of range: ${index}`);
+    }
+    const [from, to] = range[0] <= range[1] ? range : [range[1], range[0]];
+    const minLevel = getCachedItem(item.itemId)?.levelRequired ?? 0;
+    let updated = 0;
+    for (const card of cards.value) {
+      if (card.level === null) continue;
+      if (card.level < from || card.level > to) continue;
+      if (card.level < minLevel) continue;
+      card.dofus[index] = { ...item };
+      updated++;
+    }
+    return updated;
+  }
+
   function addEmptyCardAfter(cardId: string): void {
     const idx = findIndex(cardId);
     const prev = cards.value[idx];
@@ -115,6 +162,8 @@ export const useBuildStore = defineStore('build', () => {
     setTitle,
     setSlot,
     setDofus,
+    setSlotRange,
+    setDofusRange,
     addEmptyCardAfter,
     addCopyCardAfter,
     removeCard,

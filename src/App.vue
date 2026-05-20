@@ -7,6 +7,7 @@ import AppPurchasePlanner from './components/AppPurchasePlanner.vue';
 import AppSwitchView from './components/AppSwitchView.vue';
 import ItemPickerPopover from './components/ItemPickerPopover.vue';
 import ClassPickerModal from './components/ClassPickerModal.vue';
+import AppToast from './components/AppToast.vue';
 import { useBuildStore } from './stores/build';
 import { useUiStore } from './stores/ui';
 
@@ -83,6 +84,7 @@ onMounted(() => {
     />
     <ItemPickerPopover />
     <ClassPickerModal />
+    <AppToast />
   </div>
 </template>
 

@@ -15,6 +15,9 @@ function normalizeSearch(s: string): string {
 
 // DofusDB exposes itemTypes; these are the typeId values we expect to filter by.
 // Verify against the live API before going to prod (Task 18).
+// The familier slot holds: 18 Familier · 121 Montilier (petsmount) · 97 Dragodinde ·
+// 196 Muldo · 207 Volkorne. They are all equipped in the same slot in-game, so the
+// picker shows them all when picking a familier.
 export const SLOT_TO_TYPE_IDS: Record<SlotType, number[]> = {
   coiffe: [16],
   cape: [17],
@@ -25,7 +28,7 @@ export const SLOT_TO_TYPE_IDS: Record<SlotType, number[]> = {
   bottes: [11],
   arme: [2, 3, 4, 5, 6, 7, 8, 19, 20, 21, 22],
   bouclier: [82],
-  familier: [18, 121],
+  familier: [18, 121, 97, 196, 207],
 };
 
 const BASE_URL = (import.meta.env.VITE_DOFUSDB_BASE_URL as string | undefined) ?? 'https://api.dofusdb.fr';

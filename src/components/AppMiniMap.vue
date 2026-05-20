@@ -27,7 +27,7 @@ const cells = computed<Cell[]>(() => {
       key: r,
       label: r,
       payload: r,
-      ariaLabel: `Aller à la salle ${r}`,
+      ariaLabel: r === 'hub' ? 'Aller au Hub' : `Aller à la salle ${r}`,
     }));
   }
   return build.cards.map((c, idx) => ({
@@ -69,9 +69,14 @@ const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
 
 function gotoCell(cell: Cell, idx: number): void {
   if (ui.viewMode === 'purchase') {
-    // Click on a room pill: find the first card whose level falls in that room and
-    // make it active. AppPurchasePlanner watches the derived active room and scrolls.
     const room = cell.payload as RoomId;
+    // Hub has no card-level mapping — request an explicit scroll instead of setActiveCard.
+    if (room === 'hub') {
+      ui.requestPurchaseScroll('hub');
+      return;
+    }
+    // Other rooms: find the first card whose level falls in that room and make it active.
+    // AppPurchasePlanner watches the derived active room and scrolls.
     const target = build.cards.find((c) => c.level !== null && levelToRoom(c.level) === room);
     if (target) ui.setActiveCard(target.id);
     return;

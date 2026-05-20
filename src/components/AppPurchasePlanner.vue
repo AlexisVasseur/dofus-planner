@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, nextTick } from 'vue';
 import { useShoppingList } from '@/composables/useShoppingList';
-import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, levelToRoom, type RoomId, type NpcId } from '@/types/rooms';
+import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, ROOM_LABEL, levelToRoom, type RoomId, type NpcId } from '@/types/rooms';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
 
@@ -44,6 +44,16 @@ watch(activeRoom, async (room) => {
   const el = roomSectionRefs.value[room];
   if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }, { immediate: true });
+
+// Explicit "scroll to Hub" trigger from the minimap. The Hub has no card-level mapping,
+// so the activeRoom-driven scroll above never targets it; this watcher handles the case.
+watch(() => ui.purchaseScrollTick, async () => {
+  const room = ui.purchaseScrollRoom as RoomId | null;
+  if (!room) return;
+  await nextTick();
+  const el = roomSectionRefs.value[room];
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
 function backToBuild(): void {
   ui.setViewMode('build');
@@ -103,7 +113,7 @@ async function copyItem(name: string, key: string): Promise<void> {
         >
           <header class="mb-3">
             <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
-              Salle {{ room }}
+              {{ ROOM_LABEL[room] }}
             </h2>
           </header>
 
@@ -130,7 +140,7 @@ async function copyItem(name: string, key: string): Promise<void> {
                   <button
                     type="button"
                     data-testid="item-name"
-                    class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md px-2 py-1.5 hover:bg-[#8AE0EE]/[0.08] hover:border-[#8AE0EE]/30 hover:text-[#8AE0EE] transition-colors cursor-pointer"
+                    class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md pl-2 py-1.5 hover:bg-[#8AE0EE]/[0.08] hover:border-[#8AE0EE]/30 hover:text-[#8AE0EE] transition-colors cursor-pointer overflow-hidden"
                     :class="copiedKey === `${room}-${npc}-${item.id}` && '!bg-[#5DCFE0]/[0.12] !border-[#5DCFE0]/40 !text-[#5DCFE0]'"
                     :title="`Cliquer pour copier — ${item.name}`"
                     @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
@@ -143,7 +153,14 @@ async function copyItem(name: string, key: string): Promise<void> {
                       loading="lazy"
                     />
                     <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
-                    <span class="truncate min-w-0 flex-1">{{ item.name }}</span>
+                    <span class="truncate min-w-0 flex-1 pr-2">{{ item.name }}</span>
+                    <!-- Quantity badge: only shown when the item is needed more than once
+                         in a single card (e.g. Silimelle as anneau1 + anneau2). -->
+                    <span
+                      v-if="(list.counts[item.id] ?? 1) > 1"
+                      class="flex-shrink-0 self-stretch -my-1.5 -mr-px px-3 min-w-[40px] inline-flex items-center justify-center font-mono font-extrabold text-[15px] text-text-default border-l border-black/40"
+                      style="background: rgba(0,0,0,0.45);"
+                    >×{{ list.counts[item.id] }}</span>
                   </button>
                   <Transition name="copied">
                     <span

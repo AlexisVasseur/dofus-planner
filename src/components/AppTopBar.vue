@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { getCachedItem, populateCache, ensureItems } from '@/composables/useItemCatalog';
 import type { Card } from '@/types/build';
 import type { Item } from '@/data/dofusdb';
 import logoUrl from '@/assets/dofus-planner.png';
+import ConfirmPopover from './ConfirmPopover.vue';
 
 const build = useBuildStore();
 const ui = useUiStore();
@@ -36,13 +37,18 @@ function collectItemIds(cards: Card[]): number[] {
   return Array.from(ids);
 }
 
-function newBuild() {
-  if (window.confirm('Réinitialiser le build ? Cette action est irréversible.')) {
-    build.resetBuild();
-    ui.setActiveCard(null);
-    ui.closeItemPicker();
-    ui.closeClassPicker();
-  }
+const newBuildBtnRef = ref<HTMLElement | null>(null);
+const confirmingNewBuild = ref(false);
+
+function onNewBuildClick(): void {
+  confirmingNewBuild.value = !confirmingNewBuild.value;
+}
+
+function onConfirmNewBuild(): void {
+  build.resetBuild();
+  ui.setActiveCard(null);
+  ui.closeItemPicker();
+  ui.closeClassPicker();
 }
 
 function exportBuild() {
@@ -186,9 +192,10 @@ function importBuild() {
         </svg>
       </button>
       <button
+        ref="newBuildBtnRef"
         type="button"
         class="h-9 inline-flex items-center gap-1.5 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-3.5 font-sans text-[11px] font-bold uppercase tracking-[0.06em] cursor-pointer hover:bg-[#8AE0EE] hover:border-[#8AE0EE] active:translate-y-[1px] transition-colors"
-        @click="newBuild"
+        @click="onNewBuildClick"
         aria-label="Nouveau build"
       >
         <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">
@@ -197,5 +204,13 @@ function importBuild() {
         Nouveau build
       </button>
     </div>
+    <ConfirmPopover
+      v-model:open="confirmingNewBuild"
+      :trigger-el="newBuildBtnRef"
+      message="Réinitialiser le build ? Cette action est irréversible."
+      confirm-label="Réinitialiser"
+      tone="danger"
+      @confirm="onConfirmNewBuild"
+    />
   </header>
 </template>
