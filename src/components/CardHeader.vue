@@ -128,7 +128,7 @@ function cancelTitle() {
           @click="onClassClick"
         >Choisir une classe</button>
         <button
-          v-else
+          v-else-if="title !== null || !readonly"
           type="button"
           class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left w-full truncate"
           :class="readonly ? 'cursor-default' : 'hover:opacity-80'"

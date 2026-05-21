@@ -63,7 +63,7 @@ const pillStyle = computed(() => {
 });
 
 // Card geometry — must match AppTimeline / EquipmentCard / Connector widths.
-const CARD_WIDTH = 700;
+const CARD_WIDTH = 440;
 const CONNECTOR_WIDTH = 52;
 const PADDING_LEFT = 64; // matches pl-16 in AppTimeline
 

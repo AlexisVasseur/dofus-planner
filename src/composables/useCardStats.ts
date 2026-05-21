@@ -21,12 +21,26 @@ export const CHAR_DOM_FEU = 89;          // Dommage Intel
 export const CHAR_DOM_EAU = 90;          // Dommage Eau (Chance)
 export const CHAR_DOM_AIR = 91;          // Dommage Air
 
+/** Base character stats by level. Dofus rules:
+ *   PA       = 6, becomes 7 from level 100.
+ *   PM       = 3 (flat).
+ *   Vitalité = 55 at level 1, +5 per level (so `50 + 5 * level`).
+ * No level → no base (we don't know the level yet). */
+function baseStats(level: number | null): Record<number, number> {
+  if (level === null) return {};
+  return {
+    [CHAR_PA]: level >= 100 ? 7 : 6,
+    [CHAR_PM]: 3,
+    [CHAR_VITALITE]: 50 + 5 * level,
+  };
+}
+
 /** Aggregate the max-roll value (`effect.to`) of every item effect on the card, grouped by
- * characteristic. Each item contributes its own bonus per characteristic; multiple items
- * boosting the same stat sum together. Items not yet in the cache contribute nothing
- * (the panel re-renders once their effects arrive). */
+ * characteristic, ADDED to the level-based character base. Each item contributes its own
+ * bonus per characteristic; multiple items boosting the same stat sum together. Items not
+ * yet in the cache contribute nothing (the panel re-renders once their effects arrive). */
 export function aggregateCardStats(card: Card): Record<number, number> {
-  const totals: Record<number, number> = {};
+  const totals: Record<number, number> = { ...baseStats(card.level) };
   const accumulate = (itemId: number): void => {
     const item = getCachedItem(itemId);
     if (!item || !item.effects) return;

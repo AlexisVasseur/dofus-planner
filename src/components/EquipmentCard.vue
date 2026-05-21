@@ -2,12 +2,12 @@
 import { ref, computed } from 'vue';
 import CardHeader from './CardHeader.vue';
 import CardDeleteConfirm from './CardDeleteConfirm.vue';
-import EquipmentSlot from './EquipmentSlot.vue';
-import DofusRow from './DofusRow.vue';
+import SlotIcon from './SlotIcon.vue';
+import DofusCell from './DofusCell.vue';
 import CardStatsPanel from './CardStatsPanel.vue';
 import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
-import { SLOT_ORDER, DOFUS_COUNT } from '@/types/slots';
+import { DOFUS_COUNT, type SlotType } from '@/types/slots';
 import type { Card } from '@/types/build';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
@@ -18,8 +18,9 @@ const SURFACE_BASE = '#0a0a0a';
 const BORDER_BASE = '#262626';
 const FALLBACK_ACCENT = '#5DCFE0';
 
-const props = withDefaults(defineProps<{ card: Card; readonly?: boolean }>(), {
+const props = withDefaults(defineProps<{ card: Card; readonly?: boolean; headerOnly?: boolean }>(), {
   readonly: false,
+  headerOnly: false,
 });
 const build = useBuildStore();
 const ui = useUiStore();
@@ -30,7 +31,7 @@ const confirmingDelete = ref(false); // in-place delete confirm replaces the bod
 
 const themeStyle = computed(() => {
   const a = getClassAssets(props.card.classId);
-  const base: Record<string, string> = { width: 'var(--card-width, 700px)' };
+  const base: Record<string, string> = { width: 'var(--card-width, 440px)' };
   if (a) {
     base['--class-dominant'] = a.colors.dominant;
     base['--class-soft'] = a.colors.soft;
@@ -68,10 +69,26 @@ function onConfirmDelete(): void {
   build.removeCard(props.card.id);
 }
 
-const slotItems = computed(() => SLOT_ORDER.map((slot) => {
+// Cruciform layout — left + right slot columns positioned around the central stats panel.
+// `null` entries mean "no slot here" (visual gap to align rows between the two columns).
+const LEFT_SLOTS: ReadonlyArray<SlotType | null> = ['coiffe', 'cape', null, 'arme', 'bouclier', 'familier'];
+const RIGHT_SLOTS: ReadonlyArray<SlotType> = ['amulette', 'anneau1', 'anneau2', 'ceinture', 'bottes'];
+
+function getItem(slot: SlotType): ReturnType<typeof getCachedItem> | null {
   const ref = props.card.slots[slot];
-  return { slot, item: ref ? getCachedItem(ref.itemId) : null };
-}));
+  return ref ? getCachedItem(ref.itemId) : null;
+}
+
+const leftColumn = computed(() => LEFT_SLOTS.map((slot, i) => ({
+  slot,
+  row: i + 1,
+  item: slot ? getItem(slot) : null,
+})));
+const rightColumn = computed(() => RIGHT_SLOTS.map((slot, i) => ({
+  slot,
+  row: i + 1,
+  item: getItem(slot),
+})));
 
 const dofusItems = computed(() => {
   const out = [];
@@ -126,9 +143,9 @@ function onDofusPick(index: number): void {
 
 <template>
   <article
-    class="equipment-card select-none text-left flex-shrink-0 h-full max-h-[660px] flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden"
+    class="equipment-card select-none text-left flex-shrink-0 flex flex-col bg-bg-surface border border-border-default rounded-xl overflow-hidden"
+    :class="[headerOnly ? 'h-auto' : 'h-full max-h-[660px]', { 'is-active': isActive }]"
     :style="themeStyle"
-    :class="{ 'is-active': isActive }"
     :data-class-id="card.classId ?? ''"
     :data-card-id="card.id"
     @mouseenter="hovered = true"
@@ -146,8 +163,9 @@ function onDofusPick(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="onHeaderRemove"
     />
-    <!-- Body crossfades between equipment view and in-place delete confirm. -->
-    <Transition name="card-body" mode="out-in">
+    <!-- Body crossfades between equipment view and in-place delete confirm.
+         When headerOnly is set (Reader thumbnails), the whole body is skipped. -->
+    <Transition v-if="!headerOnly" name="card-body" mode="out-in">
       <CardDeleteConfirm
         v-if="confirmingDelete"
         key="confirm"
@@ -155,16 +173,36 @@ function onDofusPick(index: number): void {
         @confirm="onConfirmDelete"
       />
       <div v-else key="equipment" class="flex-1 flex flex-col min-h-0">
-        <!-- Top: two columns — equipment slots (left) and dofus rows (right). Both use
-             a 10-row CSS grid so a dofus row (6 items) gets the SAME row height as an
-             equipment row (10 items) — the dofus column just leaves its last 4 grid
-             slots empty. A 1px divider separates the two columns. -->
-        <div class="flex-1 flex min-h-0 p-4 gap-3">
-          <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
-            <EquipmentSlot
-              v-for="entry in slotItems"
-              :key="entry.slot"
-              class="min-h-0 max-h-14 overflow-hidden"
+        <!-- Single body grid: 6 cols × 7 rows. Each cell is square (1fr/1fr can't enforce
+             that, so we use container queries — see .slot-cell rule below). All slots
+             share the SAME size which scales with the smaller of cell width or height. -->
+        <div class="flex-1 grid grid-cols-6 grid-rows-[repeat(7,minmax(0,1fr))] gap-[0.6875rem] px-4 py-4 min-h-0">
+          <template v-for="entry in leftColumn" :key="`l-${entry.row}`">
+            <div
+              v-if="entry.slot"
+              class="cell-wrap"
+              :style="{ gridColumnStart: 1, gridRowStart: entry.row }"
+            >
+              <SlotIcon
+                class="slot-cell"
+                :slot="entry.slot"
+                :item="entry.item"
+                :card-level="card.level"
+                :active="activeOnSlot(entry.slot)"
+                :readonly="readonly"
+                @pick="onSlotPick(entry.slot)"
+                @clear="onClearSlot(entry.slot)"
+              />
+            </div>
+          </template>
+          <div
+            v-for="entry in rightColumn"
+            :key="`r-${entry.row}`"
+            class="cell-wrap"
+            :style="{ gridColumnStart: 6, gridRowStart: entry.row }"
+          >
+            <SlotIcon
+              class="slot-cell"
               :slot="entry.slot"
               :item="entry.item"
               :card-level="card.level"
@@ -174,13 +212,17 @@ function onDofusPick(index: number): void {
               @clear="onClearSlot(entry.slot)"
             />
           </div>
-          <div class="w-px bg-white/10 self-stretch flex-shrink-0" aria-hidden="true"></div>
-          <div class="flex-1 grid grid-rows-[repeat(10,minmax(0,1fr))] min-h-0 min-w-0">
-            <DofusRow
-              v-for="entry in dofusItems"
-              :key="entry.index"
-              class="min-h-0 max-h-14 overflow-hidden"
-              :index="entry.index"
+          <div class="min-w-0 min-h-0 overflow-hidden" style="grid-column: 2 / 6; grid-row: 1 / 7;">
+            <CardStatsPanel :card="card" />
+          </div>
+          <div
+            v-for="entry in dofusItems"
+            :key="`d-${entry.index}`"
+            class="cell-wrap"
+            :style="{ gridColumnStart: entry.index + 1, gridRowStart: 7 }"
+          >
+            <DofusCell
+              class="slot-cell"
               :item="entry.item"
               :card-level="card.level"
               :active="activeOnDofus(entry.index)"
@@ -190,8 +232,6 @@ function onDofusPick(index: number): void {
             />
           </div>
         </div>
-        <!-- Bottom: aggregated stats panel, full width, horizontal layout -->
-        <CardStatsPanel :card="card" />
       </div>
     </Transition>
   </article>
@@ -203,5 +243,20 @@ function onDofusPick(index: number): void {
 }
 .card-body-enter-from, .card-body-leave-to {
   opacity: 0;
+}
+/* Each grid cell is a size container so the slot inside can size itself to the SMALLER
+   of the cell width or height (kept square via aspect-ratio: 1). This is what makes the
+   equipment slots and dofus cells stay the SAME size, even when the card height is
+   constrained — every slot computes from the same `cqmin`. */
+.cell-wrap {
+  container-type: size;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  min-height: 0;
+}
+.slot-cell {
+  width: 100cqmin;
+  height: 100cqmin;
 }
 </style>
