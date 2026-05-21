@@ -21,17 +21,24 @@ export const CHAR_DOM_FEU = 89;          // Dommage Intel
 export const CHAR_DOM_EAU = 90;          // Dommage Eau (Chance)
 export const CHAR_DOM_AIR = 91;          // Dommage Air
 
-/** Base character stats by level. Dofus rules:
- *   PA       = 6, becomes 7 from level 100.
- *   PM       = 3 (flat).
- *   Vitalité = 55 at level 1, +5 per level (so `50 + 5 * level`).
+/** Base character stats — what the character already has before any item bonus.
+ *   PA        = 6, becomes 7 from level 100.
+ *   PM        = 3 (flat).
+ *   Vitalité  = 55 at level 1, +5 per level (so `50 + 5 * level`) PLUS 100 baseline.
+ *   Force / Intelligence / Chance / Agilité / Sagesse = 100 each (the player's default
+ *     scroll/allocation budget — items add on top).
  * No level → no base (we don't know the level yet). */
 function baseStats(level: number | null): Record<number, number> {
   if (level === null) return {};
   return {
     [CHAR_PA]: level >= 100 ? 7 : 6,
     [CHAR_PM]: 3,
-    [CHAR_VITALITE]: 50 + 5 * level,
+    [CHAR_VITALITE]: 50 + 5 * level + 100,
+    [CHAR_FORCE]: 100,
+    [CHAR_INTELLIGENCE]: 100,
+    [CHAR_CHANCE]: 100,
+    [CHAR_AGILITE]: 100,
+    [CHAR_SAGESSE]: 100,
   };
 }
 
