@@ -2,6 +2,7 @@
 import { ref, computed, nextTick } from 'vue';
 import ClassThumbnail from '@/components/ClassThumbnail.vue';
 import type { ClassId } from '@/types/classes';
+import { getClassAssets } from '@/composables/useClassAssets';
 
 const props = defineProps<{
   classId: ClassId | null;
@@ -28,6 +29,7 @@ const levelInputRef = ref<HTMLInputElement | null>(null);
 const titleInputRef = ref<HTMLInputElement | null>(null);
 
 const showCta = computed(() => props.classId === null);
+const thumbnailUrl = computed(() => getClassAssets(props.classId)?.thumbnail ?? null);
 
 async function startEditLevel() {
   if (props.readonly || editingLevel.value) return;
@@ -93,19 +95,29 @@ function cancelTitle() {
 </script>
 
 <template>
-  <header class="header relative p-4 border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
-    <div class="flex items-center gap-4 w-full">
+  <header class="header relative pl-[4px] pr-4 py-[2px] border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+    <div class="flex items-stretch gap-4 w-full">
       <button
         type="button"
-        class="class-picker-trigger"
+        class="class-picker-trigger flex-shrink-0"
         :class="{ 'cursor-default': readonly }"
         @click="onClassClick"
         aria-label="Choisir une classe"
       >
-        <ClassThumbnail :class-id="classId" :size="56" />
+        <!-- Image hugs the card top-left + extends to the header's bottom — no padding
+             around the image. Card's outer rounded-xl + overflow-hidden clips the
+             top-left corner naturally. -->
+        <img
+          v-if="thumbnailUrl"
+          :src="thumbnailUrl"
+          alt=""
+          class="block w-[88px] h-[88px] object-cover"
+          loading="lazy"
+        />
+        <ClassThumbnail v-else :class-id="classId" :size="88" />
       </button>
       <div
-        class="right flex-1 min-w-0"
+        class="right flex-1 min-w-0 py-4"
         :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
       >
         <input

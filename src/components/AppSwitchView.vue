@@ -5,6 +5,8 @@ import { useBuildStore } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import EquipmentCard from './EquipmentCard.vue';
 import EquipmentCardDiff from './EquipmentCardDiff.vue';
+import ClassThumbnail from './ClassThumbnail.vue';
+import { getClassAssets } from '@/composables/useClassAssets';
 
 const build = useBuildStore();
 const ui = useUiStore();
@@ -21,10 +23,6 @@ const previousCard = computed(() =>
 const nextCard = computed(() =>
   activeIndex.value < build.cards.length - 1 ? build.cards[activeIndex.value + 1] : null,
 );
-const beforePrevCard = computed(() =>
-  activeIndex.value >= 2 ? build.cards[activeIndex.value - 2] : null,
-);
-
 const canGoBack = computed(() => activeIndex.value > 0);
 const canGoNext = computed(() => activeIndex.value < build.cards.length - 1);
 
@@ -92,6 +90,19 @@ const prevLevelLabel = computed(() => {
   const lvl = previousCard.value?.level;
   return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
 });
+
+// Class-tinted accent + thumbnail URL for each peek tile.
+function peekStyle(classId: string | null): Record<string, string> {
+  const a = getClassAssets(classId as never);
+  if (!a) return {};
+  return {
+    '--peek-accent': a.colors.accent,
+    borderColor: `color-mix(in srgb, #262626 50%, ${a.colors.dominant} 50%)`,
+  };
+}
+function peekThumbnail(classId: string | null): string | null {
+  return getClassAssets(classId as never)?.thumbnail ?? null;
+}
 const nextLevelLabel = computed(() => {
   const lvl = nextCard.value?.level;
   return lvl !== null && lvl !== undefined ? `Lv ${lvl}` : '—';
@@ -104,41 +115,64 @@ const nextLevelLabel = computed(() => {
     @wheel="onWheel"
   >
     <div class="carousel relative flex flex-1 items-center justify-center gap-32 w-full min-h-0" style="--card-width: 440px;">
-      <!-- PREV peek — always rendered to keep the active card centered. When there's no
-           previous card, the button is disabled (readonly) and the peek card preview is
-           omitted (no ghost card below the label). -->
+      <!-- PREV peek — square tile with class thumbnail + level + left arrow. -->
       <button
         type="button"
-        class="peek peek-prev group relative flex flex-col items-end justify-center origin-right h-full flex-shrink-0"
+        class="peek peek-prev group relative flex items-center justify-center flex-shrink-0"
         :class="canGoBack ? 'cursor-pointer' : 'cursor-default opacity-0 pointer-events-none'"
         :disabled="!canGoBack"
         :aria-hidden="!canGoBack"
         :aria-label="canGoBack ? `Étape précédente — ${prevLevelLabel}` : 'Aucune étape précédente'"
         @click="canGoBack && goPrev()"
       >
-        <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 440px;">
-          <!-- Label stays in its "active" turquoise state always — when canGoBack flips
-               false, the parent button's opacity-0 hides it. No conditional class swap =
-               no flicker between turquoise and dim states during navigation. -->
-          <div
-            class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none"
-          >
-            <span>‹</span>
-            <span>Précédent · {{ prevLevelLabel }}</span>
+        <div
+          v-if="previousCard"
+          class="peek-tile relative aspect-square w-[180px] bg-bg-surface border-2 rounded-xl overflow-hidden transition-all"
+          :style="peekStyle(previousCard.classId)"
+        >
+          <!-- Full-bleed class image. -->
+          <img
+            v-if="peekThumbnail(previousCard.classId)"
+            :src="peekThumbnail(previousCard.classId)!"
+            alt=""
+            class="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+            draggable="false"
+          />
+          <div v-else class="absolute inset-0 bg-bg-elev flex items-center justify-center">
+            <ClassThumbnail :class-id="previousCard.classId" :size="80" />
           </div>
-          <!-- When canGoBack is false, the whole peek-prev is opacity-0 (from the button
-               class). We avoid swapping the inner card with a dashed placeholder — that
-               instant DOM swap was causing a visible flicker before the opacity fade. -->
-          <div v-if="previousCard" class="opacity-40 group-hover:opacity-70 transition-opacity">
-            <EquipmentCard v-if="activeIndex - 1 === 0" :card="previousCard" :readonly="true" :header-only="true" />
-            <EquipmentCardDiff
-              v-else-if="beforePrevCard"
-              :card="previousCard"
-              :previous="beforePrevCard"
-              :header-only="true"
-            />
+          <!-- Gradient from transparent (top) to opaque black (bottom) so the text below
+               reads cleanly over the image. -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none"></div>
+          <!-- Text overlay at the bottom. -->
+          <div class="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-0.5">
+            <div
+              class="font-display text-[18px] font-bold uppercase tracking-[0.18em] leading-none"
+              :style="{ color: 'var(--peek-accent, rgba(255,255,255,0.9))' }"
+            >Niv {{ previousCard.level ?? '—' }}</div>
+            <div
+              v-if="previousCard.title"
+              class="text-[10px] text-text-muted uppercase tracking-[0.1em] truncate w-full text-center"
+            >{{ previousCard.title }}</div>
           </div>
         </div>
+        <!-- Arrow lives fully OUTSIDE the tile: positioned to the left of the tile with
+             a small gap. `right-full` anchors the arrow's right edge at the tile's left
+             edge, then mr-3 pushes it 12px further out. -->
+        <svg
+          v-if="previousCard"
+          class="peek-arrow peek-arrow-left absolute right-full top-1/2 mr-3 w-14 h-14 text-[#5DCFE0] drop-shadow-[0_0_10px_rgba(93,207,224,0.5)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M15 6l-6 6 6 6" />
+        </svg>
       </button>
 
       <!-- ACTIVE card. Old + new overlap in the stage via absolute positioning so they
@@ -163,41 +197,92 @@ const nextLevelLabel = computed(() => {
         </Transition>
       </div>
 
-      <!-- NEXT peek — always rendered to keep the active card centered. Same readonly
-           treatment as PREV when there's no next card. -->
+      <!-- NEXT peek — square tile with class thumbnail + level + right arrow. -->
       <button
         type="button"
-        class="peek peek-next group relative flex flex-col items-start justify-center origin-left h-full flex-shrink-0"
+        class="peek peek-next group relative flex items-center justify-center flex-shrink-0"
         :class="canGoNext ? 'cursor-pointer' : 'cursor-default opacity-0 pointer-events-none'"
         :disabled="!canGoNext"
         :aria-hidden="!canGoNext"
         :aria-label="canGoNext ? `Étape suivante — ${nextLevelLabel}` : 'Aucune étape suivante'"
         @click="canGoNext && goNext()"
       >
-        <div class="peek-stack flex flex-col gap-9 pointer-events-none" style="width: 440px;">
-          <!-- Label kept always in turquoise — parent opacity handles invisibility. -->
-          <div
-            class="peek-label inline-flex items-center justify-center gap-3 bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-6 py-3 font-sans text-[26px] font-extrabold tracking-[0.06em] uppercase leading-none"
-          >
-            <span>Suivant · {{ nextLevelLabel }}</span>
-            <span>›</span>
+        <div
+          v-if="nextCard"
+          class="peek-tile relative aspect-square w-[180px] bg-bg-surface border-2 rounded-xl overflow-hidden transition-all"
+          :style="peekStyle(nextCard.classId)"
+        >
+          <img
+            v-if="peekThumbnail(nextCard.classId)"
+            :src="peekThumbnail(nextCard.classId)!"
+            alt=""
+            class="absolute inset-0 w-full h-full object-cover"
+            loading="lazy"
+            draggable="false"
+          />
+          <div v-else class="absolute inset-0 bg-bg-elev flex items-center justify-center">
+            <ClassThumbnail :class-id="nextCard.classId" :size="80" />
           </div>
-          <div v-if="nextCard && activeCard" class="opacity-40 group-hover:opacity-70 transition-opacity">
-            <EquipmentCardDiff
-              :card="nextCard"
-              :previous="activeCard"
-              :header-only="true"
-            />
+          <div class="absolute inset-0 bg-gradient-to-t from-black/95 via-black/55 to-transparent pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 right-0 px-3 py-3 flex flex-col items-center gap-0.5">
+            <div
+              class="font-display text-[18px] font-bold uppercase tracking-[0.18em] leading-none"
+              :style="{ color: 'var(--peek-accent, rgba(255,255,255,0.9))' }"
+            >Niv {{ nextCard.level ?? '—' }}</div>
+            <div
+              v-if="nextCard.title"
+              class="text-[10px] text-text-muted uppercase tracking-[0.1em] truncate w-full text-center"
+            >{{ nextCard.title }}</div>
           </div>
         </div>
+        <svg
+          v-if="nextCard"
+          class="peek-arrow peek-arrow-right absolute left-full top-1/2 ml-3 w-14 h-14 text-[#5DCFE0] drop-shadow-[0_0_10px_rgba(93,207,224,0.5)]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.8"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          aria-hidden="true"
+        >
+          <path d="M9 6l6 6-6 6" />
+        </svg>
       </button>
     </div>
   </div>
 </template>
 
 <style scoped>
-.peek {
-  transform: scale(0.55);
+/* Peek tile — square preview that emphasises class + level. Hover elevates it slightly
+ * and adds a turquoise glow so the user knows it's clickable. The arrow on the outer
+ * edge points the navigation direction. */
+.peek-tile {
+  opacity: 0.85;
+}
+.peek:hover .peek-tile {
+  opacity: 1;
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 1px #5DCFE0, 0 8px 28px rgba(93, 207, 224, 0.25);
+}
+/* Arrow base position (vertical centering via transform — keeps the wobble math simple). */
+.peek-arrow {
+  transform: translateY(-50%);
+  transition: transform 180ms ease;
+}
+.peek:hover .peek-arrow-left {
+  animation: peek-wobble-left 0.9s ease-in-out infinite;
+}
+.peek:hover .peek-arrow-right {
+  animation: peek-wobble-right 0.9s ease-in-out infinite;
+}
+@keyframes peek-wobble-left {
+  0%, 100% { transform: translate(0, -50%); }
+  50%      { transform: translate(-6px, -50%); }
+}
+@keyframes peek-wobble-right {
+  0%, 100% { transform: translate(0, -50%); }
+  50%      { transform: translate(6px, -50%); }
 }
 
 /* Hide the per-card delete (×) button in Switch view — purely visual mode. */
