@@ -82,6 +82,9 @@ onMounted(() => {
       :scroll-ref="ui.viewMode === 'build' ? scrollEl : null"
       class="relative z-20"
     />
+    <footer class="relative z-20 px-4 py-2 text-center text-[11px] text-text-faint leading-snug">
+      © 2026 - 2026 DofusPlanner. Certaines illustrations sont la propriété d'Ankama Studio et de Dofus - Tous droits réservés. API via DofusDB
+    </footer>
     <ItemPickerPopover />
     <ClassPickerModal />
     <AppToast />
