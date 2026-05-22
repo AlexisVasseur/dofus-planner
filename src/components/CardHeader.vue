@@ -115,13 +115,13 @@ function cancelTitle() {
           v-if="thumbnailUrl"
           :src="thumbnailUrl"
           alt=""
-          class="block w-[88px] h-[88px] object-cover"
+          class="block w-[64px] h-[64px] object-cover"
           loading="lazy"
         />
-        <ClassThumbnail v-else :class-id="classId" :size="88" />
+        <ClassThumbnail v-else :class-id="classId" :size="64" />
       </button>
       <div
-        class="right flex-1 min-w-0 py-4"
+        class="right flex-1 min-w-0 py-2"
         :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
       >
         <input
@@ -129,7 +129,7 @@ function cancelTitle() {
           ref="titleInputRef"
           v-model="titleDraft"
           maxlength="30"
-          class="block bg-transparent font-display text-[14px] font-light tracking-[0.18em] uppercase outline-none w-full border-b border-dashed border-white/60"
+          class="block bg-transparent font-display text-[12px] font-light tracking-[0.16em] uppercase outline-none w-full border-b border-dashed border-white/60"
           style="color: inherit;"
           @blur="commitTitle"
           @keydown.enter.prevent="commitTitle"
@@ -138,7 +138,7 @@ function cancelTitle() {
         <button
           v-else-if="showCta"
           type="button"
-          class="class-picker-trigger block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left"
+          class="class-picker-trigger block font-display text-[12px] font-light tracking-[0.16em] uppercase text-left"
           :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
           style="color: inherit;"
           @click="onClassClick"
@@ -146,14 +146,14 @@ function cancelTitle() {
         <button
           v-else-if="title !== null || !readonly"
           type="button"
-          class="block font-display text-[14px] font-light tracking-[0.18em] uppercase text-left w-full truncate"
+          class="block font-display text-[12px] font-light tracking-[0.16em] uppercase text-left w-full truncate"
           :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
           style="color: inherit;"
           @click="startEditTitle"
         >{{ title ?? 'Ajouter un titre' }}</button>
-        <div class="flex items-baseline gap-2 mt-1">
+        <div class="flex items-baseline gap-1.5 mt-0.5">
           <span
-            class="font-display text-[18px] font-bold uppercase tracking-[0.18em] leading-none"
+            class="font-display text-[13px] font-bold uppercase tracking-[0.16em] leading-none"
             style="color: inherit;"
           >Niv</span>
           <input
@@ -163,7 +163,7 @@ function cancelTitle() {
             type="text"
             inputmode="numeric"
             maxlength="3"
-            class="font-display text-[36px] font-bold leading-none bg-transparent w-20 outline-none border-b border-dashed border-white/60"
+            class="font-display text-[26px] font-bold leading-none bg-transparent w-14 outline-none border-b border-dashed border-white/60"
             style="color: inherit;"
             @blur="commitLevel"
             @keydown.enter.prevent="commitLevel"
@@ -173,7 +173,7 @@ function cancelTitle() {
             v-else
             type="button"
             @click="startEditLevel"
-            class="font-display text-[36px] font-bold leading-none"
+            class="font-display text-[26px] font-bold leading-none"
             :class="readonly
               ? 'cursor-default'
               : 'border-b border-dashed border-border-default hover:border-white/60 cursor-text'"
@@ -187,13 +187,13 @@ function cancelTitle() {
          so shared cards stay actionable. -->
     <button
       type="button"
-      class="absolute top-2.5 w-10 h-10 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
-      :class="readonly ? 'right-2.5' : 'right-14'"
+      class="absolute top-1.5 w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
+      :class="readonly ? 'right-1.5' : 'right-10'"
       @click.stop="onDofusbookClick"
       aria-label="Ouvrir dans Dofusbook"
       title="Ouvrir dans Dofusbook"
     >
-      <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
         <polyline points="15 3 21 3 21 9" />
         <line x1="10" y1="14" x2="21" y2="3" />
@@ -204,13 +204,13 @@ function cancelTitle() {
     <button
       v-if="!readonly"
       type="button"
-      class="card-delete-btn absolute top-2.5 right-2.5 w-10 h-10 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 inline-flex items-center justify-center transition-colors"
+      class="card-delete-btn absolute top-1.5 right-1.5 w-8 h-8 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 inline-flex items-center justify-center transition-colors"
       :class="confirmingDelete && 'text-danger-soft border-danger/40 bg-danger/10'"
       @click="onRemoveClick"
       aria-label="Supprimer cette étape"
       title="Supprimer cette étape"
     >
-      <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M6 6l12 12M18 6L6 18" />
       </svg>
     </button>
