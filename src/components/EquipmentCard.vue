@@ -11,6 +11,7 @@ import { DOFUS_COUNT, type SlotType } from '@/types/slots';
 import type { Card } from '@/types/build';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
+import { buildDofusbookUrl } from '@/utils/dofusbook';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
 // Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent.DEFAULT=#5DCFE0.
@@ -58,6 +59,10 @@ function onHeaderRemove(): void {
   if (props.readonly) return;
   // Toggle the in-place confirm panel. Subsequent × clicks dismiss.
   confirmingDelete.value = !confirmingDelete.value;
+}
+
+function onOpenDofusbook(): void {
+  window.open(buildDofusbookUrl(props.card), '_blank', 'noopener,noreferrer');
 }
 
 function onConfirmDelete(): void {
@@ -162,6 +167,7 @@ function onDofusPick(index: number): void {
       @update:level="(v) => build.setLevel(card.id, v)"
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="onHeaderRemove"
+      @open-dofusbook="onOpenDofusbook"
     />
     <!-- Body crossfades between equipment view and in-place delete confirm.
          When headerOnly is set (Reader thumbnails), the whole body is skipped. -->

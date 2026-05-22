@@ -18,6 +18,7 @@ const emit = defineEmits<{
   'update:level': [value: number | null];
   'update:title': [value: string | null];
   'remove': [];
+  'open-dofusbook': [];
 }>();
 
 const editingLevel = ref(false);
@@ -77,6 +78,9 @@ function onClassClick(): void {
 function onRemoveClick(): void {
   if (props.readonly) return;
   emit('remove');
+}
+function onDofusbookClick(): void {
+  emit('open-dofusbook');
 }
 
 let commitTitleGuard = false;
@@ -178,6 +182,23 @@ function cancelTitle() {
         </div>
       </div>
     </div>
+    <!-- Dofusbook share — generates the encoded ?stuff=... URL from the current card
+         state and opens dofusbook in a new tab. Visible in readonly (Reader) mode too
+         so shared cards stay actionable. -->
+    <button
+      type="button"
+      class="absolute top-2.5 w-10 h-10 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
+      :class="readonly ? 'right-2.5' : 'right-14'"
+      @click.stop="onDofusbookClick"
+      aria-label="Ouvrir dans Dofusbook"
+      title="Ouvrir dans Dofusbook"
+    >
+      <svg viewBox="0 0 24 24" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+        <polyline points="15 3 21 3 21 9" />
+        <line x1="10" y1="14" x2="21" y2="3" />
+      </svg>
+    </button>
     <!-- × emits 'remove'. Parent owns the confirming state and toggles it; the
          red-tinted danger state is driven by the confirmingDelete prop. -->
     <button
