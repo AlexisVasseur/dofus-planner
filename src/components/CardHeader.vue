@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, nextTick } from 'vue';
 import { onClickOutside, useEventListener } from '@vueuse/core';
+import ClassThumbnail from '@/components/ClassThumbnail.vue';
 import type { ClassId } from '@/types/classes';
 import { getClassAssets } from '@/composables/useClassAssets';
 
@@ -32,16 +33,6 @@ const titleInputRef = ref<HTMLInputElement | null>(null);
 
 const showCta = computed(() => props.classId === null);
 const thumbnailUrl = computed(() => getClassAssets(props.classId)?.thumbnail ?? null);
-
-const heroStyle = computed(() => {
-  const url = thumbnailUrl.value;
-  if (!url) return {} as Record<string, string>;
-  return {
-    backgroundImage: `url("${url}")`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center 20%',
-  } satisfies Record<string, string>;
-});
 
 async function startEditLevel() {
   if (props.readonly || editingLevel.value) return;
@@ -125,95 +116,95 @@ function cancelTitle() {
 </script>
 
 <template>
-  <header class="header relative h-[76px] border-b border-border-subtle overflow-hidden">
-    <!-- Hero background: class portrait blended with class accent tint, gradient on top. -->
-    <div
-      v-if="thumbnailUrl"
-      class="absolute inset-0 pointer-events-none"
-      :style="heroStyle"
-      aria-hidden="true"
-    />
-    <div
-      v-if="thumbnailUrl"
-      class="absolute inset-0 pointer-events-none"
-      style="background: linear-gradient(to right, transparent 0%, transparent 30%, color-mix(in srgb, var(--class-dominant, #555) 65%, transparent) 65%, rgba(8,18,26,1) 100%);"
-      aria-hidden="true"
-    />
-    <!-- Click-through layer: clicking the hero (outside the text and kebab) opens the
-         class picker. z-0 so the text + kebab catch their own clicks first. -->
-    <button
-      v-if="!readonly"
-      type="button"
-      class="absolute inset-0 z-0 class-picker-trigger"
-      :class="{ 'cursor-pointer': !readonly }"
-      aria-label="Choisir une classe"
-      @click="onClassClick"
-    />
-    <!-- Text overlay (right aligned, vertically centered). -->
-    <div
-      class="absolute inset-y-0 right-14 z-10 flex flex-col items-end justify-center gap-1"
-      :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
-    >
-      <input
-        v-if="editingTitle"
-        ref="titleInputRef"
-        v-model="titleDraft"
-        maxlength="30"
-        class="block bg-transparent font-display text-[10px] font-light tracking-[0.16em] uppercase outline-none text-right max-w-[200px] border-b border-dashed border-white/60"
-        style="color: inherit;"
-        @blur="commitTitle"
-        @keydown.enter.prevent="commitTitle"
-        @keydown.esc.prevent="cancelTitle"
-      />
+  <header class="header relative pl-[4px] pr-4 py-[2px] border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+    <div class="flex items-stretch gap-4 w-full">
       <button
-        v-else-if="showCta"
         type="button"
-        class="class-picker-trigger block font-display text-[10px] font-light tracking-[0.16em] uppercase text-right max-w-[200px]"
-        :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
-        style="color: inherit;"
-        @click.stop="onClassClick"
-      >Choisir une classe</button>
-      <button
-        v-else-if="title !== null || !readonly"
-        type="button"
-        class="block font-display text-[10px] font-light tracking-[0.16em] uppercase text-right max-w-[200px] truncate"
-        :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
-        style="color: inherit;"
-        @click.stop="startEditTitle"
-      >{{ title ?? 'Ajouter un titre' }}</button>
-      <div class="flex items-baseline gap-1.5 mt-1">
-        <span
-          class="font-display text-[11px] font-bold uppercase tracking-[0.16em] leading-none text-white/70"
-        >Niv</span>
+        class="class-picker-trigger flex-shrink-0"
+        :class="{ 'cursor-default': readonly }"
+        @click="onClassClick"
+        aria-label="Choisir une classe"
+      >
+        <!-- Image hugs the card top-left + extends to the header's bottom — no padding
+             around the image. Card's outer rounded-xl + overflow-hidden clips the
+             top-left corner naturally. -->
+        <img
+          v-if="thumbnailUrl"
+          :src="thumbnailUrl"
+          alt=""
+          class="block w-[64px] h-[64px] object-cover"
+          loading="lazy"
+        />
+        <ClassThumbnail v-else :class-id="classId" :size="64" />
+      </button>
+      <div
+        class="right flex-1 min-w-0 py-2 pr-10"
+        :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
+      >
         <input
-          v-if="editingLevel"
-          ref="levelInputRef"
-          v-model="levelDraft"
-          type="text"
-          inputmode="numeric"
-          maxlength="3"
-          class="font-display text-[26px] font-bold leading-none bg-transparent w-14 outline-none border-b border-dashed border-white/60 text-white"
-          @blur="commitLevel"
-          @keydown.enter.prevent="commitLevel"
-          @keydown.esc.prevent="cancelLevel"
+          v-if="editingTitle"
+          ref="titleInputRef"
+          v-model="titleDraft"
+          maxlength="30"
+          class="block bg-transparent font-display text-[12px] font-light tracking-[0.16em] uppercase outline-none w-full border-b border-dashed border-white/60"
+          style="color: inherit;"
+          @blur="commitTitle"
+          @keydown.enter.prevent="commitTitle"
+          @keydown.esc.prevent="cancelTitle"
         />
         <button
-          v-else
+          v-else-if="showCta"
           type="button"
-          @click.stop="startEditLevel"
-          class="font-display text-[26px] font-bold leading-none text-white"
-          :class="readonly
-            ? 'cursor-default'
-            : 'border-b border-dashed border-white/30 hover:border-white/70 cursor-text'"
-        >{{ level ?? '—' }}</button>
+          class="class-picker-trigger block font-display text-[12px] font-light tracking-[0.16em] uppercase text-left"
+          :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
+          style="color: inherit;"
+          @click="onClassClick"
+        >Choisir une classe</button>
+        <button
+          v-else-if="title !== null || !readonly"
+          type="button"
+          class="block font-display text-[12px] font-light tracking-[0.16em] uppercase text-left w-full truncate"
+          :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
+          style="color: inherit;"
+          @click="startEditTitle"
+        >{{ title ?? 'Ajouter un titre' }}</button>
+        <div class="flex items-baseline gap-1.5 mt-0.5">
+          <span
+            class="font-display text-[13px] font-bold uppercase tracking-[0.16em] leading-none"
+            style="color: inherit;"
+          >Niv</span>
+          <input
+            v-if="editingLevel"
+            ref="levelInputRef"
+            v-model="levelDraft"
+            type="text"
+            inputmode="numeric"
+            maxlength="3"
+            class="font-display text-[26px] font-bold leading-none bg-transparent w-14 outline-none border-b border-dashed border-white/60"
+            style="color: inherit;"
+            @blur="commitLevel"
+            @keydown.enter.prevent="commitLevel"
+            @keydown.esc.prevent="cancelLevel"
+          />
+          <button
+            v-else
+            type="button"
+            @click="startEditLevel"
+            class="font-display text-[26px] font-bold leading-none"
+            :class="readonly
+              ? 'cursor-default'
+              : 'border-b border-dashed border-border-default hover:border-white/60 cursor-text'"
+            style="color: inherit;"
+          >{{ level ?? '—' }}</button>
+        </div>
       </div>
     </div>
-    <!-- Kebab trigger — single button overlaying the hero. -->
+    <!-- Kebab trigger — single button anchored to the top-right of the header. -->
     <button
       ref="kebabRef"
       data-testid="card-kebab"
       type="button"
-      class="absolute top-3 right-3 z-10 w-7 h-7 rounded-full bg-black/45 border border-white/15 text-white/75 backdrop-blur-sm inline-flex items-center justify-center hover:text-[#8AE0EE] hover:border-[#8AE0EE]/40 transition-colors"
+      class="absolute top-1.5 right-1.5 w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
       aria-label="Actions"
       aria-haspopup="menu"
       :aria-expanded="menuOpen"
