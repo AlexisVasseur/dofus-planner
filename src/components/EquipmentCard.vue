@@ -11,7 +11,8 @@ import { DOFUS_COUNT, type SlotType } from '@/types/slots';
 import type { Card } from '@/types/build';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
-import { buildDofusbookUrl } from '@/utils/dofusbook';
+import { buildDofusbookUrl, encodeCardCode } from '@/utils/dofusbook';
+import { useToast } from '@/composables/useToast';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
 // Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent.DEFAULT=#5DCFE0.
@@ -25,6 +26,7 @@ const props = withDefaults(defineProps<{ card: Card; readonly?: boolean; headerO
 });
 const build = useBuildStore();
 const ui = useUiStore();
+const toast = useToast();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 const hovered = ref(false); // visual glow on hover, does NOT change activeCardId
@@ -63,6 +65,17 @@ function onHeaderRemove(): void {
 
 function onOpenDofusbook(): void {
   window.open(buildDofusbookUrl(props.card), '_blank', 'noopener,noreferrer');
+}
+
+async function onCopyCode(): Promise<void> {
+  const code = encodeCardCode(props.card);
+  try {
+    await navigator.clipboard.writeText(code);
+    toast.show('Code copié dans le presse-papier');
+  } catch {
+    // Fallback for environments where the Clipboard API is blocked (e.g. http on iOS).
+    window.prompt('Copiez ce code :', code);
+  }
 }
 
 function onConfirmDelete(): void {
@@ -168,6 +181,7 @@ function onDofusPick(index: number): void {
       @update:title="(v) => build.setTitle(card.id, v)"
       @remove="onHeaderRemove"
       @open-dofusbook="onOpenDofusbook"
+      @copy-code="onCopyCode"
     />
     <!-- Body crossfades between equipment view and in-place delete confirm.
          When headerOnly is set (Reader thumbnails), the whole body is skipped. -->

@@ -25,6 +25,7 @@ const MOBILE_BREAKPOINT = 720;
 
 const popoverRef = ref<HTMLElement | null>(null);
 const listRef = ref<HTMLElement | null>(null);
+const searchInputRef = ref<HTMLInputElement | null>(null);
 const { width: viewportW, height: viewportH } = useWindowSize();
 
 interface Position {
@@ -102,11 +103,14 @@ function recomputePosition(): void {
 // is mounted (matters when the picker opens immediately after a card was added).
 // Also resets the item list scroll to the top — switching slots or reopening the picker
 // always shows the catalog from the start, never wherever the user last scrolled to.
+// Focuses the search input so the user can start typing immediately (autofocus is
+// unreliable inside Teleport + Transition, so we focus explicitly post-mount).
 watch(() => ui.itemPickerTarget, async (t) => {
   if (t === null) return;
   await nextTick();
   recomputePosition();
   if (listRef.value) listRef.value.scrollTop = 0;
+  searchInputRef.value?.focus();
 }, { immediate: true });
 
 // Recompute on viewport resize and on window scroll (Builder timeline scrolls).
@@ -129,7 +133,7 @@ const search = ref('');
 // shimmer doesn't read as 6 identical bars.
 const SKELETON_NAME_WIDTHS = ['w-4/5', 'w-3/5', 'w-3/4', 'w-2/3', 'w-4/6', 'w-3/4', 'w-2/3', 'w-3/5'];
 
-const filterMode = ref<'all' | 'eligible' | 'over'>('eligible');
+const filterMode = ref<'all' | 'eligible'>('eligible');
 const sortMode = ref<'level' | 'name'>('level');
 
 // Bulk "tranche" mode: when ON, picking an item broadcasts it to every existing card
@@ -205,7 +209,25 @@ watch(target, (newTarget, oldTarget) => {
   }
 });
 
-const { results, loading, error } = useItemSearch(slotForFilter, search);
+// Server-side level cap: when the user picks "≤ Lv X", we pass the card's level
+// to the API so pagination (sorted desc by level) starts with eligible items.
+// Without this, the first page would be all max-level gear and the eligible list
+// would look empty until the user scrolls all the way through the catalog.
+const maxLevel = computed<number | null>(() => {
+  if (filterMode.value !== 'eligible') return null;
+  return card.value?.level ?? null;
+});
+const { results, loading, loadingMore, error, loadMore } = useItemSearch(slotForFilter, search, maxLevel);
+
+// Infinite scroll: when the user nears the bottom of the list, request the next page.
+// Triggered ~80px before the absolute bottom so the next batch lands before they see a gap.
+const INFINITE_SCROLL_THRESHOLD = 80;
+function onListScroll(): void {
+  const el = listRef.value;
+  if (!el) return;
+  const remaining = el.scrollHeight - el.scrollTop - el.clientHeight;
+  if (remaining < INFINITE_SCROLL_THRESHOLD) void loadMore();
+}
 
 // Force the skeleton on for at least 500ms after any user action that changes
 // what the list shows (target switch, filter change, sort change). Avoids the
@@ -238,8 +260,6 @@ const filtered = computed(() => {
   const cardLvl = card.value?.level ?? null;
   if (filterMode.value === 'eligible' && cardLvl !== null) {
     arr = arr.filter((it) => it.levelRequired <= cardLvl);
-  } else if (filterMode.value === 'over' && cardLvl !== null) {
-    arr = arr.filter((it) => it.levelRequired > cardLvl);
   }
   arr.sort((a, b) => sortMode.value === 'level'
     ? b.levelRequired - a.levelRequired   // descending: highest level first
@@ -341,7 +361,7 @@ watch(target, () => { onRowLeave(); });
         }"
       >
       <header class="flex items-center justify-between px-5 py-4 border-b border-border-subtle">
-        <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.06em] uppercase">{{ sheetTitle }}</h2>
+        <h2 class="font-sans font-bold text-[10px] text-[#8AE0EE] tracking-[0.06em] uppercase">{{ sheetTitle }}</h2>
         <button
           type="button"
           @click="close"
@@ -376,48 +396,47 @@ watch(target, () => { onRowLeave(); });
         </button>
         <span class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] text-text-faint shrink-0">Tranche</span>
         <template v-if="rangeMode">
-          <span class="font-sans text-[11px] text-text-dim">de</span>
+          <span class="font-sans text-xs text-text-dim">de</span>
           <input
             type="number"
             min="1"
             max="200"
             :value="rangeFrom"
             @input="onRangeFromInput"
-            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-[12px] font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
+            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-xs font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
           />
-          <span class="font-sans text-[11px] text-text-dim">à</span>
+          <span class="font-sans text-xs text-text-dim">à</span>
           <input
             type="number"
             min="1"
             max="200"
             :value="rangeTo"
             @input="onRangeToInput"
-            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-[12px] font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
+            class="w-14 text-center bg-white/[0.06] border border-white/15 rounded-md px-1 py-0.5 text-xs font-mono text-text-default outline-none focus:border-[#5DCFE0]/60"
           />
         </template>
-        <span v-else class="font-sans text-[11px] text-text-dim">Cette card uniquement</span>
+        <span v-else class="font-sans text-xs text-text-dim">Cette card uniquement</span>
       </div>
       <div class="px-5 py-3 border-b border-border-subtle">
         <input
+          ref="searchInputRef"
           v-model="search"
           placeholder="Rechercher…"
-          class="w-full bg-white/[0.04] border border-white/10 rounded-md px-3 py-2 text-xs text-text-default outline-none focus:border-[#5DCFE0]/60 focus:bg-[#5DCFE0]/[0.04] transition-colors"
-          autofocus
+          class="w-full bg-white/[0.04] border border-white/10 rounded-md px-3 py-2 font-sans text-xs text-text-default outline-none focus:border-[#5DCFE0]/60 focus:bg-[#5DCFE0]/[0.04] transition-colors"
         />
       </div>
       <div class="flex flex-wrap gap-1.5 px-5 py-3 border-b border-border-subtle">
         <button
           v-for="opt in [
-            { mode: 'all',      label: 'Tous' },
             { mode: 'eligible', label: '≤ Lv ' + (card?.level ?? '?') },
-            { mode: 'over',     label: 'Au-dessus' },
+            { mode: 'all',      label: 'Tous' },
           ]"
           :key="opt.mode"
           class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-2.5 py-1 rounded-full border transition-colors"
           :class="filterMode === opt.mode
             ? 'bg-[#5DCFE0]/[0.12] text-[#8AE0EE] border-[#5DCFE0]/40'
             : 'bg-white/[0.02] border-white/10 text-text-dim hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
-          @click="filterMode = opt.mode as 'all' | 'eligible' | 'over'"
+          @click="filterMode = opt.mode as 'all' | 'eligible'"
         >{{ opt.label }}</button>
         <span class="w-px self-stretch bg-border-subtle mx-1" aria-hidden="true" />
         <button
@@ -433,7 +452,7 @@ watch(target, () => { onRowLeave(); });
           @click="sortMode = opt.mode as 'level' | 'name'"
         >{{ opt.label }}</button>
       </div>
-      <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll">
+      <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll" @scroll.passive="onListScroll">
         <!-- Loading skeleton: 8 placeholder rows mimicking the real item-row layout
              so when results land they replace the skeletons without flicker.
              Forced on for 500ms after target/filter/sort changes for instant feedback. -->
@@ -452,8 +471,8 @@ watch(target, () => { onRowLeave(); });
             <div class="w-9 h-4 bg-white/[0.04] rounded border border-white/10"></div>
           </div>
         </template>
-        <p v-else-if="error" class="text-danger-soft text-xs px-3 py-4">Erreur&nbsp;: {{ error }}</p>
-        <p v-else-if="filtered.length === 0" class="text-text-dim text-xs px-3 py-4">Aucun item.</p>
+        <p v-else-if="error" class="font-sans text-xs text-danger-soft px-3 py-4">Erreur&nbsp;: {{ error }}</p>
+        <p v-else-if="filtered.length === 0" class="font-sans text-xs text-text-dim px-3 py-4">Aucun item.</p>
         <button
           v-else
           v-for="it in filtered"
@@ -481,16 +500,22 @@ watch(target, () => { onRowLeave(); });
             <span v-else>○</span>
           </div>
           <div class="it-info flex-1 min-w-0 text-left">
-            <div class="text-text-default text-xs font-medium truncate">{{ it.name }}</div>
-            <div class="text-text-faint text-[10px] font-mono truncate" v-if="renderItemStatsMax(it).length">{{ renderItemStatsMax(it).join(' · ') }}</div>
+            <div class="font-sans text-xs font-medium text-text-default truncate">{{ it.name }}</div>
+            <div class="font-sans text-[10px] text-white/70 truncate" v-if="renderItemStatsMax(it).length">{{ renderItemStatsMax(it).join(' · ') }}</div>
           </div>
           <span
-            class="text-[10px] font-mono rounded px-2 py-0.5 border"
+            class="font-mono text-[10px] text-white rounded px-2 py-0.5 border"
             :class="isOverLeveled(it.levelRequired, card?.level ?? null)
-              ? 'text-danger-soft border-danger/40 bg-danger/10'
-              : 'text-text-dim border-border-default bg-bg-page'"
+              ? 'border-danger/40 bg-danger/10'
+              : 'border-border-default bg-bg-page'"
           >lv {{ it.levelRequired }}</span>
         </button>
+        <!-- Infinite-scroll sentinel: more rows being fetched as the user nears bottom. -->
+        <div
+          v-if="loadingMore"
+          class="flex items-center justify-center py-3 font-sans text-[10px] uppercase tracking-[0.06em] text-text-faint"
+          aria-live="polite"
+        >Chargement…</div>
       </div>
       <!-- Shared hover tooltip for the rows in the search list -->
       <ItemStatsTooltip :open="hoveredItem !== null" :trigger-el="hoveredEl" :item="hoveredItem" />

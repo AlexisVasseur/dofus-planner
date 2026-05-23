@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   empty: [];
   copy: [];
+  code: [];
   close: [];
 }>();
 
@@ -18,7 +19,7 @@ const popoverRef = ref<HTMLElement | null>(null);
 
 const VERTICAL_GAP = 10;
 const VIEWPORT_MARGIN = 12;
-const WIDTH = 280;
+const WIDTH = 380;
 
 const style = computed(() => {
   const ideal = props.anchorX - WIDTH / 2;
@@ -74,6 +75,17 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           <path d="M12 5v14M5 12h14" />
         </svg>
         <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Nouveau</span>
+      </button>
+      <button
+        type="button"
+        class="flex-1 flex flex-col items-center justify-center gap-2 py-3 rounded-lg border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.10] hover:bg-[#5DCFE0]/[0.18] hover:border-[#5DCFE0]/60 transition-colors"
+        @click="emit('code')"
+      >
+        <svg class="w-7 h-7 text-[#8AE0EE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="16 18 22 12 16 6" />
+          <polyline points="8 6 2 12 8 18" />
+        </svg>
+        <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Code</span>
       </button>
     </div>
   </Teleport>

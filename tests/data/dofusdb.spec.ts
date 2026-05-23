@@ -63,7 +63,7 @@ describe('dofusdb client', () => {
       expect(calledUrl).toContain(`${encodedKey}=${tid}`);
     }
     expect(calledUrl).toContain(`${encodeURIComponent('$limit')}=50`);
-    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=level`);
+    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=-level`);
   });
 
   it('fetchItemsBySlot uses slug.fr[$search] with normalized (lowercased, no diacritics) input', async () => {
@@ -84,7 +84,7 @@ describe('dofusdb client', () => {
       expect(calledUrl).toContain(`${encodedKey}=${tid}`);
     }
     expect(calledUrl).toContain(`${encodeURIComponent('$limit')}=50`);
-    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=level`);
+    expect(calledUrl).toContain(`${encodeURIComponent('$sort')}=-level`);
   });
 
   it('fetchItem returns a single Item by id', async () => {

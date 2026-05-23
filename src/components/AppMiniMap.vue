@@ -1,13 +1,32 @@
 <script setup lang="ts">
-import { computed, toRef } from 'vue';
-import { useBuildStore } from '@/stores/build';
+import { computed, ref, toRef } from 'vue';
+import { useBuildStore, type ExoKey } from '@/stores/build';
 import { useUiStore } from '@/stores/ui';
 import { ROOM_ORDER, levelToRoom, type RoomId } from '@/types/rooms';
+import { INVESTABLE_STATS } from '@/types/build';
+import { getInvestment, getExo } from '@/utils/statCost';
+import BulkActionsPopover from './BulkActionsPopover.vue';
 
 const props = defineProps<{ scrollRef: HTMLElement | null }>();
 
 const build = useBuildStore();
 const ui = useUiStore();
+
+// Bulk popover trigger replaces the static "Timeline" label.
+const bulkTriggerRef = ref<HTMLElement | null>(null);
+const bulkOpen = ref(false);
+function toggleBulk(): void { bulkOpen.value = !bulkOpen.value; }
+function closeBulk(): void { bulkOpen.value = false; }
+
+// Global state of each bulk toggle = ON iff every card has the flag set.
+const allParchotted = computed(() => build.cards.every((c) =>
+  INVESTABLE_STATS.every((s) => getInvestment(c, s).scrolled),
+));
+const allExo = computed<Record<ExoKey, boolean>>(() => ({
+  pa: build.cards.every((c) => getExo(c).pa),
+  pm: build.cards.every((c) => getExo(c).pm),
+  po: build.cards.every((c) => getExo(c).po),
+}));
 
 const scrollElRef = toRef(props, 'scrollRef');
 
@@ -95,7 +114,25 @@ function gotoCell(cell: Cell, idx: number): void {
     class="minimap mx-4 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex items-center gap-3 px-5 py-2.5 relative"
     style="background: rgba(8,8,8,0.55);"
   >
-    <div class="font-sans font-bold text-[11px] text-text-faint tracking-[0.06em] uppercase shrink-0">Timeline</div>
+    <button
+      ref="bulkTriggerRef"
+      type="button"
+      class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2 py-1 rounded-md border transition-colors"
+      :class="bulkOpen
+        ? 'border-[#5DCFE0]/60 text-[#8AE0EE] bg-[#5DCFE0]/[0.10]'
+        : 'border-white/10 text-text-faint hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
+      aria-label="Actions globales sur toutes les cards"
+      @click="toggleBulk"
+    >Bulk</button>
+    <BulkActionsPopover
+      :open="bulkOpen"
+      :trigger-el="bulkTriggerRef"
+      :all-parchotted="allParchotted"
+      :all-exo="allExo"
+      @close="closeBulk"
+      @toggle-parcho="(v) => build.applyScrollAll(v)"
+      @toggle-exo="(key, v) => build.applyExoAll(key, v)"
+    />
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <Transition name="cells" mode="out-in">
         <div :key="ui.viewMode" class="absolute inset-1 flex gap-[3px]">

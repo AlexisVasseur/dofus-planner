@@ -6,7 +6,9 @@ import type { SlotType } from '@/types/slots';
 
 export type SearchTarget = SlotType | 'dofus' | null;
 
-const ITEM_CACHE_KEY = 'dofus-planner.cache.items.v1';
+// v2 bump (2026-05): adds setId / set fields to cached items so panoplie bonuses can be
+// computed. v1 entries lack these fields → invalidated to force a re-fetch from DofusDB.
+const ITEM_CACHE_KEY = 'dofus-planner.cache.items.v2';
 const EFFECT_CACHE_KEY = 'dofus-planner.cache.effects.v1';
 
 interface ItemCacheEntry { item: Item; fetchedAt: number; }
@@ -166,37 +168,81 @@ export async function ensureItems(ids: number[]): Promise<void> {
   await ensureEffectTemplates(collectEffectIds(fetchedItems));
 }
 
-export function useItemSearch(target: Ref<SearchTarget>, search: Ref<string>) {
+const PAGE_SIZE = 50;
+
+export function useItemSearch(
+  target: Ref<SearchTarget>,
+  search: Ref<string>,
+  maxLevel: Ref<number | null> = ref(null),
+) {
   const results = ref<Item[]>([]);
   const loading = ref(false);
+  const loadingMore = ref(false);
   const error = ref<string | null>(null);
+  const hasMore = ref(false);
+
+  async function fetchPage(skip: number): Promise<Item[]> {
+    if (target.value === null) return [];
+    const opts = {
+      search: search.value,
+      limit: PAGE_SIZE,
+      skip,
+      maxLevel: maxLevel.value ?? undefined,
+    };
+    return target.value === 'dofus'
+      ? await fetchDofusOrTrophees(opts)
+      : await fetchItemsBySlot(target.value, opts);
+  }
+
+  function cacheAndIndex(items: Item[]): void {
+    const now = Date.now();
+    for (const item of items) {
+      cache.value[String(item.id)] = { item, fetchedAt: now };
+    }
+    saveCache(cache.value);
+    void ensureEffectTemplates(collectEffectIds(items));
+  }
 
   const run = useDebounceFn(async () => {
     if (target.value === null) return;
     loading.value = true;
     error.value = null;
     try {
-      const items = target.value === 'dofus'
-        ? await fetchDofusOrTrophees({ search: search.value, limit: 50 })
-        : await fetchItemsBySlot(target.value, { search: search.value, limit: 50 });
-      for (const item of items) {
-        cache.value[String(item.id)] = { item, fetchedAt: Date.now() };
-      }
-      saveCache(cache.value);
+      const items = await fetchPage(0);
+      cacheAndIndex(items);
       results.value = items;
-      // Fire and forget — tooltip lines populate as templates arrive.
-      void ensureEffectTemplates(collectEffectIds(items));
+      hasMore.value = items.length === PAGE_SIZE;
     } catch (e) {
       error.value = e instanceof Error ? e.message : String(e);
       results.value = [];
+      hasMore.value = false;
     } finally {
       loading.value = false;
     }
   }, 200);
 
-  watch([target, search], run, { immediate: true });
+  async function loadMore(): Promise<void> {
+    if (loading.value || loadingMore.value || !hasMore.value || target.value === null) return;
+    loadingMore.value = true;
+    try {
+      const items = await fetchPage(results.value.length);
+      cacheAndIndex(items);
+      // Dedup by id in case the API returns overlap between pages.
+      const seen = new Set(results.value.map((i) => i.id));
+      const fresh = items.filter((i) => !seen.has(i.id));
+      results.value = [...results.value, ...fresh];
+      hasMore.value = items.length === PAGE_SIZE;
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : String(e);
+      hasMore.value = false;
+    } finally {
+      loadingMore.value = false;
+    }
+  }
 
-  return { results, loading, error };
+  watch([target, search, maxLevel], run, { immediate: true });
+
+  return { results, loading, loadingMore, error, hasMore, loadMore };
 }
 
 export function isOverLeveled(itemLevel: number, cardLevel: number | null): boolean {

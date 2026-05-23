@@ -10,6 +10,16 @@ export interface RawEffect {
   characteristic?: number;
 }
 
+/** Panoplie / item set definition embedded in each item's API response. The `effects`
+ *  array is indexed by `(equipped pieces) - 1` — `effects[0]` is the 1-piece bonus
+ *  (usually empty), `effects[1]` the 2-piece bonus, etc. The game applies ONLY the
+ *  matching tier (each tier already lists the complete bonus, no accumulation). */
+export interface ItemSet {
+  id: number;
+  name: string;
+  effects: RawEffect[][];
+}
+
 /** Effect description template, e.g. "#1{{~1~2 à }}#2 Vitalité". `#1` = from, `#2` = to,
  * `{{~1~2 à }}` is the conditional range separator (collapses when from == to). */
 export interface EffectTemplate {
@@ -29,6 +39,12 @@ export interface Item {
    * defaults to [] when missing; the on-load migration backfills from the API. */
   effects?: RawEffect[];
   typeId: number;
+  /** Panoplie id (DofusDB itemSetId); -1 / undefined when the item belongs to no set.
+   *  Optional for legacy cache entries — those don't contribute to set bonus tallies. */
+  setId?: number;
+  /** Embedded set definition (same data for every item in the set). Optional so legacy
+   *  cache entries keep loading; aggregation just skips them. */
+  set?: ItemSet;
 }
 
 function normalizeSearch(s: string): string {
@@ -62,6 +78,12 @@ interface RawItemEffect {
   characteristic?: number;
 }
 
+interface RawItemSet {
+  id: number;
+  name?: { fr?: string; en?: string };
+  effects?: RawItemEffect[][];
+}
+
 interface RawItem {
   id: number;
   name: { fr?: string; en?: string };
@@ -70,10 +92,12 @@ interface RawItem {
   imgUrl?: string;
   typeId: number;
   effects?: RawItemEffect[];
+  itemSetId?: number;
+  itemSet?: RawItemSet;
 }
 
-function mapItem(raw: RawItem): Item {
-  const effects: RawEffect[] = (raw.effects ?? [])
+function mapEffects(raws: RawItemEffect[] | undefined): RawEffect[] {
+  return (raws ?? [])
     .filter((e): e is RawItemEffect & { effectId: number } => typeof e.effectId === 'number')
     .map((e) => ({
       from: e.from ?? 0,
@@ -81,20 +105,51 @@ function mapItem(raw: RawItem): Item {
       effectId: e.effectId,
       characteristic: e.characteristic,
     }));
+}
+
+function mapItemSet(raw: RawItemSet | undefined): ItemSet | undefined {
+  if (!raw) return undefined;
+  return {
+    id: raw.id,
+    name: raw.name?.fr ?? raw.name?.en ?? `Panoplie ${raw.id}`,
+    effects: (raw.effects ?? []).map(mapEffects),
+  };
+}
+
+function mapItem(raw: RawItem): Item {
+  const setId = typeof raw.itemSetId === 'number' && raw.itemSetId >= 0 ? raw.itemSetId : undefined;
   return {
     id: raw.id,
     name: raw.name?.fr ?? raw.name?.en ?? `Item ${raw.id}`,
     levelRequired: raw.level ?? 0,
     iconUrl: raw.img ?? raw.imgUrl ?? '',
     stats: [], // kept for backwards-compat; effects[] is the canonical source
-    effects,
+    effects: mapEffects(raw.effects),
     typeId: raw.typeId ?? 0,
+    setId,
+    set: setId !== undefined ? mapItemSet(raw.itemSet) : undefined,
   };
 }
 
 export interface FetchItemsOpts {
   search: string;
   limit: number;
+  skip?: number;
+  /** When set, server filters out items requiring a higher level. Used by the picker's
+   * "≤ Lv X" mode so descending-by-level pagination starts with the eligible items
+   * (otherwise the first page is all level-200 gear and the eligible list looks empty). */
+  maxLevel?: number;
+}
+
+function appendCommonItemQuery(params: URLSearchParams, opts: FetchItemsOpts): void {
+  params.append('$limit', String(opts.limit));
+  if (opts.skip && opts.skip > 0) params.append('$skip', String(opts.skip));
+  params.append('$sort', '-level');
+  if (typeof opts.maxLevel === 'number') params.append('level[$lte]', String(opts.maxLevel));
+  const normalizedSearch = normalizeSearch(opts.search);
+  if (normalizedSearch.length > 0) {
+    params.append('slug.fr[$search]', normalizedSearch);
+  }
 }
 
 export async function fetchItemsBySlot(slot: SlotType, opts: FetchItemsOpts): Promise<Item[]> {
@@ -102,12 +157,7 @@ export async function fetchItemsBySlot(slot: SlotType, opts: FetchItemsOpts): Pr
   for (const tid of SLOT_TO_TYPE_IDS[slot]) {
     params.append('typeId[$in][]', String(tid));
   }
-  params.append('$limit', String(opts.limit));
-  params.append('$sort', 'level');
-  const normalizedSearch = normalizeSearch(opts.search);
-  if (normalizedSearch.length > 0) {
-    params.append('slug.fr[$search]', normalizedSearch);
-  }
+  appendCommonItemQuery(params, opts);
   const url = `${BASE_URL}/items?${params.toString()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
@@ -124,12 +174,7 @@ export async function fetchDofusOrTrophees(opts: FetchItemsOpts): Promise<Item[]
   for (const tid of DOFUS_TROPHEE_TYPE_IDS) {
     params.append('typeId[$in][]', String(tid));
   }
-  params.append('$limit', String(opts.limit));
-  params.append('$sort', 'level');
-  const normalizedSearch = normalizeSearch(opts.search);
-  if (normalizedSearch.length > 0) {
-    params.append('slug.fr[$search]', normalizedSearch);
-  }
+  appendCommonItemQuery(params, opts);
   const url = `${BASE_URL}/items?${params.toString()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);

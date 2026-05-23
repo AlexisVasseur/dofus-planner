@@ -46,7 +46,7 @@ void props.triggerEl;
   <Teleport to="body">
     <Transition name="tip">
       <div
-        v-if="open && item && lines.length > 0"
+        v-if="open && item"
         class="fixed z-[60] rounded-xl border border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] overflow-hidden pointer-events-none"
         :style="{
           top: position.top + 'px',
@@ -61,9 +61,13 @@ void props.triggerEl;
             <img v-if="item.iconUrl" :src="item.iconUrl" :alt="item.name" class="w-6 h-6" />
             <span v-else class="text-text-faint">○</span>
           </div>
-          <span class="flex-1 min-w-0 truncate text-[12px] font-sans font-bold text-[#8AE0EE] tracking-[0.02em]">{{ item.name }}</span>
+          <span class="flex-1 min-w-0 truncate font-sans font-bold text-xs text-[#8AE0EE] tracking-[0.02em]">{{ item.name }}</span>
+          <span class="font-mono text-[10px] text-white rounded px-2 py-0.5 border border-border-default bg-bg-page shrink-0">lv {{ item.levelRequired }}</span>
         </header>
-        <ul class="flex flex-col gap-1 px-3 py-2.5 font-mono text-[12px] text-text-default leading-tight">
+        <ul
+          v-if="lines.length > 0"
+          class="flex flex-col gap-1 px-3 py-2.5 font-sans text-xs text-text-default leading-tight"
+        >
           <li
             v-for="(l, i) in lines"
             :key="i"

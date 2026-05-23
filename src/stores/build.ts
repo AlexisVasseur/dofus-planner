@@ -1,10 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import type { Card, ItemRef } from '@/types/build';
+import type { Card, ItemRef, InvestableStat } from '@/types/build';
+import { INVESTABLE_STATS } from '@/types/build';
 import type { ClassId } from '@/types/classes';
 import { SLOT_ORDER, type SlotType, DOFUS_COUNT } from '@/types/slots';
 import { randomId } from '@/utils/id';
 import { getCachedItem } from '@/composables/useItemCatalog';
+import { getInvestment, getExo } from '@/utils/statCost';
+
+export type ExoKey = 'pa' | 'pm' | 'po';
 
 function emptySlots(): Record<SlotType, ItemRef | null> {
   const result = {} as Record<SlotType, ItemRef | null>;
@@ -139,6 +143,61 @@ export const useBuildStore = defineStore('build', () => {
     cards.value.splice(idx + 1, 0, copy);
   }
 
+  function setStatInvested(cardId: string, stat: InvestableStat, value: number): void {
+    const idx = findIndex(cardId);
+    const card = cards.value[idx];
+    const prev = getInvestment(card, stat);
+    card.investments ??= {};
+    card.investments[stat] = { ...prev, invested: Math.max(0, Math.round(value)) };
+  }
+
+  function setStatScrolled(cardId: string, stat: InvestableStat, scrolled: boolean): void {
+    const idx = findIndex(cardId);
+    const card = cards.value[idx];
+    const prev = getInvestment(card, stat);
+    card.investments ??= {};
+    card.investments[stat] = { ...prev, scrolled };
+  }
+
+  function setCardExo(cardId: string, key: ExoKey, value: boolean): void {
+    const idx = findIndex(cardId);
+    const card = cards.value[idx];
+    const prev = getExo(card);
+    card.exo = { ...prev, [key]: value };
+  }
+
+  /** Bulk: set the `scrolled` flag of every investable stat on every card. */
+  function applyScrollAll(scrolled: boolean): void {
+    for (const card of cards.value) {
+      card.investments ??= {};
+      for (const stat of INVESTABLE_STATS) {
+        const prev = getInvestment(card, stat);
+        card.investments[stat] = { ...prev, scrolled };
+      }
+    }
+  }
+
+  /** Bulk: set one Exo flag (PA / PM / PO) on every card. */
+  function applyExoAll(key: ExoKey, value: boolean): void {
+    for (const card of cards.value) {
+      const prev = getExo(card);
+      card.exo = { ...prev, [key]: value };
+    }
+  }
+
+  /** Insert an externally-built card (e.g. decoded from a base64 code) right after
+   *  `cardId`. The caller owns id generation — pass a fresh one. ClassId falls back
+   *  to the previous card's class when the imported card has none. */
+  function addCardAfter(cardId: string, card: Card): void {
+    const idx = findIndex(cardId);
+    const prev = cards.value[idx];
+    const next: Card = {
+      ...card,
+      classId: card.classId ?? prev.classId,
+    };
+    cards.value.splice(idx + 1, 0, next);
+  }
+
   function removeCard(cardId: string): void {
     const idx = findIndex(cardId);
     cards.value.splice(idx, 1);
@@ -166,6 +225,12 @@ export const useBuildStore = defineStore('build', () => {
     setDofusRange,
     addEmptyCardAfter,
     addCopyCardAfter,
+    addCardAfter,
+    setStatInvested,
+    setStatScrolled,
+    setCardExo,
+    applyScrollAll,
+    applyExoAll,
     removeCard,
     resetBuild,
     replaceCards,

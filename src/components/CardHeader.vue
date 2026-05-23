@@ -19,6 +19,7 @@ const emit = defineEmits<{
   'update:title': [value: string | null];
   'remove': [];
   'open-dofusbook': [];
+  'copy-code': [];
 }>();
 
 const editingLevel = ref(false);
@@ -81,6 +82,9 @@ function onRemoveClick(): void {
 }
 function onDofusbookClick(): void {
   emit('open-dofusbook');
+}
+function onCopyCodeClick(): void {
+  emit('copy-code');
 }
 
 let commitTitleGuard = false;
@@ -182,37 +186,48 @@ function cancelTitle() {
         </div>
       </div>
     </div>
-    <!-- Dofusbook share — generates the encoded ?stuff=... URL from the current card
-         state and opens dofusbook in a new tab. Visible in readonly (Reader) mode too
-         so shared cards stay actionable. -->
-    <button
-      type="button"
-      class="absolute top-1.5 w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
-      :class="readonly ? 'right-1.5' : 'right-10'"
-      @click.stop="onDofusbookClick"
-      aria-label="Ouvrir dans Dofusbook"
-      title="Ouvrir dans Dofusbook"
-    >
-      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-        <polyline points="15 3 21 3 21 9" />
-        <line x1="10" y1="14" x2="21" y2="3" />
-      </svg>
-    </button>
-    <!-- × emits 'remove'. Parent owns the confirming state and toggles it; the
-         red-tinted danger state is driven by the confirmingDelete prop. -->
-    <button
-      v-if="!readonly"
-      type="button"
-      class="card-delete-btn absolute top-1.5 right-1.5 w-8 h-8 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 inline-flex items-center justify-center transition-colors"
-      :class="confirmingDelete && 'text-danger-soft border-danger/40 bg-danger/10'"
-      @click="onRemoveClick"
-      aria-label="Supprimer cette étape"
-      title="Supprimer cette étape"
-    >
-      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M6 6l12 12M18 6L6 18" />
-      </svg>
-    </button>
+    <!-- Action buttons stacked at top-right. Copy-code + dofusbook share are always
+         visible (works in readonly Reader too so shared cards stay actionable);
+         × delete is hidden in readonly. -->
+    <div class="absolute top-1.5 right-1.5 flex items-center gap-0.5">
+      <button
+        type="button"
+        class="w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
+        @click.stop="onCopyCodeClick"
+        aria-label="Copier le code du stuff"
+        title="Copier le code"
+      >
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="9" y="9" width="11" height="11" rx="2" />
+          <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        class="w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
+        @click.stop="onDofusbookClick"
+        aria-label="Ouvrir dans Dofusbook"
+        title="Ouvrir dans Dofusbook"
+      >
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+          <polyline points="15 3 21 3 21 9" />
+          <line x1="10" y1="14" x2="21" y2="3" />
+        </svg>
+      </button>
+      <button
+        v-if="!readonly"
+        type="button"
+        class="card-delete-btn w-8 h-8 rounded-full text-text-faint hover:text-danger-soft hover:bg-danger/10 border border-transparent hover:border-danger/40 inline-flex items-center justify-center transition-colors"
+        :class="confirmingDelete && 'text-danger-soft border-danger/40 bg-danger/10'"
+        @click="onRemoveClick"
+        aria-label="Supprimer cette étape"
+        title="Supprimer cette étape"
+      >
+        <svg viewBox="0 0 24 24" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
   </header>
 </template>

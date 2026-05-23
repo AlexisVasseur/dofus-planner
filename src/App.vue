@@ -7,9 +7,12 @@ import AppPurchasePlanner from './components/AppPurchasePlanner.vue';
 import AppSwitchView from './components/AppSwitchView.vue';
 import ItemPickerPopover from './components/ItemPickerPopover.vue';
 import ClassPickerModal from './components/ClassPickerModal.vue';
+import CardCodeImportModal from './components/CardCodeImportModal.vue';
+import StatInvestmentModal from './components/StatInvestmentModal.vue';
 import AppToast from './components/AppToast.vue';
 import { useBuildStore } from './stores/build';
 import { useUiStore } from './stores/ui';
+import { ensureItems } from './composables/useItemCatalog';
 
 const build = useBuildStore();
 const ui = useUiStore();
@@ -38,6 +41,15 @@ onMounted(() => {
   if (!ui.activeCardId && build.cards.length > 0) {
     ui.setActiveCard(build.cards[0].id);
   }
+  // After a cache bump (or on a fresh device), the persisted build references item ids
+  // that aren't in the item cache yet. Fetch every equipped item up-front so panel
+  // breakdowns, panoplie bonuses, and tooltips populate without waiting for the picker.
+  const ids = new Set<number>();
+  for (const card of build.cards) {
+    for (const ref of Object.values(card.slots)) if (ref) ids.add(ref.itemId);
+    for (const ref of card.dofus) if (ref) ids.add(ref.itemId);
+  }
+  if (ids.size > 0) void ensureItems(Array.from(ids));
 });
 </script>
 
@@ -83,10 +95,12 @@ onMounted(() => {
       class="relative z-20"
     />
     <footer class="relative z-20 px-4 py-2 text-center text-[11px] text-text-faint leading-snug">
-      © 2026 - 2026 DofusPlanner. Certaines illustrations sont la propriété d'Ankama Studio et de Dofus - Tous droits réservés. API via DofusDB
+      © 2026 - 2026 DofusPlanner - Certaines illustrations sont la propriété d'Ankama Studio et de Dofus. Tous droits réservés - Données issues de DofusDB. Utilisation soumise à la LPNC-IA 1.0.
     </footer>
     <ItemPickerPopover />
     <ClassPickerModal />
+    <CardCodeImportModal />
+    <StatInvestmentModal />
     <AppToast />
   </div>
 </template>

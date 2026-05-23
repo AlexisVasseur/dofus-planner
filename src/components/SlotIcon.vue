@@ -58,7 +58,6 @@ onBeforeUnmount(() => {
       active ? 'is-active' : '',
       changed ? 'is-changed' : '',
     ]"
-    :title="tooltipLabel"
     @click="!readonly && emit('pick')"
     @dblclick.stop="!readonly && emit('clear')"
     @mouseenter="onEnter"

@@ -3,10 +3,12 @@ import { ref, computed } from 'vue';
 import { useElementBounding } from '@vueuse/core';
 import ConnectorPopover from './ConnectorPopover.vue';
 import { useBuildStore } from '@/stores/build';
+import { useUiStore } from '@/stores/ui';
 
 const props = defineProps<{ afterCardId: string }>();
 
 const build = useBuildStore();
+const ui = useUiStore();
 const open = ref(false);
 const pillRef = ref<HTMLButtonElement | null>(null);
 
@@ -18,6 +20,7 @@ const anchorY = computed(() => pillBottom.value);
 function toggle() { open.value = !open.value; }
 function pickEmpty() { build.addEmptyCardAfter(props.afterCardId); open.value = false; }
 function pickCopy() { build.addCopyCardAfter(props.afterCardId); open.value = false; }
+function pickCode() { ui.openCodeImport(props.afterCardId); open.value = false; }
 function close() { open.value = false; }
 
 // Silence unused-warning on pillY (kept for future flip-above-anchor logic)
@@ -45,6 +48,7 @@ void pillY;
       :ignore-el="pillRef"
       @empty="pickEmpty"
       @copy="pickCopy"
+      @code="pickCode"
       @close="close"
     />
   </div>

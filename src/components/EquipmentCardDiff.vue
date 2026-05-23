@@ -12,7 +12,8 @@ import type { Card, ItemRef } from '@/types/build';
 import { CLASSES_BY_ID } from '@/data/classes';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getClassAssets } from '@/composables/useClassAssets';
-import { buildDofusbookUrl } from '@/utils/dofusbook';
+import { buildDofusbookUrl, encodeCardCode } from '@/utils/dofusbook';
+import { useToast } from '@/composables/useToast';
 
 // Hex equivalents of Tailwind tokens used in color-mix tinting + active fallback.
 // Keep in sync with tailwind.config.ts: bg-surface=#0a0a0a, border-default=#262626, accent=#5DCFE0.
@@ -26,6 +27,7 @@ const props = withDefaults(defineProps<{ card: Card; previous: Card; headerOnly?
 
 const build = useBuildStore();
 const ui = useUiStore();
+const toast = useToast();
 
 const isActive = computed(() => ui.activeCardId === props.card.id);
 const hovered = ref(false); // visual glow on hover, does NOT change activeCardId
@@ -37,6 +39,16 @@ function onHeaderRemove(): void {
 
 function onOpenDofusbook(): void {
   window.open(buildDofusbookUrl(props.card), '_blank', 'noopener,noreferrer');
+}
+
+async function onCopyCode(): Promise<void> {
+  const code = encodeCardCode(props.card);
+  try {
+    await navigator.clipboard.writeText(code);
+    toast.show('Code copié dans le presse-papier');
+  } catch {
+    window.prompt('Copiez ce code :', code);
+  }
 }
 
 function onConfirmDelete(): void {
@@ -160,6 +172,7 @@ function onCardClick(): void { /* readonly */ }
       @update:title="() => {}"
       @remove="onHeaderRemove"
       @open-dofusbook="onOpenDofusbook"
+      @copy-code="onCopyCode"
     />
     <Transition v-if="!headerOnly" name="card-body" mode="out-in">
       <CardDeleteConfirm
