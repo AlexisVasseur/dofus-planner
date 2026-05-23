@@ -170,7 +170,7 @@ function cancelTitle() {
       <button
         v-else-if="showCta"
         type="button"
-        class="block font-display text-[10px] font-light tracking-[0.16em] uppercase text-left"
+        class="class-picker-trigger block font-display text-[10px] font-light tracking-[0.16em] uppercase text-left"
         :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
         style="color: inherit;"
         @click.stop="onClassClick"
