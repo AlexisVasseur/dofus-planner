@@ -99,7 +99,7 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 <template>
   <aside class="card-stats-h h-full flex flex-col items-stretch px-3 py-2 min-h-0 overflow-hidden gap-2" style="container-type: size;">
     <!-- PA / PM / PO row — pinned at the top, big icon + value below. -->
-    <div class="flex justify-center items-end gap-8 flex-shrink-0">
+    <div class="flex justify-center items-end gap-6 flex-shrink-0">
       <div
         v-for="(c, i) in actionRow"
         :key="`a-${i}`"
@@ -112,7 +112,7 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 
     <!-- Stats table: icon row label + STATS / +ITEM / DMG columns. Fills the remaining
          vertical space; row gap scales with container height up to 16px. -->
-    <div class="stats-table flex-1 min-h-0 flex flex-col justify-between">
+    <div class="stats-table flex-1 min-h-0 flex flex-col justify-center">
       <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-baseline gap-2">
         <span class="stat-icon" aria-hidden="true"></span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">Stats</span>
@@ -163,12 +163,12 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 <style scoped>
 /* PA / PM / PO icons — biggest on the panel, no hex backdrop, value sits underneath. */
 .action-icon {
-  width: clamp(36px, 11cqb, 72px);
-  height: clamp(36px, 11cqb, 72px);
+  width: clamp(28px, 8cqb, 56px);
+  height: clamp(28px, 8cqb, 56px);
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 .action-value {
-  font-size: clamp(18px, 5cqb, 28px);
+  font-size: clamp(15px, 4cqb, 22px);
 }
 
 /* Stats table — icon as row label (smaller than action icons, no hex backdrop). */
