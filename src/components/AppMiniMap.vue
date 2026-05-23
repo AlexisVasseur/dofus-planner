@@ -114,25 +114,29 @@ function gotoCell(cell: Cell, idx: number): void {
     class="minimap mx-4 mb-3 rounded-xl border border-border-subtle backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] flex items-center gap-3 px-5 py-2.5 relative"
     style="background: rgba(8,8,8,0.55);"
   >
-    <button
-      ref="bulkTriggerRef"
-      type="button"
-      class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2 py-1 rounded-md border transition-colors"
-      :class="bulkOpen
-        ? 'border-[#5DCFE0]/60 text-[#8AE0EE] bg-[#5DCFE0]/[0.10]'
-        : 'border-white/10 text-text-faint hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
-      aria-label="Actions globales sur toutes les cards"
-      @click="toggleBulk"
-    >Bulk</button>
-    <BulkActionsPopover
-      :open="bulkOpen"
-      :trigger-el="bulkTriggerRef"
-      :all-parchotted="allParchotted"
-      :all-exo="allExo"
-      @close="closeBulk"
-      @toggle-parcho="(v) => build.applyScrollAll(v)"
-      @toggle-exo="(key, v) => build.applyExoAll(key, v)"
-    />
+    <!-- Bulk actions are Builder-only: Reader is read-mostly and Shopping has a different
+         data shape (rooms, not cards), so the global Parcho / Exo toggles don't apply. -->
+    <template v-if="ui.viewMode === 'build'">
+      <button
+        ref="bulkTriggerRef"
+        type="button"
+        class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2 py-1 rounded-md border transition-colors"
+        :class="bulkOpen
+          ? 'border-[#5DCFE0]/60 text-[#8AE0EE] bg-[#5DCFE0]/[0.10]'
+          : 'border-white/10 text-text-faint hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
+        aria-label="Actions globales sur toutes les cards"
+        @click="toggleBulk"
+      >Bulk</button>
+      <BulkActionsPopover
+        :open="bulkOpen"
+        :trigger-el="bulkTriggerRef"
+        :all-parchotted="allParchotted"
+        :all-exo="allExo"
+        @close="closeBulk"
+        @toggle-parcho="(v) => build.applyScrollAll(v)"
+        @toggle-exo="(key, v) => build.applyExoAll(key, v)"
+      />
+    </template>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <Transition name="cells" mode="out-in">
         <div :key="ui.viewMode" class="absolute inset-1 flex gap-[3px]">
