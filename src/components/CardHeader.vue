@@ -40,8 +40,6 @@ const heroStyle = computed(() => {
     backgroundImage: `url("${url}")`,
     backgroundSize: 'cover',
     backgroundPosition: 'center 20%',
-    backgroundBlendMode: 'multiply',
-    backgroundColor: 'var(--class-dominant, rgba(255,255,255,0.05))',
   } satisfies Record<string, string>;
 });
 
@@ -131,14 +129,14 @@ function cancelTitle() {
     <!-- Hero background: class portrait blended with class accent tint, gradient on top. -->
     <div
       v-if="thumbnailUrl"
-      class="absolute inset-0 opacity-60 pointer-events-none"
+      class="absolute inset-0 pointer-events-none"
       :style="heroStyle"
       aria-hidden="true"
     />
     <div
       v-if="thumbnailUrl"
       class="absolute inset-0 pointer-events-none"
-      style="background: linear-gradient(to right, rgba(8,18,26,0.55) 0%, rgba(8,18,26,0.95) 65%);"
+      style="background: linear-gradient(to right, transparent 0%, transparent 30%, color-mix(in srgb, var(--class-dominant, #555) 65%, transparent) 65%, rgba(8,18,26,1) 100%);"
       aria-hidden="true"
     />
     <!-- Click-through layer: clicking the hero (outside the text and kebab) opens the
@@ -151,9 +149,9 @@ function cancelTitle() {
       aria-label="Choisir une classe"
       @click="onClassClick"
     />
-    <!-- Text overlay (left aligned). -->
+    <!-- Text overlay (right aligned, vertically centered). -->
     <div
-      class="absolute left-3 top-2 right-12 z-10"
+      class="absolute inset-y-0 right-14 z-10 flex flex-col items-end justify-center gap-1"
       :style="{ color: 'var(--class-accent, rgba(255,255,255,0.9))' }"
     >
       <input
@@ -161,7 +159,7 @@ function cancelTitle() {
         ref="titleInputRef"
         v-model="titleDraft"
         maxlength="30"
-        class="block bg-transparent font-display text-[10px] font-light tracking-[0.16em] uppercase outline-none w-full border-b border-dashed border-white/60"
+        class="block bg-transparent font-display text-[10px] font-light tracking-[0.16em] uppercase outline-none text-right max-w-[200px] border-b border-dashed border-white/60"
         style="color: inherit;"
         @blur="commitTitle"
         @keydown.enter.prevent="commitTitle"
@@ -170,7 +168,7 @@ function cancelTitle() {
       <button
         v-else-if="showCta"
         type="button"
-        class="class-picker-trigger block font-display text-[10px] font-light tracking-[0.16em] uppercase text-left"
+        class="class-picker-trigger block font-display text-[10px] font-light tracking-[0.16em] uppercase text-right max-w-[200px]"
         :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
         style="color: inherit;"
         @click.stop="onClassClick"
@@ -178,7 +176,7 @@ function cancelTitle() {
       <button
         v-else-if="title !== null || !readonly"
         type="button"
-        class="block font-display text-[10px] font-light tracking-[0.16em] uppercase text-left w-full truncate"
+        class="block font-display text-[10px] font-light tracking-[0.16em] uppercase text-right max-w-[200px] truncate"
         :class="readonly ? 'cursor-default' : 'hover:opacity-80'"
         style="color: inherit;"
         @click.stop="startEditTitle"
