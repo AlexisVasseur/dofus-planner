@@ -113,11 +113,6 @@ function cancelTitle() {
   editingTitle.value = false;
 }
 
-// Menu action handlers are wired to the menu body added in Task 3.
-// Referenced here to keep noUnusedLocals happy during the intermediate state.
-void (onMenuCopyCode as unknown);
-void (onMenuOpenDofusbook as unknown);
-void (onMenuRemove as unknown);
 </script>
 
 <template>
@@ -221,5 +216,62 @@ void (onMenuRemove as unknown);
         <circle cx="12" cy="19" r="1.6" />
       </svg>
     </button>
+    <Transition name="menu">
+      <div
+        v-if="menuOpen"
+        ref="menuRef"
+        data-testid="card-menu"
+        role="menu"
+        aria-orientation="vertical"
+        class="absolute top-12 right-3 z-20 w-44 rounded-md border border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_8px_18px_rgba(0,0,0,0.5)] overflow-hidden"
+        style="background: rgba(8,12,16,0.95);"
+      >
+        <button
+          data-testid="card-menu-copy"
+          type="button"
+          role="menuitem"
+          class="flex items-center gap-2 w-full px-3 py-2 text-left font-sans text-[11px] text-text-default hover:bg-[#5DCFE0]/[0.08] hover:text-[#8AE0EE] transition-colors"
+          @click.stop="onMenuCopyCode"
+        >
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="9" y="9" width="11" height="11" rx="2" />
+            <path d="M5 15V5a2 2 0 0 1 2-2h10" />
+          </svg>
+          Copier le code
+        </button>
+        <button
+          data-testid="card-menu-dofusbook"
+          type="button"
+          role="menuitem"
+          class="flex items-center gap-2 w-full px-3 py-2 text-left font-sans text-[11px] text-text-default hover:bg-[#5DCFE0]/[0.08] hover:text-[#8AE0EE] transition-colors"
+          @click.stop="onMenuOpenDofusbook"
+        >
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+            <polyline points="15 3 21 3 21 9" />
+            <line x1="10" y1="14" x2="21" y2="3" />
+          </svg>
+          Ouvrir Dofusbook
+        </button>
+        <button
+          v-if="!readonly"
+          data-testid="card-menu-remove"
+          type="button"
+          role="menuitem"
+          class="flex items-center gap-2 w-full px-3 py-2 text-left font-sans text-[11px] text-danger-soft hover:bg-danger/10 transition-colors"
+          @click.stop="onMenuRemove"
+        >
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 6l12 12M18 6L6 18" />
+          </svg>
+          Supprimer
+        </button>
+      </div>
+    </Transition>
   </header>
 </template>
+
+<style scoped>
+.menu-enter-active, .menu-leave-active { transition: opacity 120ms ease, transform 120ms ease; }
+.menu-enter-from, .menu-leave-to { opacity: 0; transform: translateY(-4px); }
+</style>
