@@ -233,6 +233,32 @@ function decodeUint(bytes: number[], c: Cursor): number {
   throw new Error(`msgpack: not a uint at offset ${c.i - 1} (head=${head.toString(16)})`);
 }
 
+/** Read a map KEY which may be encoded as either a uint (our format) or a fixstr/str8
+ *  (the older dofusbook export format that serialised every JS object key as a string).
+ *  Strings are parsed back into numbers so callers can keep treating keys as ints. */
+function decodeMapKey(bytes: number[], c: Cursor): number {
+  const head = bytes[c.i];
+  // fixstr: 0xa0 | length (length 0..31)
+  if ((head & 0xe0) === 0xa0) {
+    c.i++;
+    const len = head & 0x1f;
+    let s = '';
+    for (let k = 0; k < len; k++) s += String.fromCharCode(bytes[c.i + k]);
+    c.i += len;
+    return Number(s);
+  }
+  // str8: 0xd9 + length byte
+  if (head === 0xd9) {
+    c.i++;
+    const len = bytes[c.i++];
+    let s = '';
+    for (let k = 0; k < len; k++) s += String.fromCharCode(bytes[c.i + k]);
+    c.i += len;
+    return Number(s);
+  }
+  return decodeUint(bytes, c);
+}
+
 function decodeArrayHeader(bytes: number[], c: Cursor): number {
   const head = bytes[c.i++];
   if ((head & 0xf0) === 0x90) return head & 0x0f;
@@ -253,6 +279,23 @@ function skipValue(bytes: number[], c: Cursor): void {
   const head = bytes[c.i];
   if (head <= 0x7f || head === 0xcc || head === 0xcd || head === 0xce) {
     decodeUint(bytes, c);
+    return;
+  }
+  if ((head & 0xe0) === 0xa0) {
+    // fixstr — payload bytes after the head.
+    const len = head & 0x1f;
+    c.i += 1 + len;
+    return;
+  }
+  if (head === 0xd9) {
+    c.i++;
+    const len = bytes[c.i++];
+    c.i += len;
+    return;
+  }
+  if (head === 0xc0 || head === 0xc2 || head === 0xc3) {
+    // nil / false / true — single byte values some encoders use as null payloads.
+    c.i++;
     return;
   }
   if ((head & 0xf0) === 0x90 || head === 0xdc) {
@@ -325,12 +368,14 @@ export function decodeCardCode(code: string): Card {
   let additionalPoints: number[] = [];
 
   for (let i = 0; i < mapLen; i++) {
-    const key = decodeUint(bytes, c);
+    // Some dofusbook exports encode root + nested map keys as strings (fixstr) instead
+    // of msgpack uints — we route every map key through decodeMapKey to accept both.
+    const key = decodeMapKey(bytes, c);
     if (key === 0) {
       // t[0] BaseStats — a map of dofusbook carac index → starting stat value.
       const n = decodeMapHeader(bytes, c);
       for (let j = 0; j < n; j++) {
-        const k = decodeUint(bytes, c);
+        const k = decodeMapKey(bytes, c);
         const v = decodeUint(bytes, c);
         baseStatsMap[k] = v;
       }
@@ -344,7 +389,7 @@ export function decodeCardCode(code: string): Card {
     } else if (key === 4) {
       const n = decodeMapHeader(bytes, c);
       for (let j = 0; j < n; j++) {
-        const k = decodeUint(bytes, c);
+        const k = decodeMapKey(bytes, c);
         const v = decodeUint(bytes, c);
         numPicks[k] = v;
       }
