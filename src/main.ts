@@ -8,5 +8,8 @@ const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia);
 
-app.mount('#app');
+// Load persisted cards into the store BEFORE mounting — App.vue's onMounted fetches
+// every equipped item id on boot, and reading build.cards before persistence loads
+// would only see the default empty card (so no items get refetched after a cache bump).
 usePersistence();
+app.mount('#app');
