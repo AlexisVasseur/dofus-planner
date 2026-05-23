@@ -112,8 +112,8 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 
     <!-- Stats table: icon row label + STATS / +ITEM / DMG columns. Fills the remaining
          vertical space; row gap scales with container height up to 16px. -->
-    <div class="stats-table flex-1 min-h-0 flex flex-col justify-center">
-      <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-baseline gap-2">
+    <div class="stats-table flex-1 min-h-0 flex flex-col justify-between">
+      <div class="grid grid-cols-[auto_60px_60px_60px] mx-auto w-fit items-baseline gap-2">
         <span class="stat-icon" aria-hidden="true"></span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">Stats</span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">+ Item</span>
@@ -122,7 +122,7 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
       <div
         v-for="(r, i) in statRows"
         :key="`s-${i}`"
-        class="stat-row grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-2"
+        class="stat-row grid grid-cols-[auto_60px_60px_60px] mx-auto w-fit items-center gap-2"
       >
         <img :src="r.icon" :alt="r.label" class="stat-icon select-none" draggable="false" />
         <button
@@ -187,9 +187,9 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
   font-size: clamp(8px, 2.2cqb, 12px);
 }
 
-/* Row spacing scales with available height — tight on short cards, breathes
-   up to 16px on tall ones. Applies to the header row and each stat row. */
+/* Row gap minimum — justify-between handles the extra distribution so the table
+   stretches end-to-end and uses every pixel of the available height. */
 .stats-table {
-  gap: clamp(2px, 1.6cqb, 16px);
+  gap: 4px;
 }
 </style>
