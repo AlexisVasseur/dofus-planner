@@ -12,6 +12,7 @@ import {
   CHAR_PUISSANCE, CHAR_DOMMAGE,
 } from '@/composables/useCardStats';
 import { useUiStore } from '@/stores/ui';
+import { getInvestment } from '@/utils/statCost';
 import StatSourcesTooltip from './StatSourcesTooltip.vue';
 
 const props = defineProps<{ card: Card }>();
@@ -36,6 +37,12 @@ const ICON = {
 
 const cb = (c: number) => characterBase.value[c] ?? 0;
 const ib = (c: number) => itemBonus.value[c] ?? 0;
+// Parcho 100 bonus per stat — moves out of the Stats column and into the +Item /
+// +Parcho column. 0 when no class or no scroll, 100 when scrolled.
+const scrollFor = (stat: InvestableStat | null): number => {
+  if (stat === null) return 0;
+  return getInvestment(props.card, stat).scrolled ? 100 : 0;
+};
 
 // PA / PM / PO row — bigger hex-less icons at the top. Single column (not investable).
 const actionRow = computed(() => [
@@ -44,9 +51,10 @@ const actionRow = computed(() => [
   { icon: ICON.po, label: 'PO', value: cb(CHAR_PO) + ib(CHAR_PO) },
 ]);
 
-// Stats table: 7 rows, each split into STATS (base + invest + scroll) / +ITEM (gear) /
-// DMG (where applicable). The first 6 rows are click-to-edit — clicking the STATS cell
-// opens the investment modal. Puissance is item-only so its row is read-only.
+// Stats table: 7 rows, each split into STATS (base + invest + exo, no parcho) /
+// + Item / + Parcho (scroll bonus + gear) / DMG (where applicable). The first 6
+// rows are click-to-edit — clicking the STATS cell opens the investment modal.
+// Puissance is item-only so its row is read-only.
 interface StatRow {
   icon: string;
   label: string;
@@ -57,18 +65,36 @@ interface StatRow {
   char: number;
   /** Companion damage characteristic id (Dom. Force, Dom. Air, …) — null for Vita / Sag. */
   dmgChar: number | null;
-  statValue: number;
-  itemValue: number;
+  /** Stats column — base + invested + exo (no parcho, no items). */
+  statsValue: number;
+  /** + Item / + Parcho column — scroll bonus + items contribution. */
+  bonusValue: number;
   dmgValue: number | null;
 }
+function makeRow(
+  icon: string, label: string, dmgLabel: string | null,
+  investKey: InvestableStat | null, char: number, dmgChar: number | null,
+): StatRow {
+  const scroll = scrollFor(investKey);
+  // characterBase already includes the scroll bonus — subtract it so the Stats
+  // column is "what the character has innately" (level + invested + exo only).
+  const statsValue = cb(char) - scroll;
+  const bonusValue = scroll + ib(char);
+  return {
+    icon, label, dmgLabel, investKey, char, dmgChar,
+    statsValue,
+    bonusValue,
+    dmgValue: dmgChar !== null ? ib(dmgChar) : null,
+  };
+}
 const statRows = computed<StatRow[]>(() => [
-  { icon: ICON.pv,    label: 'Vitalité',     dmgLabel: null,            investKey: 'vitalite',     char: CHAR_VITALITE,     dmgChar: null,            statValue: cb(CHAR_VITALITE),     itemValue: ib(CHAR_VITALITE),     dmgValue: null },
-  { icon: ICON.sag,   label: 'Sagesse',      dmgLabel: null,            investKey: 'sagesse',      char: CHAR_SAGESSE,      dmgChar: null,            statValue: cb(CHAR_SAGESSE),      itemValue: ib(CHAR_SAGESSE),      dmgValue: null },
-  { icon: ICON.terre, label: 'Force',        dmgLabel: 'Dommage Force', investKey: 'force',        char: CHAR_FORCE,        dmgChar: CHAR_DOM_TERRE,  statValue: cb(CHAR_FORCE),        itemValue: ib(CHAR_FORCE),        dmgValue: ib(CHAR_DOM_TERRE) },
-  { icon: ICON.air,   label: 'Agilité',      dmgLabel: 'Dommage Air',   investKey: 'agilite',      char: CHAR_AGILITE,      dmgChar: CHAR_DOM_AIR,    statValue: cb(CHAR_AGILITE),      itemValue: ib(CHAR_AGILITE),      dmgValue: ib(CHAR_DOM_AIR) },
-  { icon: ICON.feu,   label: 'Intelligence', dmgLabel: 'Dommage Feu',   investKey: 'intelligence', char: CHAR_INTELLIGENCE, dmgChar: CHAR_DOM_FEU,    statValue: cb(CHAR_INTELLIGENCE), itemValue: ib(CHAR_INTELLIGENCE), dmgValue: ib(CHAR_DOM_FEU) },
-  { icon: ICON.eau,   label: 'Chance',       dmgLabel: 'Dommage Eau',   investKey: 'chance',       char: CHAR_CHANCE,       dmgChar: CHAR_DOM_EAU,    statValue: cb(CHAR_CHANCE),       itemValue: ib(CHAR_CHANCE),       dmgValue: ib(CHAR_DOM_EAU) },
-  { icon: ICON.puiss, label: 'Puissance',    dmgLabel: 'Dommages',      investKey: null,           char: CHAR_PUISSANCE,    dmgChar: CHAR_DOMMAGE,    statValue: 0,                     itemValue: ib(CHAR_PUISSANCE),    dmgValue: ib(CHAR_DOMMAGE) },
+  makeRow(ICON.pv,    'Vitalité',     null,            'vitalite',     CHAR_VITALITE,     null),
+  makeRow(ICON.sag,   'Sagesse',      null,            'sagesse',      CHAR_SAGESSE,      null),
+  makeRow(ICON.terre, 'Force',        'Dommage Force', 'force',        CHAR_FORCE,        CHAR_DOM_TERRE),
+  makeRow(ICON.air,   'Agilité',      'Dommage Air',   'agilite',      CHAR_AGILITE,      CHAR_DOM_AIR),
+  makeRow(ICON.feu,   'Intelligence', 'Dommage Feu',   'intelligence', CHAR_INTELLIGENCE, CHAR_DOM_FEU),
+  makeRow(ICON.eau,   'Chance',       'Dommage Eau',   'chance',       CHAR_CHANCE,       CHAR_DOM_EAU),
+  makeRow(ICON.puiss, 'Puissance',    'Dommages',      null,           CHAR_PUISSANCE,    CHAR_DOMMAGE),
 ]);
 
 function onStatClick(row: StatRow): void {
@@ -113,10 +139,13 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
     <!-- Stats table: icon row label + STATS / +ITEM / DMG columns. Fills the remaining
          vertical space; row gap scales with container height up to 16px. -->
     <div class="stats-table flex-1 min-h-0 flex flex-col justify-between">
-      <div class="grid grid-cols-[auto_60px_60px_60px] mx-auto w-fit items-baseline gap-2">
+      <div class="grid grid-cols-[auto_60px_60px_60px] mx-auto w-fit items-end gap-2">
         <span class="stat-icon" aria-hidden="true"></span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">Stats</span>
-        <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">+ Item</span>
+        <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center flex flex-col leading-tight">
+          <span>+ Item</span>
+          <span>+ Parcho</span>
+        </span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">DMG</span>
       </div>
       <div
@@ -134,12 +163,12 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
           :disabled="r.investKey === null"
           :data-stat-trigger="r.investKey !== null ? `${props.card.id}-${r.investKey}` : undefined"
           @click.stop="onStatClick(r)"
-        >{{ r.statValue }}</button>
+        >{{ r.statsValue }}</button>
         <span
           class="stat-value font-mono font-bold tabular-nums text-center text-text-default bg-white/[0.06] border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
           @mouseenter="onCellEnter({ char: r.char, invest: r.investKey, label: r.label })"
           @mouseleave="onCellLeave"
-        >{{ r.statValue + r.itemValue }}</span>
+        >{{ r.bonusValue }}</span>
         <span
           v-if="r.dmgValue !== null && r.dmgChar !== null"
           class="stat-value font-mono font-bold tabular-nums text-center text-text-default bg-white/[0.06] border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
