@@ -52,9 +52,9 @@ const actionRow = computed(() => [
 ]);
 
 // Stats table: 7 rows, each split into STATS (base + invest + exo, no parcho) /
-// + Item / + Parcho (scroll bonus + gear) / DMG (where applicable). The first 6
-// rows are click-to-edit — clicking the STATS cell opens the investment modal.
-// Puissance is item-only so its row is read-only.
+// TOTAL (everything combined) / DMG (where applicable). The first 6 rows are
+// click-to-edit — clicking the STATS cell opens the investment modal. Puissance
+// is item-only so its row is read-only.
 interface StatRow {
   icon: string;
   label: string;
@@ -67,8 +67,8 @@ interface StatRow {
   dmgChar: number | null;
   /** Stats column — base + invested + exo (no parcho, no items). */
   statsValue: number;
-  /** + Item / + Parcho column — scroll bonus + items contribution. */
-  bonusValue: number;
+  /** TOTAL column — full final value: base + invest + exo + scroll + items. */
+  totalValue: number;
   dmgValue: number | null;
 }
 function makeRow(
@@ -79,11 +79,10 @@ function makeRow(
   // characterBase already includes the scroll bonus — subtract it so the Stats
   // column is "what the character has innately" (level + invested + exo only).
   const statsValue = cb(char) - scroll;
-  const bonusValue = scroll + ib(char);
   return {
     icon, label, dmgLabel, investKey, char, dmgChar,
     statsValue,
-    bonusValue,
+    totalValue: cb(char) + ib(char),
     dmgValue: dmgChar !== null ? ib(dmgChar) : null,
   };
 }
@@ -123,29 +122,39 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 </script>
 
 <template>
-  <aside class="card-stats-h h-full flex flex-col items-stretch px-3 py-2 min-h-0 overflow-hidden gap-2" style="container-type: size;">
-    <!-- PA / PM / PO row — pinned at the top, big icon + value below. -->
-    <div class="flex justify-center items-end gap-6 flex-shrink-0">
+  <aside
+    class="card-stats-h h-full grid min-h-0 overflow-hidden"
+    style="container-type: size; grid-template-rows: repeat(6, minmax(0, 1fr)); grid-template-columns: minmax(0, 1fr); gap: 0.6875rem;"
+  >
+    <!-- Row 1: PA / PM / PO. Full-width box (same width as the stats table below)
+         vertically centered in the grid row so the box edges land on the SLOT
+         top/bottom of row 1 — same vertical centering as coiffe / amulette. -->
+    <div class="action-row flex justify-center items-center gap-6 bg-white/[0.06] border border-white/15 rounded-md px-3 self-center">
       <div
         v-for="(c, i) in actionRow"
         :key="`a-${i}`"
-        class="action-stack flex flex-col items-center gap-1"
+        class="action-stack flex flex-row items-center gap-1.5"
       >
         <img :src="c.icon" :alt="c.label" class="action-icon select-none" draggable="false" />
         <span class="action-value font-mono font-bold tabular-nums leading-none text-text-default">{{ c.value }}</span>
       </div>
     </div>
 
-    <!-- Stats table: icon row label + STATS / +ITEM / DMG columns. Fills the remaining
-         vertical space; row gap scales with container height up to 16px. -->
-    <div class="stats-table flex-1 min-h-0 flex flex-col justify-between">
+    <!-- Rows 2-6: stats table spans the remaining 5 item rows. The vertical margin
+         equals the slot-centering offset (outer_row - cell) / 2 — same offset used to
+         center an item slot in its grid row — so the box edges land on the SLOT
+         top of row 2 and the SLOT bottom of row 6 (not the row edges). Inside, the
+         header + 7 stat rows distribute evenly via justify-between. -->
+    <div
+      class="stats-table min-h-0 flex flex-col justify-between bg-white/[0.06] border border-white/15 rounded-md px-3 py-2"
+      style="grid-row: 2 / 7;
+             margin-top: max(0px, calc((100cqb - 55px) / 12 - (100cqi - 33px) / 8));
+             margin-bottom: max(0px, calc((100cqb - 55px) / 12 - (100cqi - 33px) / 8));"
+    >
       <div class="grid grid-cols-[auto_60px_60px_60px] mx-auto w-fit items-end gap-2">
         <span class="stat-icon" aria-hidden="true"></span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">Stats</span>
-        <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center flex flex-col leading-tight">
-          <span>+ Item</span>
-          <span>+ Parcho</span>
-        </span>
+        <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">TOTAL</span>
         <span class="stat-header font-sans font-bold uppercase tracking-[0.15em] text-white text-center">DMG</span>
       </div>
       <div
@@ -156,7 +165,7 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
         <img :src="r.icon" :alt="r.label" class="stat-icon select-none" draggable="false" />
         <button
           type="button"
-          class="stat-value font-mono font-bold tabular-nums text-center text-text-default bg-white/[0.06] border border-white/15 rounded-md justify-self-center inline-block transition-colors"
+          class="stat-value font-mono font-bold tabular-nums text-center text-text-default border border-white/15 rounded-md justify-self-center inline-block transition-colors"
           :class="r.investKey === null
             ? 'cursor-default opacity-60'
             : 'hover:bg-[#8AE0EE]/[0.10] hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] cursor-pointer'"
@@ -165,13 +174,13 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
           @click.stop="onStatClick(r)"
         >{{ r.statsValue }}</button>
         <span
-          class="stat-value font-mono font-bold tabular-nums text-center text-text-default bg-white/[0.06] border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
+          class="stat-value font-mono font-bold tabular-nums text-center text-text-default border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
           @mouseenter="onCellEnter({ char: r.char, invest: r.investKey, label: r.label })"
           @mouseleave="onCellLeave"
-        >{{ r.bonusValue }}</span>
+        >{{ r.totalValue }}</span>
         <span
           v-if="r.dmgValue !== null && r.dmgChar !== null"
-          class="stat-value font-mono font-bold tabular-nums text-center text-text-default bg-white/[0.06] border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
+          class="stat-value font-mono font-bold tabular-nums text-center text-text-default border border-white/15 rounded-md justify-self-center inline-block cursor-help hover:border-[#8AE0EE]/40 hover:bg-[#5DCFE0]/[0.06] transition-colors"
           @mouseenter="onCellEnter({ char: r.dmgChar, invest: null, label: r.dmgLabel ?? r.label })"
           @mouseleave="onCellLeave"
         >{{ r.dmgValue }}</span>
@@ -190,14 +199,20 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 </template>
 
 <style scoped>
-/* PA / PM / PO icons — biggest on the panel, no hex backdrop, value sits underneath. */
+/* PA / PM / PO row — height = exactly 1 item-cell so it aligns visually with row 1
+   of the equipment grid (coiffe / amulette). Cells are square, panel inline-size is
+   4×cell + 3×11px gap, so 1 cell height = (100cqi - 33px) / 4. Icons sit inline
+   beside their value to stay within that single-row height. */
+.action-row {
+  height: calc((100cqi - 33px) / 4);
+}
 .action-icon {
-  width: clamp(28px, 8cqb, 56px);
-  height: clamp(28px, 8cqb, 56px);
+  width: clamp(22px, 12cqi, 36px);
+  height: clamp(22px, 12cqi, 36px);
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 .action-value {
-  font-size: clamp(15px, 4cqb, 22px);
+  font-size: clamp(14px, 6.5cqi, 20px);
 }
 
 /* Stats table — icon as row label (smaller than action icons, no hex backdrop). */
