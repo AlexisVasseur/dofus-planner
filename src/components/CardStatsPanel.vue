@@ -199,20 +199,25 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
 </template>
 
 <style scoped>
-/* PA / PM / PO row — height = exactly 1 item-cell so it aligns visually with row 1
-   of the equipment grid (coiffe / amulette). Cells are square, panel inline-size is
-   4×cell + 3×11px gap, so 1 cell height = (100cqi - 33px) / 4. Icons sit inline
-   beside their value to stay within that single-row height. */
+/* PA / PM / PO row — height = 1 item-cell when the card is tall enough so the box
+   aligns with row 1 of the equipment grid (coiffe / amulette). Cells are square so
+   1 cell = (100cqi - 33px) / 4 (panel inline-size = 4 cells + 3×11px). When the
+   card shrinks vertically, outer-grid rows ((100cqb - 55px) / 6) become smaller
+   than a cell — we cap the height at the row size so the box never overflows its
+   grid track (otherwise the bottom border would slip under the stats table below).
+   `container-type: size` lets the inner icon / value scale with the box via
+   cqmin instead of staying glued to the panel inline-size. */
 .action-row {
-  height: calc((100cqi - 33px) / 4);
+  height: min(calc((100cqi - 33px) / 4), calc((100cqb - 55px) / 6));
+  container-type: size;
 }
 .action-icon {
-  width: clamp(22px, 12cqi, 36px);
-  height: clamp(22px, 12cqi, 36px);
+  width: clamp(16px, 60cqmin, 32px);
+  height: clamp(16px, 60cqmin, 32px);
   filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.45));
 }
 .action-value {
-  font-size: clamp(14px, 6.5cqi, 20px);
+  font-size: clamp(12px, 32cqmin, 18px);
 }
 
 /* Stats table — icon as row label (smaller than action icons, no hex backdrop). */
