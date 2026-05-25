@@ -116,7 +116,7 @@ function cancelTitle() {
 </script>
 
 <template>
-  <header class="header relative pl-[4px] pr-4 py-[2px] border-b border-border-subtle bg-gradient-to-b from-bg-elev to-bg-surface">
+  <header class="header relative pr-4 bg-gradient-to-b from-bg-elev to-bg-surface after:content-[''] after:absolute after:left-0 after:right-0 after:bottom-0 after:h-px after:bg-border-subtle after:pointer-events-none after:z-10">
     <div class="flex items-stretch gap-4 w-full">
       <button
         type="button"
