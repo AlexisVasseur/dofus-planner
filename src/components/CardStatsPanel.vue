@@ -51,7 +51,7 @@ const actionRow = computed(() => [
   { icon: ICON.po, label: 'PO', value: cb(CHAR_PO) + ib(CHAR_PO) },
 ]);
 
-// Stats table: 7 rows, each split into STATS (base + invest + exo, no parcho) /
+// Stats table: 7 rows, each split into STATS (points invested by the player) /
 // TOTAL (everything combined) / DMG (where applicable). The first 6 rows are
 // click-to-edit — clicking the STATS cell opens the investment modal. Puissance
 // is item-only so its row is read-only.
@@ -65,7 +65,7 @@ interface StatRow {
   char: number;
   /** Companion damage characteristic id (Dom. Force, Dom. Air, …) — null for Vita / Sag. */
   dmgChar: number | null;
-  /** Stats column — base + invested + exo (no parcho, no items). */
+  /** Stats column — invested + exo (no parcho, no items, no per-level base). */
   statsValue: number;
   /** TOTAL column — full final value: base + invest + exo + scroll + items. */
   totalValue: number;
@@ -76,9 +76,14 @@ function makeRow(
   investKey: InvestableStat | null, char: number, dmgChar: number | null,
 ): StatRow {
   const scroll = scrollFor(investKey);
-  // characterBase already includes the scroll bonus — subtract it so the Stats
-  // column is "what the character has innately" (level + invested + exo only).
-  const statsValue = cb(char) - scroll;
+  // Vitality is the only stat in this table with an innate per-level base
+  // (50 + 5×level). Exclude it from the Stats column so that column reads as
+  // "points the player invested" (consistent with Force / Agi / etc. where the
+  // engine base is 0). The base still shows up in TOTAL via cb.
+  const levelBase = char === CHAR_VITALITE && props.card.level !== null
+    ? 50 + 5 * props.card.level
+    : 0;
+  const statsValue = cb(char) - scroll - levelBase;
   return {
     icon, label, dmgLabel, investKey, char, dmgChar,
     statsValue,
