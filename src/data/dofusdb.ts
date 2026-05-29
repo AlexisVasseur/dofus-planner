@@ -198,14 +198,19 @@ export async function fetchItem(id: number): Promise<Item> {
   return mapItem(raw);
 }
 
-/** Search items across ALL types by name (no typeId filter) — used by the Dofusbook
- *  text importer, which knows only item names. Sorted by descending level. */
-export async function searchItemsByName(name: string, limit = 5): Promise<Item[]> {
+/** Fetch every item whose normalized name (slug) exactly matches one of `names`,
+ *  in a SINGLE request. Used by the Dofusbook text importer to resolve all pasted
+ *  item names at once instead of one search per name. The slug is DofusDB's
+ *  lowercase, accent-stripped name, which equals `normalizeSearch(name)` — so this
+ *  is an exact, accent-insensitive match (e.g. "Ebène" → "ebene"). A name may map
+ *  to several items (e.g. a mount under two legacy typeIds); the caller picks one. */
+export async function fetchItemsByNames(names: string[]): Promise<Item[]> {
+  const slugs = Array.from(new Set(names.map(normalizeSearch).filter((s) => s.length > 0)));
+  if (slugs.length === 0) return [];
   const params = new URLSearchParams();
-  params.append('$limit', String(limit));
-  params.append('$sort', '-level');
-  const q = normalizeSearch(name);
-  if (q.length > 0) params.append('slug.fr[$search]', q);
+  // Each name can yield a few items; cap generously above any single build's size.
+  params.append('$limit', '200');
+  for (const slug of slugs) params.append('slug.fr[$in][]', slug);
   const res = await fetch(`${BASE_URL}/items?${params.toString()}`);
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
   const json = (await res.json()) as { data?: RawItem[] };

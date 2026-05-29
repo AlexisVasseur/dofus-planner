@@ -1,4 +1,4 @@
-import { searchItemsByName, normalizeSearch, type Item } from '@/data/dofusdb';
+import { fetchItemsByNames, normalizeSearch, type Item } from '@/data/dofusdb';
 import { ensureItems } from '@/composables/useItemCatalog';
 import { SLOT_ORDER, DOFUS_COUNT, type SlotType } from '@/types/slots';
 import type { ItemRef } from '@/types/build';
@@ -11,19 +11,18 @@ export interface ResolvedBuild {
   resolvedCount: number;
 }
 
-// Generous page size so the exact match surfaces even when a name collides with
-// higher-level gear that ranks first by level (e.g. "Voyageur" the prysmaradite
-// vs "Ceinture des Voyageurs" lvl 197).
-const SEARCH_LIMIT = 24;
+function isUsable(typeId: number): boolean {
+  return typeId === RING_TYPE_ID
+    || typeId === DOFUS_TYPE_ID
+    || typeId === TROPHEE_TYPE_ID
+    || TYPE_ID_TO_SLOT[typeId] !== undefined;
+}
 
-/** Pick the result whose name matches EXACTLY (after normalization). We do NOT fall
- *  back to a fuzzy "first equippable" result: that would mis-resolve names like
- *  "Voyageur" to "Ceinture des Voyageurs". No exact match → the name is left
- *  unresolved and reported, never wrongly equipped. */
-function pickMatch(name: string, results: Item[]): Item | null {
-  if (results.length === 0) return null;
-  const norm = normalizeSearch(name);
-  return results.find((it) => normalizeSearch(it.name) === norm) ?? null;
+/** Among the pooled items sharing a name, pick an equippable one (a name can map to
+ *  several items, e.g. a mount under two legacy typeIds), else the first, else null. */
+function pickMatch(candidates: Item[]): Item | null {
+  if (candidates.length === 0) return null;
+  return candidates.find((it) => isUsable(it.typeId)) ?? candidates[0];
 }
 
 export async function resolveDofusbookItems(itemNames: string[]): Promise<ResolvedBuild> {
@@ -32,16 +31,22 @@ export async function resolveDofusbookItems(itemNames: string[]): Promise<Resolv
   const dofus: (ItemRef | null)[] = Array.from({ length: DOFUS_COUNT }, () => null);
   const unresolved: string[] = [];
 
-  // Resolve all names in parallel (order preserved); a per-name failure → null.
-  const matches = await Promise.all(
-    itemNames.map(async (name) => {
-      try {
-        return pickMatch(name, await searchItemsByName(name, SEARCH_LIMIT));
-      } catch {
-        return null;
-      }
-    }),
-  );
+  // One batched request: every item whose slug exactly matches one of the names.
+  // Group the pool by normalized name so each name picks from its own exact matches.
+  let pool: Item[] = [];
+  try {
+    pool = await fetchItemsByNames(itemNames);
+  } catch {
+    pool = [];
+  }
+  const byName = new Map<string, Item[]>();
+  for (const it of pool) {
+    const key = normalizeSearch(it.name);
+    const bucket = byName.get(key);
+    if (bucket) bucket.push(it);
+    else byName.set(key, [it]);
+  }
+  const matches = itemNames.map((name) => pickMatch(byName.get(normalizeSearch(name)) ?? []));
 
   // Assign in itemNames order so ring / dofus placement is deterministic.
   const resolvedIds: number[] = [];
