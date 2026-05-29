@@ -61,6 +61,25 @@ export const useBuildStore = defineStore('build', () => {
     card.exo = { pa: allCardsExo('pa'), pm: allCardsExo('pm'), po: allCardsExo('po') };
   }
 
+  // Variant for IMPORTED cards (which carry their own scroll/exo): only turn ON the
+  // global toggles that are currently fully active, never wipe the card's own flags.
+  // Keeps the "Actions globales" toggles applied to imports without clobbering an
+  // import that legitimately brought its own exo/scroll while a toggle is off.
+  function inheritActiveGlobals(card: Card): void {
+    if (allCardsScrolled()) {
+      card.investments ??= {};
+      for (const s of INVESTABLE_STATS) {
+        card.investments[s] = { ...getInvestment(card, s), scrolled: true };
+      }
+    }
+    const exo = { ...getExo(card) };
+    let changed = false;
+    for (const key of ['pa', 'pm', 'po'] as ExoKey[]) {
+      if (allCardsExo(key)) { exo[key] = true; changed = true; }
+    }
+    if (changed) card.exo = exo;
+  }
+
   function setClass(cardId: string, classId: ClassId): void {
     const idx = findIndex(cardId);
     cards.value[idx].classId = classId;
@@ -249,6 +268,7 @@ export const useBuildStore = defineStore('build', () => {
       ...card,
       classId: card.classId ?? prev.classId,
     };
+    inheritActiveGlobals(next);
     cards.value.splice(idx + 1, 0, next);
   }
 
