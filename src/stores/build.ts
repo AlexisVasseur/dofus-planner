@@ -52,6 +52,10 @@ export const useBuildStore = defineStore('build', () => {
   // derived "Actions globales" toggles stay consistent (and the card immediately benefits).
   // Scroll is set explicitly (not left to the scrolled-by-default), so a globally-OFF Parcho
   // produces an unscrolled new card.
+  // The app's global toggles are authoritative for EVERY new or imported card:
+  // each created card's scroll + exo are forced to match the current global state
+  // (ON → applied, OFF → cleared), regardless of what an import brought itself.
+  // Invested amounts are preserved. Keeps the "Actions globales" toggles consistent.
   function applyGlobalsToNewCard(card: Card): void {
     const scrolled = allCardsScrolled();
     card.investments ??= {};
@@ -59,25 +63,6 @@ export const useBuildStore = defineStore('build', () => {
       card.investments[s] = { ...getInvestment(card, s), scrolled };
     }
     card.exo = { pa: allCardsExo('pa'), pm: allCardsExo('pm'), po: allCardsExo('po') };
-  }
-
-  // Variant for IMPORTED cards (which carry their own scroll/exo): only turn ON the
-  // global toggles that are currently fully active, never wipe the card's own flags.
-  // Keeps the "Actions globales" toggles applied to imports without clobbering an
-  // import that legitimately brought its own exo/scroll while a toggle is off.
-  function inheritActiveGlobals(card: Card): void {
-    if (allCardsScrolled()) {
-      card.investments ??= {};
-      for (const s of INVESTABLE_STATS) {
-        card.investments[s] = { ...getInvestment(card, s), scrolled: true };
-      }
-    }
-    const exo = { ...getExo(card) };
-    let changed = false;
-    for (const key of ['pa', 'pm', 'po'] as ExoKey[]) {
-      if (allCardsExo(key)) { exo[key] = true; changed = true; }
-    }
-    if (changed) card.exo = exo;
   }
 
   function setClass(cardId: string, classId: ClassId): void {
@@ -268,7 +253,7 @@ export const useBuildStore = defineStore('build', () => {
       ...card,
       classId: card.classId ?? prev.classId,
     };
-    inheritActiveGlobals(next);
+    applyGlobalsToNewCard(next);
     cards.value.splice(idx + 1, 0, next);
   }
 

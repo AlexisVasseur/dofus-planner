@@ -96,12 +96,12 @@ describe('build store — new cards inherit active global options', () => {
       expect(getInvestment(nc, 'force').invested).toBe(80); // invested preserved
     });
 
-    it('does NOT wipe the imported card own exo when the toggle is globally off', () => {
+    it('forces the imported card exo OFF when the toggle is globally off (app is authoritative)', () => {
       const s = useBuildStore();
-      // global exo off (default). The import brought pm=true itself.
+      // global exo off (default). The import brought pm=true itself — the app wins.
       const imported = makeImportedCard({ exo: { pa: false, pm: true, po: false } });
       s.addCardAfter(s.cards[0].id, imported);
-      expect(getExo(s.cards[1]).pm).toBe(true); // preserved, not forced off
+      expect(getExo(s.cards[1]).pm).toBe(false); // cleared — global state takes precedence
     });
   });
 });
