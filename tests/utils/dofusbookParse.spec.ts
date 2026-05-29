@@ -1,12 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { parseDofusbookText } from '@/utils/dofusbookParse';
-
-const fixture = readFileSync(
-  resolve(__dirname, '../fixtures/dofusbook-extract.txt'),
-  'utf8',
-);
+import fixture from '../fixtures/dofusbook-extract.txt?raw';
 
 describe('parseDofusbookText', () => {
   it('parses class, level, title from the header', () => {
