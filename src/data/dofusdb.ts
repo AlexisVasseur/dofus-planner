@@ -47,6 +47,15 @@ export interface Item {
   set?: ItemSet;
 }
 
+/** A panoplie summary from the /item-sets endpoint. The endpoint embeds the
+ *  member items, so `itemIds` comes from that list — no second fetch needed. */
+export interface ItemSetSummary {
+  id: number;
+  name: string;
+  level: number;
+  itemIds: number[];
+}
+
 function normalizeSearch(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
 }
@@ -187,6 +196,40 @@ export async function fetchItem(id: number): Promise<Item> {
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
   const raw = (await res.json()) as RawItem;
   return mapItem(raw);
+}
+
+interface RawItemSetEntry {
+  id: number;
+  name?: { fr?: string; en?: string };
+  level?: number;
+  items?: { id: number }[];
+}
+
+export interface FetchItemSetsOpts {
+  search: string;
+  limit: number;
+  skip?: number;
+}
+
+export async function fetchItemSets(opts: FetchItemSetsOpts): Promise<ItemSetSummary[]> {
+  const params = new URLSearchParams();
+  params.append('$limit', String(opts.limit));
+  if (opts.skip && opts.skip > 0) params.append('$skip', String(opts.skip));
+  params.append('$sort', '-level');
+  const normalizedSearch = normalizeSearch(opts.search);
+  if (normalizedSearch.length > 0) {
+    params.append('slug.fr[$search]', normalizedSearch);
+  }
+  const url = `${BASE_URL}/item-sets?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
+  const json = (await res.json()) as { data?: RawItemSetEntry[] };
+  return (json.data ?? []).map((raw) => ({
+    id: raw.id,
+    name: raw.name?.fr ?? raw.name?.en ?? '',
+    level: raw.level ?? 0,
+    itemIds: (raw.items ?? []).map((i) => i.id),
+  }));
 }
 
 interface RawEffectTemplate {
