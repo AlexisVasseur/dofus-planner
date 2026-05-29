@@ -53,4 +53,14 @@ describe('fetchItemSets', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500 }));
     await expect(fetchItemSets({ search: 'x', limit: 20 })).rejects.toThrow(/500/);
   });
+
+  it('appends $skip only when > 0', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
+    vi.stubGlobal('fetch', fetchMock);
+    await fetchItemSets({ search: 'x', limit: 20, skip: 40 });
+    expect(fetchMock.mock.calls[0][0] as string).toContain('%24skip=40');
+    fetchMock.mockClear();
+    await fetchItemSets({ search: 'x', limit: 20, skip: 0 });
+    expect(fetchMock.mock.calls[0][0] as string).not.toContain('%24skip');
+  });
 });

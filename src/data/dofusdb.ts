@@ -213,13 +213,7 @@ export interface FetchItemSetsOpts {
 
 export async function fetchItemSets(opts: FetchItemSetsOpts): Promise<ItemSetSummary[]> {
   const params = new URLSearchParams();
-  params.append('$limit', String(opts.limit));
-  if (opts.skip && opts.skip > 0) params.append('$skip', String(opts.skip));
-  params.append('$sort', '-level');
-  const normalizedSearch = normalizeSearch(opts.search);
-  if (normalizedSearch.length > 0) {
-    params.append('slug.fr[$search]', normalizedSearch);
-  }
+  appendCommonItemQuery(params, opts);
   const url = `${BASE_URL}/item-sets?${params.toString()}`;
   const res = await fetch(url);
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
