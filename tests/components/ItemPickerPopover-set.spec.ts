@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { mount } from '@vue/test-utils';
+import { mount, flushPromises } from '@vue/test-utils';
 import { createPinia, setActivePinia } from 'pinia';
 import { ref } from 'vue';
 
@@ -22,7 +22,7 @@ vi.mock('@/composables/useItemSetSearch', () => ({
 const ensureItems = vi.fn().mockResolvedValue(undefined);
 vi.mock('@/composables/useItemCatalog', async (orig) => {
   const actual = await orig<typeof import('@/composables/useItemCatalog')>();
-  return { ...actual, ensureItems: (...a: number[][]) => ensureItems(...a) };
+  return { ...actual, ensureItems: (ids: number[]) => ensureItems(ids) };
 });
 
 import ItemPickerPopover from '@/components/ItemPickerPopover.vue';
@@ -56,8 +56,7 @@ describe('ItemPickerPopover — set mode', () => {
     const w = mount(ItemPickerPopover, { attachTo: document.body });
     await w.vm.$nextTick();
     await w.find('[data-testid="set-row"]').trigger('click');
-    await Promise.resolve(); // let the awaited ensureItems resolve
-    await w.vm.$nextTick();
+    await flushPromises();
 
     expect(ensureItems).toHaveBeenCalledWith([101, 102]);
     expect(equipSpy).toHaveBeenCalledWith(cardId, [101, 102]);
