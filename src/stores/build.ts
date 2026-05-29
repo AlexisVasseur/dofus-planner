@@ -7,21 +7,9 @@ import { SLOT_ORDER, type SlotType, DOFUS_COUNT } from '@/types/slots';
 import { randomId } from '@/utils/id';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getInvestment, getExo } from '@/utils/statCost';
-import { SLOT_TO_TYPE_IDS } from '@/data/dofusdb';
+import { RING_TYPE_ID, TYPE_ID_TO_SLOT } from '@/utils/typeIdSlots';
 
 export type ExoKey = 'pa' | 'pm' | 'po';
-
-// typeId → slot, EXCLUDING the two ring slots (typeId 9 maps to both, handled
-// separately in equipItemSet). Every other typeId maps to exactly one slot.
-const RING_TYPE_ID = 9;
-const TYPE_ID_TO_SLOT: Record<number, SlotType> = (() => {
-  const map: Record<number, SlotType> = {};
-  for (const slot of SLOT_ORDER) {
-    if (slot === 'anneau1' || slot === 'anneau2') continue;
-    for (const tid of SLOT_TO_TYPE_IDS[slot]) map[tid] = slot;
-  }
-  return map;
-})();
 
 function emptySlots(): Record<SlotType, ItemRef | null> {
   const result = {} as Record<SlotType, ItemRef | null>;
