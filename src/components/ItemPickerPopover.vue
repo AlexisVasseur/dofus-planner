@@ -3,11 +3,12 @@ import { computed, ref, watch, nextTick } from 'vue';
 import { useEventListener, useWindowSize, onClickOutside } from '@vueuse/core';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
-import { useItemSearch, isOverLeveled, getCachedItem, renderItemStatsMax, type SearchTarget } from '@/composables/useItemCatalog';
+import { useItemSearch, isOverLeveled, getCachedItem, renderItemStatsMax, ensureItems, type SearchTarget } from '@/composables/useItemCatalog';
+import { useItemSetSearch } from '@/composables/useItemSetSearch';
 import { SLOT_PICK_PHRASE } from '@/types/slots';
 import { useToast } from '@/composables/useToast';
 import ItemStatsTooltip from './ItemStatsTooltip.vue';
-import type { Item } from '@/data/dofusdb';
+import type { Item, ItemSetSummary } from '@/data/dofusdb';
 
 const ui = useUiStore();
 const build = useBuildStore();
@@ -118,6 +119,7 @@ useEventListener(window, 'resize', recomputePosition);
 useEventListener(window, 'scroll', recomputePosition, { passive: true, capture: true });
 
 const target = computed(() => ui.itemPickerTarget);
+const isSetMode = computed(() => target.value?.kind === 'set');
 
 // Resolve the search target for DofusDB:
 // - slot picker: query the slot's typeIds (typeId filtering server-side)
@@ -125,7 +127,8 @@ const target = computed(() => ui.itemPickerTarget);
 const slotForQuery = computed<SearchTarget>(() => {
   if (!target.value) return null;
   if (target.value.kind === 'slot') return target.value.slot;
-  return 'dofus';
+  if (target.value.kind === 'dofus') return 'dofus';
+  return null; // set mode → item search idle; set search drives results
 });
 const search = ref('');
 
@@ -219,6 +222,25 @@ const maxLevel = computed<number | null>(() => {
 });
 const { results, loading, loadingMore, error, loadMore } = useItemSearch(slotForFilter, search, maxLevel);
 
+const setSearch = useItemSetSearch(search, isSetMode);
+const equipping = ref(false);
+const equipError = ref<string | null>(null);
+
+async function pickSet(set: ItemSetSummary): Promise<void> {
+  if (!target.value || target.value.kind !== 'set') return;
+  equipping.value = true;
+  equipError.value = null;
+  try {
+    await ensureItems(set.itemIds);
+    build.equipItemSet(target.value.cardId, set.itemIds);
+    ui.closeItemPicker();
+  } catch (e) {
+    equipError.value = e instanceof Error ? e.message : String(e);
+  } finally {
+    equipping.value = false;
+  }
+}
+
 // Infinite scroll: when the user nears the bottom of the list, request the next page.
 // Triggered ~80px before the absolute bottom so the next batch lands before they see a gap.
 const INFINITE_SCROLL_THRESHOLD = 80;
@@ -269,12 +291,13 @@ const filtered = computed(() => {
 
 const sheetTitle = computed(() => {
   if (!target.value) return '';
+  if (target.value.kind === 'set') return 'Choisir une panoplie';
   if (target.value.kind === 'slot') return `Choisir ${SLOT_PICK_PHRASE[target.value.slot]}`;
   return `Choisir un dofus / trophée`;
 });
 
 function pick(itemId: number) {
-  if (!target.value) return;
+  if (!target.value || target.value.kind === 'set') return;
   if (!rangeMode.value) {
     if (target.value.kind === 'slot') {
       build.setSlot(target.value.cardId, target.value.slot, { itemId });
@@ -376,7 +399,7 @@ watch(target, () => { onRowLeave(); });
       <!-- Tranche (bulk-apply) toggle. OFF = single-card pick (current card only).
            ON exposes two clamp-to-[1,200] number inputs pre-filled with the current
            card's level → next card's level - 1 (or 200 if last). -->
-      <div class="px-5 py-3 border-b border-border-subtle flex items-center gap-3">
+      <div v-if="!isSetMode" class="px-5 py-3 border-b border-border-subtle flex items-center gap-3">
         <button
           type="button"
           role="switch"
@@ -425,7 +448,7 @@ watch(target, () => { onRowLeave(); });
           class="w-full bg-white/[0.04] border border-white/10 rounded-md px-3 py-2 font-sans text-xs text-text-default outline-none focus:border-[#5DCFE0]/60 focus:bg-[#5DCFE0]/[0.04] transition-colors"
         />
       </div>
-      <div class="flex flex-wrap gap-1.5 px-5 py-3 border-b border-border-subtle">
+      <div v-if="!isSetMode" class="flex flex-wrap gap-1.5 px-5 py-3 border-b border-border-subtle">
         <button
           v-for="opt in [
             { mode: 'eligible', label: '≤ Lv ' + (card?.level ?? '?') },
@@ -453,6 +476,7 @@ watch(target, () => { onRowLeave(); });
         >{{ opt.label }}</button>
       </div>
       <div ref="listRef" class="flex-1 overflow-y-auto px-2 py-1.5 thin-scroll" @scroll.passive="onListScroll">
+        <template v-if="!isSetMode">
         <!-- Loading skeleton: 8 placeholder rows mimicking the real item-row layout
              so when results land they replace the skeletons without flicker.
              Forced on for 500ms after target/filter/sort changes for instant feedback. -->
@@ -516,6 +540,27 @@ watch(target, () => { onRowLeave(); });
           class="flex items-center justify-center py-3 font-sans text-[10px] uppercase tracking-[0.06em] text-text-faint"
           aria-live="polite"
         >Chargement…</div>
+        </template>
+        <template v-else>
+          <p v-if="setSearch.loading.value" class="font-sans text-xs text-text-dim px-3 py-4">Chargement…</p>
+          <p v-else-if="equipError" class="font-sans text-xs text-danger-soft px-3 py-4">Erreur&nbsp;: {{ equipError }}</p>
+          <p v-else-if="setSearch.error.value" class="font-sans text-xs text-danger-soft px-3 py-4">Erreur&nbsp;: {{ setSearch.error.value }}</p>
+          <p v-else-if="setSearch.results.value.length === 0" class="font-sans text-xs text-text-dim px-3 py-4">Aucune panoplie.</p>
+          <button
+            v-else
+            v-for="set in setSearch.results.value"
+            :key="set.id"
+            data-testid="set-row"
+            type="button"
+            class="item flex items-center justify-between gap-3 px-3 py-2.5 rounded-md w-full transition-colors hover:bg-[#8AE0EE]/[0.06] disabled:opacity-50"
+            :disabled="equipping"
+            @click="pickSet(set)"
+          >
+            <span class="font-sans text-xs font-medium text-text-default truncate text-left flex-1 min-w-0">{{ set.name }}</span>
+            <span class="font-mono text-[10px] text-white/70 shrink-0">{{ set.itemIds.length }} pièces</span>
+            <span class="font-mono text-[10px] text-white rounded px-2 py-0.5 border border-border-default bg-bg-page shrink-0">Niv. {{ set.level }}</span>
+          </button>
+        </template>
       </div>
       <!-- Shared hover tooltip for the rows in the search list -->
       <ItemStatsTooltip :open="hoveredItem !== null" :trigger-el="hoveredEl" :item="hoveredItem" />
