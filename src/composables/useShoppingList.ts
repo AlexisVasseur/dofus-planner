@@ -22,17 +22,24 @@ export interface ShoppingList {
     items: number;
     activeRooms: number;
     perRoom: Record<RoomId, number>;
+    /** Quantity-aware total: sums counts[itemId] (the ×N badge) instead of distinct
+     *  list entries. "Number of copies to actually buy." */
+    units: number;
+    /** Per-room quantity total (same quantity semantics as `units`). */
+    unitsPerRoom: Record<RoomId, number>;
   };
 }
 
 function emptyShoppingList(): ShoppingList {
   const rooms = {} as ShoppingList['rooms'];
   const perRoom = {} as ShoppingList['totals']['perRoom'];
+  const unitsPerRoom = {} as ShoppingList['totals']['unitsPerRoom'];
   for (const r of ROOM_ORDER) {
     rooms[r] = {};
     perRoom[r] = 0;
+    unitsPerRoom[r] = 0;
   }
-  return { rooms, counts: {}, totals: { items: 0, activeRooms: 0, perRoom } };
+  return { rooms, counts: {}, totals: { items: 0, activeRooms: 0, perRoom, units: 0, unitsPerRoom } };
 }
 
 export function useShoppingList(): ComputedRef<ShoppingList> {
@@ -121,19 +128,27 @@ export function useShoppingList(): ComputedRef<ShoppingList> {
       }
     }
 
-    // Compute totals.
+    // Compute totals. `n` counts distinct list entries; `units` sums counts[itemId]
+    // (the ×N badge) so the quantity totals reflect copies to actually buy.
     let totalItems = 0;
+    let totalUnits = 0;
     let activeRooms = 0;
     for (const room of ROOM_ORDER) {
       let n = 0;
+      let units = 0;
       for (const npc of Object.keys(result.rooms[room]) as NpcId[]) {
-        n += result.rooms[room][npc]!.length;
+        const items = result.rooms[room][npc]!;
+        n += items.length;
+        for (const item of items) units += result.counts[item.id] ?? 1;
       }
       result.totals.perRoom[room] = n;
+      result.totals.unitsPerRoom[room] = units;
       totalItems += n;
+      totalUnits += units;
       if (n > 0) activeRooms += 1;
     }
     result.totals.items = totalItems;
+    result.totals.units = totalUnits;
     result.totals.activeRooms = activeRooms;
     return result;
   });

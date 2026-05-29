@@ -104,6 +104,15 @@ async function copyItem(name: string, key: string): Promise<void> {
            Each room is its own floating panel; the bottom timeline minimap drives
            which room is in view by setting ui.activeCardId. -->
       <div class="flex flex-col gap-6 pt-6 pb-12">
+        <!-- Global total: quantity-aware (sums the ×N badges), pinned above the rooms. -->
+        <div class="mx-4 flex items-center justify-center">
+          <span class="inline-flex items-center gap-2 rounded-full border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] px-4 py-1.5">
+            <span class="font-mono font-extrabold text-[15px] text-[#8AE0EE] tabular-nums">{{ list.totals.units }}</span>
+            <span class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase">
+              {{ list.totals.units > 1 ? 'items à acheter' : 'item à acheter' }}
+            </span>
+          </span>
+        </div>
         <div
           v-for="room in visibleRooms"
           :key="room"
@@ -111,10 +120,14 @@ async function copyItem(name: string, key: string): Promise<void> {
           class="mx-4 rounded-xl border border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4 scroll-mt-16"
           style="background: rgba(8,8,8,0.2);"
         >
-          <header class="mb-3">
+          <header class="mb-3 flex items-baseline gap-2">
             <h2 class="font-sans font-bold text-[12px] text-[#8AE0EE] tracking-[0.1em] uppercase">
               {{ ROOM_LABEL[room] }}
             </h2>
+            <span
+              v-if="list.totals.unitsPerRoom[room] > 0"
+              class="font-mono font-bold text-[12px] text-text-muted tabular-nums"
+            >· {{ list.totals.unitsPerRoom[room] }}</span>
           </header>
 
           <p

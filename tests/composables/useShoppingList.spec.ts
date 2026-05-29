@@ -231,6 +231,60 @@ describe('useShoppingList', () => {
     expect(list.counts[904]).toBe(2);
   });
 
+  // Unit totals: quantity-aware totals that sum counts[itemId] (the ×N badge),
+  // unlike totals.items / perRoom which count distinct list entries.
+  describe('unit totals (quantities)', () => {
+    it('empty timeline → units and unitsPerRoom all zero', () => {
+      const s = useBuildStore();
+      s.replaceCards([makeCard(null)]);
+      const list = useShoppingList().value;
+      expect(list.totals.units).toBe(0);
+      for (const room of ['1-49', '50-99', '100-149', '150-199', '200', 'hub'] as const) {
+        expect(list.totals.unitsPerRoom[room]).toBe(0);
+      }
+    });
+
+    it('distinct items each count once → units equals items', () => {
+      seedItem(1101, { level: 1, typeId: 16 });
+      seedItem(1102, { level: 1, typeId: 17 });
+      const s = useBuildStore();
+      s.replaceCards([
+        makeCard(1, { slots: { coiffe: { itemId: 1101 }, cape: { itemId: 1102 } } }),
+      ]);
+      const list = useShoppingList().value;
+      expect(list.totals.unitsPerRoom['1-49']).toBe(2);
+      expect(list.totals.units).toBe(2);
+    });
+
+    it('item worn twice on one card (×2) → contributes 2 units', () => {
+      seedItem(1103, { name: 'Silimelle', level: 1, typeId: 9 });
+      const s = useBuildStore();
+      s.replaceCards([
+        makeCard(1, { slots: { anneau1: { itemId: 1103 }, anneau2: { itemId: 1103 } } }),
+      ]);
+      const list = useShoppingList().value;
+      expect(list.totals.unitsPerRoom['1-49']).toBe(2);
+      expect(list.totals.units).toBe(2);
+      // distinct-item totals stay at 1 (one list entry)
+      expect(list.totals.perRoom['1-49']).toBe(1);
+      expect(list.totals.items).toBe(1);
+    });
+
+    it('units sum across rooms', () => {
+      seedItem(1104, { name: 'Silimelle', level: 1, typeId: 9 });      // 1-49, ×2
+      seedItem(1105, { name: 'Cape haute', level: 120, typeId: 17 });  // 100-149, ×1
+      const s = useBuildStore();
+      s.replaceCards([
+        makeCard(1, { slots: { anneau1: { itemId: 1104 }, anneau2: { itemId: 1104 } } }),
+        makeCard(120, { slots: { cape: { itemId: 1105 } } }),
+      ]);
+      const list = useShoppingList().value;
+      expect(list.totals.unitsPerRoom['1-49']).toBe(2);
+      expect(list.totals.unitsPerRoom['100-149']).toBe(1);
+      expect(list.totals.units).toBe(3);
+    });
+  });
+
   // Bug regression: items are bucketed by their OWN levelRequired, never by the card level.
   it('item levelRequired drives the room, not the card level', () => {
     seedItem(701, { name: 'Coiffe haute', level: 60, typeId: 16 }); // → 50-99
