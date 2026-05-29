@@ -52,7 +52,15 @@ export function useItemSetSearch(search: Ref<string>, enabled: Ref<boolean>) {
     }
   }
 
-  watch([search, enabled], run, { immediate: true });
+  watch([search, enabled], () => {
+    if (!enabled.value) {
+      results.value = [];
+      hasMore.value = false;
+      error.value = null;
+      return;
+    }
+    void run();
+  }, { immediate: true });
 
   return { results, loading, loadingMore, error, hasMore, loadMore };
 }

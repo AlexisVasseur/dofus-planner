@@ -69,4 +69,33 @@ describe('useItemSetSearch', () => {
     expect(error.value).toBe('boom');
     expect(results.value).toEqual([]);
   });
+
+  it('re-fetches when the search term changes while enabled', async () => {
+    fetchItemSets.mockResolvedValue(makeSets([1]));
+    const search = ref('a');
+    const enabled = ref(true);
+    useItemSetSearch(search, enabled);
+    await vi.advanceTimersByTimeAsync(300);
+    await nextTick();
+    expect(fetchItemSets).toHaveBeenCalledTimes(1);
+
+    search.value = 'ab';
+    await vi.advanceTimersByTimeAsync(300);
+    await nextTick();
+    expect(fetchItemSets).toHaveBeenCalledTimes(2);
+    expect(fetchItemSets).toHaveBeenLastCalledWith({ search: 'ab', limit: 50, skip: 0 });
+  });
+
+  it('clears results when enabled flips to false', async () => {
+    fetchItemSets.mockResolvedValue(makeSets([1, 2]));
+    const search = ref('a');
+    const enabled = ref(true);
+    const { results } = useItemSetSearch(search, enabled);
+    await vi.advanceTimersByTimeAsync(300);
+    await nextTick();
+    expect(results.value).toHaveLength(2);
+    enabled.value = false;
+    await nextTick();
+    expect(results.value).toEqual([]);
+  });
 });
