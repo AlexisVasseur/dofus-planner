@@ -82,6 +82,7 @@ export const useBuildStore = defineStore('build', () => {
   function equipItemSet(cardId: string, itemIds: number[]): void {
     const idx = findIndex(cardId);
     const card = cards.value[idx];
+    // Mutating slot props on this reactive proxy is tracked by Vue (same as setSlot).
     const rings: number[] = [];
     for (const id of itemIds) {
       const item = getCachedItem(id);

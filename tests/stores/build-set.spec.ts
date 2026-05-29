@@ -108,4 +108,13 @@ describe('build store — equipItemSet', () => {
     seed(1, 16);
     expect(() => s.equipItemSet('nope', [1])).toThrow(/Card not found/);
   });
+
+  it('three rings → only the first two are placed, extras dropped', () => {
+    const s = useBuildStore();
+    const c = s.cards[0];
+    seed(10, 9); seed(11, 9); seed(12, 9);
+    s.equipItemSet(c.id, [10, 11, 12]);
+    expect(c.slots.anneau1).toEqual({ itemId: 10 });
+    expect(c.slots.anneau2).toEqual({ itemId: 11 });
+  });
 });
