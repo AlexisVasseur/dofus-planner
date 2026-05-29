@@ -206,7 +206,7 @@ export async function searchItemsByName(name: string, limit = 5): Promise<Item[]
   params.append('$sort', '-level');
   const q = normalizeSearch(name);
   if (q.length > 0) params.append('slug.fr[$search]', q);
-  const res = await fetch(`${BASE_URL}/items?${params.toString().replace(/\+/g, '%20')}`);
+  const res = await fetch(`${BASE_URL}/items?${params.toString()}`);
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
   const json = (await res.json()) as { data?: RawItem[] };
   return (json.data ?? []).map(mapItem);

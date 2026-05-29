@@ -15,17 +15,19 @@ describe('searchItemsByName', () => {
     expect(items).toHaveLength(1);
     expect(items[0]).toMatchObject({ id: 694, name: 'Dofus Pourpre', typeId: 23, levelRequired: 110 });
 
-    const url = fetchMock.mock.calls[0][0] as string;
-    expect(url).toContain('/items?');
-    expect(url).toContain('slug.fr%5B%24search%5D=dofus%20pourpre');
-    expect(url).toContain('%24limit=5');
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.pathname).toBe('/items');
+    expect(url.searchParams.get('slug.fr[$search]')).toBe('dofus pourpre');
+    expect(url.searchParams.get('$limit')).toBe('5');
+    expect(url.searchParams.get('$sort')).toBe('-level');
   });
 
   it('omits the search param when the name is blank', async () => {
     const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ data: [] }) });
     vi.stubGlobal('fetch', fetchMock);
     await searchItemsByName('   ');
-    expect(fetchMock.mock.calls[0][0] as string).not.toContain('slug.fr');
+    const url = new URL(fetchMock.mock.calls[0][0] as string);
+    expect(url.searchParams.has('slug.fr[$search]')).toBe(false);
   });
 
   it('throws on a non-ok response', async () => {
