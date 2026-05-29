@@ -5,7 +5,8 @@ import type { InvestableStat } from '@/types/build';
 
 export type ItemPickerTarget =
   | { kind: 'slot'; cardId: string; slot: SlotType }
-  | { kind: 'dofus'; cardId: string; index: number };
+  | { kind: 'dofus'; cardId: string; index: number }
+  | { kind: 'set'; cardId: string };
 
 export type ViewMode = 'build' | 'switch' | 'purchase';
 
