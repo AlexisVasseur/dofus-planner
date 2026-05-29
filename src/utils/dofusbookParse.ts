@@ -1,4 +1,5 @@
 import type { ClassId } from '@/types/classes';
+import type { InvestableStat } from '@/types/build';
 import { normalizeSearch } from '@/data/dofusdb';
 
 // The 19 class ids, used to validate the header's class word (normalized).
@@ -12,11 +13,25 @@ const CLASS_IDS: ReadonlySet<string> = new Set<ClassId>([
 // (e.g. the build's element indicator right after "Boosts actifs"). Dropped.
 const ELEMENT_NOISE: ReadonlySet<string> = new Set(['air', 'terre', 'feu', 'eau', 'neutre']);
 
+// French stat-table labels → the app's investable stat keys. Order matches the
+// Dofusbook stats panel (Puissance is item-only, not investable, so excluded).
+const STAT_LABELS: ReadonlyArray<readonly [string, InvestableStat]> = [
+  ['Vitalité', 'vitalite'],
+  ['Sagesse', 'sagesse'],
+  ['Force', 'force'],
+  ['Intelligence', 'intelligence'],
+  ['Chance', 'chance'],
+  ['Agilité', 'agilite'],
+];
+
 export interface ParsedDofusbook {
   classId: ClassId | null;
   level: number | null;
   title: string | null;
   itemNames: string[];
+  /** Invested characteristic points per stat (the "Base" column). Only stats with
+   *  a non-zero invested value are present. */
+  investments: Partial<Record<InvestableStat, number>>;
 }
 
 function clampLevel(n: number): number | null {
@@ -103,8 +118,38 @@ function parseItemNames(lines: string[]): string[] {
   });
 }
 
+/** Invested points per stat, read from the stats panel's "Base" column. For each
+ *  stat label the following numeric lines are `[+⚡ (elementals only), Base, Parcho,
+ *  <next stat's total>]`. The next stat's total always trails, so Base is the
+ *  third-from-last number (= second-to-last once the trailing total is dropped).
+ *  The panoplie bonus lines later in the page read "100 Vitalité" (number + name on
+ *  one line), so they never match an exact stat-name line and are ignored. */
+function parseInvestments(lines: string[]): Partial<Record<InvestableStat, number>> {
+  const out: Partial<Record<InvestableStat, number>> = {};
+  for (const [label, stat] of STAT_LABELS) {
+    const idx = lines.findIndex((l) => l === label);
+    if (idx === -1) continue;
+    const nums: number[] = [];
+    for (let i = idx + 1; i < lines.length; i++) {
+      const l = lines[i];
+      if (l === '' || !/^\d+$/.test(l)) break; // stop at the blank gap / next stat name
+      nums.push(Number(l));
+    }
+    if (nums.length < 3) continue; // need at least [Base, Parcho, nextTotal]
+    const base = nums[nums.length - 3];
+    if (base > 0) out[stat] = base;
+  }
+  return out;
+}
+
 export function parseDofusbookText(text: string): ParsedDofusbook {
   const lines = text.split('\n').map((l) => l.trim());
   const { classId, title } = parseClassAndTitle(lines);
-  return { classId, level: parseStuffLevel(lines), title, itemNames: parseItemNames(lines) };
+  return {
+    classId,
+    level: parseStuffLevel(lines),
+    title,
+    itemNames: parseItemNames(lines),
+    investments: parseInvestments(lines),
+  };
 }

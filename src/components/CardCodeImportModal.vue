@@ -101,6 +101,12 @@ async function submitDofusbook(): Promise<void> {
       slots: resolved.slots,
       dofus: resolved.dofus as Card['dofus'],
     };
+    // Invested characteristic points parsed from the stats panel's "Base" column.
+    const investments: Card['investments'] = {};
+    for (const [stat, invested] of Object.entries(parsed.investments)) {
+      investments[stat as keyof typeof investments] = { invested, scrolled: true };
+    }
+    if (Object.keys(investments).length > 0) card.investments = investments;
     build.addCardAfter(afterId, card);
     ui.setActiveCard(card.id);
     const total = parsed.itemNames.length;

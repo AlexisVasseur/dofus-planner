@@ -30,6 +30,10 @@ const SAMPLE = [
   'Dofusbook',
   'Feca 133 - Draegnerys',
   '',
+  'Sagesse',
+  '186',
+  '100',
+  '821',
   'Niv. Stuff',
   'Niveau 133',
   '',
@@ -80,6 +84,7 @@ describe('CardCodeImportModal — Dofusbook mode', () => {
     expect(inserted.level).toBe(133);
     expect(inserted.title).toBe('Draegnerys');
     expect(inserted.slots.coiffe).toEqual({ itemId: 1 });
+    expect(inserted.investments?.sagesse).toEqual({ invested: 186, scrolled: true });
     expect(ui.codeImportAfterCardId).toBeNull(); // modal closed
   });
 

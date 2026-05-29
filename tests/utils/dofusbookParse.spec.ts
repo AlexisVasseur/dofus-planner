@@ -24,6 +24,11 @@ describe('parseDofusbookText', () => {
       expect(r.itemNames).toContain('Dofus Pourpre');
       expect(r.itemNames[r.itemNames.length - 1]).toBe('Ravageur Terre');
     });
+
+    it('reads invested points from the "Base" column (Sagesse 186, Force 101)', () => {
+      const r = parseDofusbookText(fixture);
+      expect(r.investments).toEqual({ sagesse: 186, force: 101 });
+    });
   });
 
   // Fixture 2: header is "Cra 12 PA Kanni" (NO " - ", the "12" is part of the build
@@ -51,6 +56,11 @@ describe('parseDofusbookText', () => {
       expect(r.itemNames).toContain('Dofus Cawotte');
       // the bare "air" element label is dropped
       expect(r.itemNames).not.toContain('air');
+    });
+
+    it('reads invested points from the "Base" column (Sagesse 156, Agilité 25)', () => {
+      const r = parseDofusbookText(fixture2);
+      expect(r.investments).toEqual({ sagesse: 156, agilite: 25 });
     });
   });
 
