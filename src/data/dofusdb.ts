@@ -56,7 +56,7 @@ export interface ItemSetSummary {
   itemIds: number[];
 }
 
-function normalizeSearch(s: string): string {
+export function normalizeSearch(s: string): string {
   return s.toLowerCase().normalize('NFD').replace(/\p{Diacritic}/gu, '').trim();
 }
 
@@ -196,6 +196,20 @@ export async function fetchItem(id: number): Promise<Item> {
   if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
   const raw = (await res.json()) as RawItem;
   return mapItem(raw);
+}
+
+/** Search items across ALL types by name (no typeId filter) — used by the Dofusbook
+ *  text importer, which knows only item names. Sorted by descending level. */
+export async function searchItemsByName(name: string, limit = 5): Promise<Item[]> {
+  const params = new URLSearchParams();
+  params.append('$limit', String(limit));
+  params.append('$sort', '-level');
+  const q = normalizeSearch(name);
+  if (q.length > 0) params.append('slug.fr[$search]', q);
+  const res = await fetch(`${BASE_URL}/items?${params.toString().replace(/\+/g, '%20')}`);
+  if (!res.ok) throw new Error(`DofusDB request failed: ${res.status}`);
+  const json = (await res.json()) as { data?: RawItem[] };
+  return (json.data ?? []).map(mapItem);
 }
 
 interface RawItemSetEntry {
