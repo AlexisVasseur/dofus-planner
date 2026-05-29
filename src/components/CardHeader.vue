@@ -21,6 +21,7 @@ const emit = defineEmits<{
   'remove': [];
   'open-dofusbook': [];
   'copy-code': [];
+  'equip-set': [];
 }>();
 
 const editingLevel = ref(false);
@@ -82,6 +83,7 @@ function closeMenu(): void { menuOpen.value = false; }
 
 function onMenuCopyCode(): void { closeMenu(); emit('copy-code'); }
 function onMenuOpenDofusbook(): void { closeMenu(); emit('open-dofusbook'); }
+function onMenuEquipSet(): void { closeMenu(); emit('equip-set'); }
 function onMenuRemove(): void { closeMenu(); emit('remove'); }
 
 onClickOutside(menuRef, (e) => {
@@ -252,6 +254,20 @@ function cancelTitle() {
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
           Ouvrir Dofusbook
+        </button>
+        <button
+          v-if="!readonly"
+          data-testid="card-menu-equip-set"
+          type="button"
+          role="menuitem"
+          class="flex items-center gap-2 w-full px-3 py-2 text-left font-sans text-[11px] text-text-default hover:bg-[#5DCFE0]/[0.08] hover:text-[#8AE0EE] transition-colors"
+          @click.stop="onMenuEquipSet"
+        >
+          <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
+            <line x1="7" y1="7" x2="7.01" y2="7" />
+          </svg>
+          Équiper une panoplie
         </button>
         <button
           v-if="!readonly"

@@ -157,6 +157,11 @@ function onDofusPick(index: number): void {
   if (props.readonly) return;
   ui.openItemPicker({ kind: 'dofus', cardId: props.card.id, index });
 }
+
+function onEquipSet(): void {
+  if (props.readonly) return;
+  ui.openItemPicker({ kind: 'set', cardId: props.card.id });
+}
 </script>
 
 <template>
@@ -182,6 +187,7 @@ function onDofusPick(index: number): void {
       @remove="onHeaderRemove"
       @open-dofusbook="onOpenDofusbook"
       @copy-code="onCopyCode"
+      @equip-set="onEquipSet"
     />
     <!-- Body crossfades between equipment view and in-place delete confirm.
          When headerOnly is set (Reader thumbnails), the whole body is skipped. -->
