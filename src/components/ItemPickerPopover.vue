@@ -355,8 +355,8 @@ function onRowLeave(): void {
   if (rowHoverTimer !== null) { clearTimeout(rowHoverTimer); rowHoverTimer = null; }
   hoveredItem.value = null;
 }
-// Closing the picker or switching target dismisses any open tooltip.
-watch(target, () => { onRowLeave(); });
+// Closing the picker or switching target dismisses any open tooltip + stale equip error.
+watch(target, () => { onRowLeave(); equipError.value = null; });
 </script>
 
 <template>
