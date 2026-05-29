@@ -53,6 +53,26 @@ export const useBuildStore = defineStore('build', () => {
     return idx;
   }
 
+  function allCardsScrolled(): boolean {
+    return cards.value.length > 0
+      && cards.value.every((c) => INVESTABLE_STATS.every((s) => getInvestment(c, s).scrolled));
+  }
+  function allCardsExo(key: ExoKey): boolean {
+    return cards.value.length > 0 && cards.value.every((c) => getExo(c)[key]);
+  }
+  // A newly created card adopts whatever global toggles are currently fully ON, so the
+  // derived "Actions globales" toggles stay consistent (and the card immediately benefits).
+  // Scroll is set explicitly (not left to the scrolled-by-default), so a globally-OFF Parcho
+  // produces an unscrolled new card.
+  function applyGlobalsToNewCard(card: Card): void {
+    const scrolled = allCardsScrolled();
+    card.investments ??= {};
+    for (const s of INVESTABLE_STATS) {
+      card.investments[s] = { ...getInvestment(card, s), scrolled };
+    }
+    card.exo = { pa: allCardsExo('pa'), pm: allCardsExo('pm'), po: allCardsExo('po') };
+  }
+
   function setClass(cardId: string, classId: ClassId): void {
     const idx = findIndex(cardId);
     cards.value[idx].classId = classId;
@@ -170,6 +190,7 @@ export const useBuildStore = defineStore('build', () => {
       slots: emptySlots(),
       dofus: emptyDofus(),
     };
+    applyGlobalsToNewCard(next);
     cards.value.splice(idx + 1, 0, next);
   }
 
@@ -184,6 +205,7 @@ export const useBuildStore = defineStore('build', () => {
       slots: { ...prev.slots },
       dofus: [...prev.dofus] as Card['dofus'],
     };
+    applyGlobalsToNewCard(copy);
     cards.value.splice(idx + 1, 0, copy);
   }
 

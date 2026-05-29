@@ -120,13 +120,13 @@ function gotoCell(cell: Cell, idx: number): void {
       <button
         ref="bulkTriggerRef"
         type="button"
-        class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2 py-1 rounded-md border transition-colors"
+        class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2.5 py-1 rounded-md border transition-colors"
         :class="bulkOpen
-          ? 'border-[#5DCFE0]/60 text-[#8AE0EE] bg-[#5DCFE0]/[0.10]'
-          : 'border-white/10 text-text-faint hover:text-[#8AE0EE] hover:border-[#8AE0EE]/30'"
-        aria-label="Actions globales sur toutes les cards"
+          ? 'border-[#5DCFE0] text-[#8AE0EE] bg-[#5DCFE0]/[0.12]'
+          : 'border-[#5DCFE0]/50 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10]'"
+        aria-label="Options globales sur toutes les cards"
         @click="toggleBulk"
-      >Bulk</button>
+      >Options globales</button>
       <BulkActionsPopover
         :open="bulkOpen"
         :trigger-el="bulkTriggerRef"
