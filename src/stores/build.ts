@@ -7,8 +7,21 @@ import { SLOT_ORDER, type SlotType, DOFUS_COUNT } from '@/types/slots';
 import { randomId } from '@/utils/id';
 import { getCachedItem } from '@/composables/useItemCatalog';
 import { getInvestment, getExo } from '@/utils/statCost';
+import { SLOT_TO_TYPE_IDS } from '@/data/dofusdb';
 
 export type ExoKey = 'pa' | 'pm' | 'po';
+
+// typeId → slot, EXCLUDING the two ring slots (typeId 9 maps to both, handled
+// separately in equipItemSet). Every other typeId maps to exactly one slot.
+const RING_TYPE_ID = 9;
+const TYPE_ID_TO_SLOT: Record<number, SlotType> = (() => {
+  const map: Record<number, SlotType> = {};
+  for (const slot of SLOT_ORDER) {
+    if (slot === 'anneau1' || slot === 'anneau2') continue;
+    for (const tid of SLOT_TO_TYPE_IDS[slot]) map[tid] = slot;
+  }
+  return map;
+})();
 
 function emptySlots(): Record<SlotType, ItemRef | null> {
   const result = {} as Record<SlotType, ItemRef | null>;
@@ -59,6 +72,36 @@ export const useBuildStore = defineStore('build', () => {
   function setSlot(cardId: string, slot: SlotType, item: ItemRef | null): void {
     const idx = findIndex(cardId);
     cards.value[idx].slots[slot] = item;
+  }
+
+  /** Equip a full panoplie. Each piece overwrites its homologous slot; slots not
+   *  covered by the set are left intact. Rings (typeId 9): one ring goes to the
+   *  first empty ring slot (else overwrites anneau1); two rings fill both slots.
+   *  Pieces whose typeId maps to no slot, or items absent from the cache, are
+   *  skipped (the caller warms the cache beforehand). */
+  function equipItemSet(cardId: string, itemIds: number[]): void {
+    const idx = findIndex(cardId);
+    const card = cards.value[idx];
+    const rings: number[] = [];
+    for (const id of itemIds) {
+      const item = getCachedItem(id);
+      if (!item) continue;
+      if (item.typeId === RING_TYPE_ID) {
+        rings.push(id);
+        continue;
+      }
+      const slot = TYPE_ID_TO_SLOT[item.typeId];
+      if (!slot) continue;
+      card.slots[slot] = { itemId: id };
+    }
+    if (rings.length === 1) {
+      if (card.slots.anneau1 === null) card.slots.anneau1 = { itemId: rings[0] };
+      else if (card.slots.anneau2 === null) card.slots.anneau2 = { itemId: rings[0] };
+      else card.slots.anneau1 = { itemId: rings[0] };
+    } else if (rings.length >= 2) {
+      card.slots.anneau1 = { itemId: rings[0] };
+      card.slots.anneau2 = { itemId: rings[1] };
+    }
   }
 
   function setDofus(cardId: string, index: number, item: ItemRef | null): void {
@@ -220,6 +263,7 @@ export const useBuildStore = defineStore('build', () => {
     setLevel,
     setTitle,
     setSlot,
+    equipItemSet,
     setDofus,
     setSlotRange,
     setDofusRange,
