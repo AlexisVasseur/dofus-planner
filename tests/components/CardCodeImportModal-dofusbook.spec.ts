@@ -23,7 +23,21 @@ function emptySlots() {
     ceinture: null, bottes: null, arme: null, bouclier: null, familier: null,
   };
 }
-const SAMPLE = 'Feca 133 - Draegnerys\n\nForgemagie\nBoosts actifs (0)\nRésumé du stuff';
+// A minimal page the parser recognizes: a "Dofusbook" tab line before the header,
+// the level under "Niv. Stuff", and the item-region anchors. resolveDofusbookItems
+// is mocked, so the item names here don't need to resolve to anything real.
+const SAMPLE = [
+  'Dofusbook',
+  'Feca 133 - Draegnerys',
+  '',
+  'Niv. Stuff',
+  'Niveau 133',
+  '',
+  'Some Item',
+  'Boosts actifs (0)',
+  'Another Item',
+  'Résumé du stuff',
+].join('\n');
 
 beforeEach(() => {
   setActivePinia(createPinia());
