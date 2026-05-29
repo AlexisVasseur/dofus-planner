@@ -80,6 +80,26 @@ describe('resolveDofusbookItems', () => {
     expect(r.unresolved).toEqual(['Cosmétique']);
   });
 
+  it('picks the exact-name match even when a fuzzy gear result ranks first', async () => {
+    // "Voyageur" the prysmaradite (type 151) collides with "Ceinture des Voyageurs"
+    // (type 10, higher level → ranked first). The exact name must win.
+    searchItemsByName.mockResolvedValue([
+      item(1, 'Ceinture des Voyageurs', 10, 197),
+      item(2, 'Voyageur', 151, 100),
+    ]);
+    const r = await resolveDofusbookItems(['Voyageur']);
+    expect(r.dofus[0]).toEqual({ itemId: 2 });
+    expect(r.slots.ceinture).toBeNull();
+    expect(r.unresolved).toEqual([]);
+  });
+
+  it('does NOT fuzzy-fall-back to gear when there is no exact name match', async () => {
+    searchItemsByName.mockResolvedValue([item(1, 'Ceinture des Voyageurs', 10, 197)]);
+    const r = await resolveDofusbookItems(['Voyageur']);
+    expect(r.slots.ceinture).toBeNull(); // not wrongly equipped
+    expect(r.unresolved).toEqual(['Voyageur']);
+  });
+
   it('warms the catalog cache with the resolved ids', async () => {
     searchItemsByName.mockResolvedValue([item(1, 'Coiffe', 16)]);
     await resolveDofusbookItems(['Coiffe']);

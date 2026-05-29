@@ -11,21 +11,19 @@ export interface ResolvedBuild {
   resolvedCount: number;
 }
 
-function isUsable(typeId: number): boolean {
-  return typeId === RING_TYPE_ID
-    || typeId === DOFUS_TYPE_ID
-    || typeId === TROPHEE_TYPE_ID
-    || TYPE_ID_TO_SLOT[typeId] !== undefined;
-}
+// Generous page size so the exact match surfaces even when a name collides with
+// higher-level gear that ranks first by level (e.g. "Voyageur" the prysmaradite
+// vs "Ceinture des Voyageurs" lvl 197).
+const SEARCH_LIMIT = 24;
 
-/** Pick the best result for a searched name: exact normalized-name match first,
- *  else the first result whose typeId is equippable; else null. */
+/** Pick the result whose name matches EXACTLY (after normalization). We do NOT fall
+ *  back to a fuzzy "first equippable" result: that would mis-resolve names like
+ *  "Voyageur" to "Ceinture des Voyageurs". No exact match → the name is left
+ *  unresolved and reported, never wrongly equipped. */
 function pickMatch(name: string, results: Item[]): Item | null {
   if (results.length === 0) return null;
   const norm = normalizeSearch(name);
-  const exact = results.find((it) => normalizeSearch(it.name) === norm);
-  if (exact) return exact;
-  return results.find((it) => isUsable(it.typeId)) ?? null;
+  return results.find((it) => normalizeSearch(it.name) === norm) ?? null;
 }
 
 export async function resolveDofusbookItems(itemNames: string[]): Promise<ResolvedBuild> {
@@ -38,7 +36,7 @@ export async function resolveDofusbookItems(itemNames: string[]): Promise<Resolv
   const matches = await Promise.all(
     itemNames.map(async (name) => {
       try {
-        return pickMatch(name, await searchItemsByName(name));
+        return pickMatch(name, await searchItemsByName(name, SEARCH_LIMIT));
       } catch {
         return null;
       }
