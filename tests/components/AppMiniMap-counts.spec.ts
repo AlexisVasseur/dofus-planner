@@ -29,7 +29,7 @@ describe('AppMiniMap — shopping room counts', () => {
     const w = mount(AppMiniMap, { props: { scrollRef: null }, attachTo: document.body });
     await w.vm.$nextTick();
 
-    expect(w.find('[data-testid="room-count-1-49"]').text()).toBe('1');
+    expect(w.find('[data-testid="room-count-1-49"]').text()).toBe('1 items');
     const total = w.find('[data-testid="minimap-total"]');
     expect(total.exists()).toBe(true);
     expect(total.text()).toContain('TOTAL');

@@ -174,7 +174,7 @@ function gotoCell(cell: Cell, idx: number): void {
               v-if="ui.viewMode === 'purchase' && roomCount(cell.payload) > 0"
               :data-testid="`room-count-${cell.payload}`"
               class="font-mono text-[9px] opacity-80"
-            >{{ roomCount(cell.payload) }}</span>
+            >{{ roomCount(cell.payload) }} items</span>
           </button>
         </div>
       </Transition>
@@ -183,10 +183,10 @@ function gotoCell(cell: Cell, idx: number): void {
     <div
       v-if="ui.viewMode === 'purchase'"
       data-testid="minimap-total"
-      class="shrink-0 px-3 py-1 rounded-md border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] flex flex-col items-center justify-center leading-none gap-0.5"
+      class="shrink-0 px-6 min-w-[6rem] py-1 rounded-md border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] flex flex-col items-center justify-center leading-none gap-0.5"
     >
       <span class="font-sans text-[8px] uppercase tracking-[0.08em] text-text-muted">TOTAL</span>
-      <span class="font-mono font-extrabold text-[13px] text-[#8AE0EE] tabular-nums">{{ totalCount }}</span>
+      <span class="font-mono font-extrabold text-[13px] text-[#8AE0EE] tabular-nums">{{ totalCount }} items</span>
     </div>
   </footer>
 </template>
