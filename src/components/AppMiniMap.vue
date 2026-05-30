@@ -146,6 +146,14 @@ function gotoCell(cell: Cell, idx: number): void {
         @toggle-exo="(key, v) => build.applyExoAll(key, v)"
       />
     </template>
+    <!-- Shopping-only: open the "Ajouter des objets" (custom import) modal. -->
+    <button
+      v-if="ui.viewMode === 'purchase'"
+      type="button"
+      data-testid="open-custom-import"
+      class="font-sans font-bold text-[11px] tracking-[0.06em] uppercase shrink-0 px-2.5 py-1 rounded-md border border-[#5DCFE0]/50 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
+      @click="ui.openCustomImport()"
+    >Ajouter des objets</button>
     <div class="flex-1 h-9 rounded-md relative overflow-hidden">
       <Transition name="cells" mode="out-in">
         <div :key="ui.viewMode" class="absolute inset-1 flex gap-[3px]">

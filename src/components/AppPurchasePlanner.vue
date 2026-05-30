@@ -9,7 +9,6 @@ import CustomImportModal from './CustomImportModal.vue';
 const ui = useUiStore();
 const build = useBuildStore();
 const list = useShoppingList();
-const customModalOpen = ref(false);
 
 const hasAnything = computed(() => list.value.totals.items > 0 || list.value.unknown.length > 0);
 
@@ -99,12 +98,6 @@ async function copyItem(name: string, key: string): Promise<void> {
         class="bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-4 py-2 font-sans text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#8AE0EE] transition-colors"
         @click="backToBuild"
       >← Retour à Builder</button>
-      <button
-        type="button"
-        data-testid="open-custom-import"
-        class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
-        @click="customModalOpen = true"
-      >Ajouter des objets</button>
     </div>
 
     <template v-else>
@@ -112,14 +105,6 @@ async function copyItem(name: string, key: string): Promise<void> {
            Each room is its own floating panel; the bottom timeline minimap drives
            which room is in view by setting ui.activeCardId. -->
       <div class="flex flex-col gap-6 pt-6 pb-12">
-        <div class="mx-4 flex items-center justify-center">
-          <button
-            type="button"
-            data-testid="open-custom-import"
-            class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
-            @click="customModalOpen = true"
-          >Ajouter des objets</button>
-        </div>
         <div
           v-for="room in visibleRooms"
           :key="room"
@@ -216,7 +201,7 @@ async function copyItem(name: string, key: string): Promise<void> {
         </div>
       </div>
     </template>
-    <CustomImportModal :open="customModalOpen" @close="customModalOpen = false" />
+    <CustomImportModal :open="ui.customImportOpen" @close="ui.closeCustomImport()" />
   </section>
 </template>
 

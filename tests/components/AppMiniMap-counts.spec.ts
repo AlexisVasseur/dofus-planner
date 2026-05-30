@@ -44,4 +44,21 @@ describe('AppMiniMap — shopping room counts', () => {
     expect(w.find('[data-testid="minimap-total"]').exists()).toBe(false);
     expect(w.text()).toContain('Lv 42');
   });
+
+  it('shows the "Ajouter des objets" button in shopping mode and opens the custom import', async () => {
+    const ui = useUiStore();
+    ui.setViewMode('purchase');
+    const w = mount(AppMiniMap, { props: { scrollRef: null }, attachTo: document.body });
+    const btn = w.find('[data-testid="open-custom-import"]');
+    expect(btn.exists()).toBe(true);
+    expect(btn.text()).toBe('Ajouter des objets');
+    await btn.trigger('click');
+    expect(ui.customImportOpen).toBe(true);
+  });
+
+  it('does not show the "Ajouter des objets" button in builder mode', () => {
+    useUiStore().setViewMode('build');
+    const w = mount(AppMiniMap, { props: { scrollRef: null }, attachTo: document.body });
+    expect(w.find('[data-testid="open-custom-import"]').exists()).toBe(false);
+  });
 });

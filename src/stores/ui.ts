@@ -32,6 +32,11 @@ export const useUiStore = defineStore('ui', () => {
   const codeImportAfterCardId = ref<string | null>(null);
   // When set, the stat investment modal is open for {cardId, stat}.
   const statModalTarget = ref<StatModalTarget | null>(null);
+  // Shopping "Ajouter des objets" (custom import) modal — triggered from the minimap.
+  const customImportOpen = ref(false);
+
+  function openCustomImport(): void { customImportOpen.value = true; }
+  function closeCustomImport(): void { customImportOpen.value = false; }
 
   function setActiveCard(id: string | null): void {
     activeCardId.value = id;
@@ -92,6 +97,9 @@ export const useUiStore = defineStore('ui', () => {
     viewMode,
     codeImportAfterCardId,
     statModalTarget,
+    customImportOpen,
+    openCustomImport,
+    closeCustomImport,
     setActiveCard,
     openItemPicker,
     closeItemPicker,

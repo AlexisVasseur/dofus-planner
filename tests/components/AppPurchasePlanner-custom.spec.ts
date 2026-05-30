@@ -10,12 +10,12 @@ import { populateCache } from '@/composables/useItemCatalog';
 beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
 
 describe('AppPurchasePlanner — custom', () => {
-  it('shows the Import custom button and opens the modal', async () => {
-    useUiStore().setViewMode('purchase');
+  it('renders the custom-import modal when ui.customImportOpen is set (trigger lives in the minimap)', async () => {
+    const ui = useUiStore();
+    ui.setViewMode('purchase');
+    ui.openCustomImport();
     const w = mount(AppPurchasePlanner, { attachTo: document.body });
-    const btn = w.find('[data-testid="open-custom-import"]');
-    expect(btn.exists()).toBe(true);
-    await btn.trigger('click');
+    await w.vm.$nextTick();
     expect(w.find('[data-testid="custom-textarea"]').exists()).toBe(true);
   });
 
