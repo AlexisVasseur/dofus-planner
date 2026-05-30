@@ -1,4 +1,5 @@
 import type { SlotType } from './slots';
+import { TYPE_ID_TO_SLOT, RING_TYPE_ID } from '@/utils/typeIdSlots';
 
 export type RoomId = '1-49' | '50-99' | '100-149' | '150-199' | '200' | 'hub';
 
@@ -80,4 +81,23 @@ export function levelToRoom(level: number): RoomId {
   if (level >= 100) return '100-149';
   if (level >= 50) return '50-99';
   return '1-49';
+}
+
+/** Route a resolved item to its shopping room + NPC by typeId + levelRequired.
+ *  Mirrors useShoppingList's bucketing but keyed on typeId (the custom importer
+ *  knows only the item, not a slot). Returns null when the typeId fits no shopping
+ *  NPC (e.g. a consumable) — the caller treats that as "unknown". */
+export function routeItemByType(item: { typeId: number; levelRequired: number }): { room: RoomId; npc: NpcId } | null {
+  const { typeId, levelRequired } = item;
+  if (typeId === TYPE_ID_DOFUS) return { room: '200', npc: 'dofus' };
+  if (typeId === TYPE_ID_TROPHEE) {
+    const room = levelToRoom(levelRequired);
+    return { room: room === '1-49' ? '50-99' : room, npc: 'trophee' };
+  }
+  if (FAMILIER_TYPE_IDS.includes(typeId)) return { room: 'hub', npc: 'familier' };
+  if (MONTURE_TYPE_IDS.includes(typeId)) return { room: 'hub', npc: 'monture' };
+  if (typeId === RING_TYPE_ID) return { room: levelToRoom(levelRequired), npc: 'anneau' };
+  const slot = TYPE_ID_TO_SLOT[typeId];
+  if (slot) return { room: levelToRoom(levelRequired), npc: slotToNpc(slot) };
+  return null;
 }
