@@ -10,6 +10,8 @@ import {
 } from '@/types/rooms';
 import { SLOT_ORDER, DOFUS_COUNT } from '@/types/slots';
 import type { Item } from '@/data/dofusdb';
+import { useCustomShoppingStore } from '@/stores/customShopping';
+import { routeItemByType } from '@/types/rooms';
 
 export interface ShoppingList {
   rooms: Record<RoomId, Partial<Record<NpcId, Item[]>>>;
@@ -28,6 +30,12 @@ export interface ShoppingList {
     /** Per-room quantity total (same quantity semantics as `units`). */
     unitsPerRoom: Record<RoomId, number>;
   };
+  /** Names that couldn't be placed — not found in DofusDB, or a cached item whose
+   *  typeId routes to no shopping NPC. Shown in the "Inconnu" panel. */
+  unknown: string[];
+  /** Item ids that came from the custom import (and aren't card-derived) — drives
+   *  the "custom" badge. */
+  customItemIds: Set<number>;
 }
 
 function emptyShoppingList(): ShoppingList {
@@ -39,11 +47,18 @@ function emptyShoppingList(): ShoppingList {
     perRoom[r] = 0;
     unitsPerRoom[r] = 0;
   }
-  return { rooms, counts: {}, totals: { items: 0, activeRooms: 0, perRoom, units: 0, unitsPerRoom } };
+  return {
+    rooms,
+    counts: {},
+    totals: { items: 0, activeRooms: 0, perRoom, units: 0, unitsPerRoom },
+    unknown: [],
+    customItemIds: new Set<number>(),
+  };
 }
 
 export function useShoppingList(): ComputedRef<ShoppingList> {
   const build = useBuildStore();
+  const custom = useCustomShoppingStore();
   return computed(() => {
     const result = emptyShoppingList();
     const seen = new Set<number>(); // itemIds already bucketed (first-occurrence wins)
@@ -118,6 +133,20 @@ export function useShoppingList(): ComputedRef<ShoppingList> {
         bucket(result, room, npc, item);
         seen.add(ref.itemId);
       }
+    }
+
+    // Inject the persistent custom list. Found+routable ids that aren't already a
+    // card item get bucketed and flagged custom; everything else is "unknown".
+    for (const entry of custom.entries) {
+      if (entry.itemId === null) { result.unknown.push(entry.name); continue; }
+      if (seen.has(entry.itemId)) continue; // already from a card → no dup, no badge
+      const item = getCachedItem(entry.itemId);
+      if (!item) { void ensureItem(entry.itemId).catch(() => {}); continue; }
+      const route = routeItemByType(item);
+      if (!route) { result.unknown.push(entry.name); continue; }
+      bucket(result, route.room, route.npc, item);
+      result.customItemIds.add(item.id);
+      seen.add(item.id);
     }
 
     // Sort each NPC list by levelRequired ascending.

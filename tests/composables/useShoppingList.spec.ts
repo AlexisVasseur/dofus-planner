@@ -3,6 +3,7 @@ import { setActivePinia, createPinia } from 'pinia';
 import { useBuildStore } from '@/stores/build';
 import { useShoppingList } from '@/composables/useShoppingList';
 import { populateCache } from '@/composables/useItemCatalog';
+import { useCustomShoppingStore } from '@/stores/customShopping';
 import { TYPE_ID_DOFUS, TYPE_ID_TROPHEE } from '@/types/rooms';
 import type { Item } from '@/data/dofusdb';
 import type { Card } from '@/types/build';
@@ -342,5 +343,57 @@ describe('useShoppingList', () => {
     expect(list.rooms['150-199'].bottes?.map((i) => i.id)).toEqual([806]);
     expect(list.rooms['150-199'].arme?.map((i) => i.id)).toEqual([807]);
     expect(list.rooms['200'].bouclier?.map((i) => i.id)).toEqual([808]);
+  });
+});
+
+describe('useShoppingList — custom import', () => {
+  beforeEach(() => { setActivePinia(createPinia()); localStorage.clear(); });
+
+  it('injects a found custom item into the right room/NPC and flags it custom', () => {
+    seedItem(900, { name: 'Dragolyre', level: 32, typeId: 1 }); // amulette
+    const build = useBuildStore();
+    build.replaceCards([makeCard(1)]);
+    useCustomShoppingStore().setEntries([{ name: 'Dragolyre', itemId: 900 }]);
+    const list = useShoppingList().value;
+    expect(list.rooms['1-49'].amulette?.map((i) => i.id)).toEqual([900]);
+    expect(list.customItemIds.has(900)).toBe(true);
+  });
+
+  it('puts an unfound entry (itemId null) into unknown', () => {
+    const build = useBuildStore();
+    build.replaceCards([makeCard(1)]);
+    useCustomShoppingStore().setEntries([{ name: 'Truc Inconnu', itemId: null }]);
+    const list = useShoppingList().value;
+    expect(list.unknown).toEqual(['Truc Inconnu']);
+  });
+
+  it('does not duplicate a custom item already provided by a card (no custom badge)', () => {
+    seedItem(901, { name: 'Coiffe Bouftou', level: 1, typeId: 16 });
+    const build = useBuildStore();
+    build.replaceCards([makeCard(1, { slots: { coiffe: { itemId: 901 } } })]);
+    useCustomShoppingStore().setEntries([{ name: 'Coiffe Bouftou', itemId: 901 }]);
+    const list = useShoppingList().value;
+    expect(list.rooms['1-49'].coiffe?.map((i) => i.id)).toEqual([901]); // once
+    expect(list.customItemIds.has(901)).toBe(false); // it's a card item, not a custom badge
+  });
+
+  it('routes a custom item whose cached typeId maps nowhere into unknown', () => {
+    seedItem(902, { name: 'Potion', level: 1, typeId: 99 });
+    const build = useBuildStore();
+    build.replaceCards([makeCard(1)]);
+    useCustomShoppingStore().setEntries([{ name: 'Potion', itemId: 902 }]);
+    const list = useShoppingList().value;
+    expect(list.unknown).toEqual(['Potion']);
+    expect(list.customItemIds.has(902)).toBe(false);
+  });
+
+  it('counts custom items in the totals', () => {
+    seedItem(903, { name: 'Dragolyre', level: 32, typeId: 1 });
+    const build = useBuildStore();
+    build.replaceCards([makeCard(1)]);
+    useCustomShoppingStore().setEntries([{ name: 'Dragolyre', itemId: 903 }]);
+    const list = useShoppingList().value;
+    expect(list.totals.units).toBe(1);
+    expect(list.totals.unitsPerRoom['1-49']).toBe(1);
   });
 });
