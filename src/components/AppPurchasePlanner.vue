@@ -4,12 +4,14 @@ import { useShoppingList } from '@/composables/useShoppingList';
 import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, ROOM_LABEL, levelToRoom, type RoomId, type NpcId } from '@/types/rooms';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
+import CustomImportModal from './CustomImportModal.vue';
 
 const ui = useUiStore();
 const build = useBuildStore();
 const list = useShoppingList();
+const customModalOpen = ref(false);
 
-const hasAnything = computed(() => list.value.totals.items > 0);
+const hasAnything = computed(() => list.value.totals.items > 0 || list.value.unknown.length > 0);
 
 // Show every room (even empty) so users always see the full structure.
 const visibleRooms = computed(() => [...ROOM_ORDER]);
@@ -97,6 +99,12 @@ async function copyItem(name: string, key: string): Promise<void> {
         class="bg-[#5DCFE0] text-[#0A2530] border border-[#5DCFE0] rounded-md px-4 py-2 font-sans text-[11px] font-bold uppercase tracking-[0.06em] hover:bg-[#8AE0EE] transition-colors"
         @click="backToBuild"
       >← Retour à Builder</button>
+      <button
+        type="button"
+        data-testid="open-custom-import"
+        class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
+        @click="customModalOpen = true"
+      >Import custom</button>
     </div>
 
     <template v-else>
@@ -105,13 +113,19 @@ async function copyItem(name: string, key: string): Promise<void> {
            which room is in view by setting ui.activeCardId. -->
       <div class="flex flex-col gap-6 pt-6 pb-12">
         <!-- Global total: quantity-aware (sums the ×N badges), pinned above the rooms. -->
-        <div class="mx-4 flex items-center justify-center">
+        <div class="mx-4 flex items-center justify-center gap-3">
           <span class="inline-flex items-center gap-2 rounded-full border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] px-4 py-1.5">
             <span class="font-mono font-extrabold text-[15px] text-[#8AE0EE] tabular-nums">{{ list.totals.units }}</span>
             <span class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase">
               {{ list.totals.units > 1 ? 'items à acheter' : 'item à acheter' }}
             </span>
           </span>
+          <button
+            type="button"
+            data-testid="open-custom-import"
+            class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
+            @click="customModalOpen = true"
+          >Import custom</button>
         </div>
         <div
           v-for="room in visibleRooms"
@@ -167,6 +181,11 @@ async function copyItem(name: string, key: string): Promise<void> {
                     />
                     <span v-else class="w-5 h-5 flex-shrink-0" aria-hidden="true" />
                     <span class="truncate min-w-0 flex-1 pr-2">{{ item.name }}</span>
+                    <span
+                      v-if="list.customItemIds.has(item.id)"
+                      data-testid="custom-badge"
+                      class="flex-shrink-0 mr-1 px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-[0.06em] bg-[#5DCFE0]/[0.18] text-[#8AE0EE] border border-[#5DCFE0]/40"
+                    >custom</span>
                     <!-- Quantity badge: only shown when the item is needed more than once
                          in a single card (e.g. Silimelle as anneau1 + anneau2). -->
                     <span
@@ -186,8 +205,25 @@ async function copyItem(name: string, key: string): Promise<void> {
             </section>
           </div>
         </div>
+        <div
+          v-if="list.unknown.length > 0"
+          class="mx-4 rounded-xl border border-danger/40 backdrop-blur-md shadow-[0_8px_32px_rgba(0,0,0,0.55)] px-5 py-4"
+          style="background: rgba(8,8,8,0.2);"
+        >
+          <header class="mb-3">
+            <h2 class="font-sans font-bold text-[12px] text-danger-soft tracking-[0.1em] uppercase">Inconnu</h2>
+          </header>
+          <ul class="flex flex-wrap gap-2">
+            <li
+              v-for="(name, i) in list.unknown"
+              :key="`unknown-${i}`"
+              class="text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md px-2 py-1.5"
+            >{{ name }}</li>
+          </ul>
+        </div>
       </div>
     </template>
+    <CustomImportModal :open="customModalOpen" @close="customModalOpen = false" />
   </section>
 </template>
 
