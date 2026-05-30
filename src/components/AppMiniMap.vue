@@ -5,12 +5,21 @@ import { useUiStore } from '@/stores/ui';
 import { ROOM_ORDER, levelToRoom, type RoomId } from '@/types/rooms';
 import { INVESTABLE_STATS } from '@/types/build';
 import { getInvestment, getExo } from '@/utils/statCost';
+import { useShoppingList } from '@/composables/useShoppingList';
 import BulkActionsPopover from './BulkActionsPopover.vue';
 
 const props = defineProps<{ scrollRef: HTMLElement | null }>();
 
 const build = useBuildStore();
 const ui = useUiStore();
+const shopping = useShoppingList();
+
+// Shopping-only: quantity-aware item count per room + grand total (same numbers as
+// the planner's "· N" room badges and the global "items à acheter" pill).
+function roomCount(payload: string): number {
+  return shopping.value.totals.unitsPerRoom[payload as RoomId] ?? 0;
+}
+const totalCount = computed(() => shopping.value.totals.units);
 
 // Bulk popover trigger replaces the static "Timeline" label.
 const bulkTriggerRef = ref<HTMLElement | null>(null);
@@ -148,7 +157,7 @@ function gotoCell(cell: Cell, idx: number): void {
             v-for="(cell, idx) in cells"
             :key="cell.key"
             type="button"
-            class="flex-1 h-full relative z-10 rounded-sm inline-flex items-center justify-center font-bold transition-colors duration-300 cursor-pointer"
+            class="flex-1 h-full relative z-10 rounded-sm flex flex-col items-center justify-center gap-0.5 leading-none font-bold transition-colors duration-300 cursor-pointer"
             :class="[
               ui.viewMode === 'purchase'
                 ? 'font-sans text-[10px] tracking-[0.06em] uppercase'
@@ -160,10 +169,24 @@ function gotoCell(cell: Cell, idx: number): void {
             :aria-label="cell.ariaLabel"
             @click="gotoCell(cell, idx)"
           >
-            {{ cell.label }}
+            <span>{{ cell.label }}</span>
+            <span
+              v-if="ui.viewMode === 'purchase' && roomCount(cell.payload) > 0"
+              :data-testid="`room-count-${cell.payload}`"
+              class="font-mono text-[9px] opacity-80"
+            >{{ roomCount(cell.payload) }}</span>
           </button>
         </div>
       </Transition>
+    </div>
+    <!-- Shopping-only: grand total to the right of the room cells. -->
+    <div
+      v-if="ui.viewMode === 'purchase'"
+      data-testid="minimap-total"
+      class="shrink-0 px-3 py-1 rounded-md border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] flex flex-col items-center justify-center leading-none gap-0.5"
+    >
+      <span class="font-sans text-[8px] uppercase tracking-[0.08em] text-text-muted">TOTAL</span>
+      <span class="font-mono font-extrabold text-[13px] text-[#8AE0EE] tabular-nums">{{ totalCount }}</span>
     </div>
   </footer>
 </template>
