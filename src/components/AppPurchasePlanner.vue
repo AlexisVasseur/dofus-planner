@@ -4,11 +4,13 @@ import { useShoppingList } from '@/composables/useShoppingList';
 import { ROOM_ORDER, NPC_ORDER, ROOM_NPCS, NPC_LABEL, ROOM_LABEL, levelToRoom, type RoomId, type NpcId } from '@/types/rooms';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
+import { useShoppingCheckedStore, itemCheckKey, nameCheckKey } from '@/stores/shoppingChecked';
 import CustomImportModal from './CustomImportModal.vue';
 
 const ui = useUiStore();
 const build = useBuildStore();
 const list = useShoppingList();
+const checked = useShoppingCheckedStore();
 
 const hasAnything = computed(() => list.value.totals.items > 0 || list.value.unknown.length > 0);
 
@@ -145,10 +147,14 @@ async function copyItem(name: string, key: string): Promise<void> {
                   <button
                     type="button"
                     data-testid="item-name"
+                    :data-checked="checked.isChecked(itemCheckKey(item.id))"
                     class="flex items-center gap-2 w-full text-left text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md pl-2 py-1.5 hover:bg-[#8AE0EE]/[0.08] hover:border-[#8AE0EE]/30 hover:text-[#8AE0EE] transition-colors cursor-pointer overflow-hidden"
-                    :class="copiedKey === `${room}-${npc}-${item.id}` && '!bg-[#5DCFE0]/[0.12] !border-[#5DCFE0]/40 !text-[#5DCFE0]'"
+                    :class="[
+                      copiedKey === `${room}-${npc}-${item.id}` && '!bg-[#5DCFE0]/[0.12] !border-[#5DCFE0]/40 !text-[#5DCFE0]',
+                      checked.isChecked(itemCheckKey(item.id)) && '!border-[#3fb950] !bg-[#3fb950]/[0.12]',
+                    ]"
                     :title="`Cliquer pour copier — ${item.name}`"
-                    @click="copyItem(item.name, `${room}-${npc}-${item.id}`)"
+                    @click="copyItem(item.name, `${room}-${npc}-${item.id}`); checked.toggle(itemCheckKey(item.id))"
                   >
                     <img
                       v-if="item.iconUrl"
@@ -192,11 +198,17 @@ async function copyItem(name: string, key: string): Promise<void> {
             <h2 class="font-sans font-bold text-[12px] text-danger-soft tracking-[0.1em] uppercase">Inconnu</h2>
           </header>
           <ul class="flex flex-wrap gap-2">
-            <li
-              v-for="(name, i) in list.unknown"
-              :key="`unknown-${i}`"
-              class="text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md px-2 py-1.5"
-            >{{ name }}</li>
+            <li v-for="(name, i) in list.unknown" :key="`unknown-${i}`">
+              <button
+                type="button"
+                data-testid="unknown-item"
+                :data-checked="checked.isChecked(nameCheckKey(name))"
+                class="text-[13px] font-sans text-text-default bg-white/[0.04] border border-white/[0.08] rounded-md px-2 py-1.5 hover:bg-[#8AE0EE]/[0.08] hover:border-[#8AE0EE]/30 transition-colors cursor-pointer"
+                :class="checked.isChecked(nameCheckKey(name)) && '!border-[#3fb950] !bg-[#3fb950]/[0.12]'"
+                :title="`Cliquer pour copier — ${name}`"
+                @click="copyItem(name, `unknown-${i}`); checked.toggle(nameCheckKey(name))"
+              >{{ name }}</button>
+            </li>
           </ul>
         </div>
       </div>
