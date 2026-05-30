@@ -3,18 +3,29 @@
 ## Goal
 
 Add an "Import custom" action to the Shopping view: paste a free list of item
-names, batch-validate their existence against DofusDB, and inject the found
-items into the right room/NPC tables (alongside the timeline-derived items).
-Names not found go into a dedicated "Inconnu" section at the bottom. There is a
-single, persistent custom list.
+names (plain one-per-line OR a `nom;type;niveau` CSV — only the name is used),
+batch-validate their existence against DofusDB, and inject the found items into
+the right room/NPC tables (alongside the timeline-derived items). Names not found
+go into a dedicated "Inconnu" section at the bottom. There is a single,
+persistent custom list. An "Analyser" button reports valid/invalid counts without
+importing; "Importer" applies the import.
 
-## Input example
+## Input examples
 
+Plain list (one name per line):
 ```
 Anneau d'Allister
 Anneau des Matougarous
 Masque de Klime
 Dofus Nebuleux
+```
+
+CSV `nom;type;niveau` (only the name column is used; the header line is ignored):
+```
+nom;type;niveau
+Alliance de Silimelle;Anneau;26
+Baguette de Sagesse;Baguette;27
+Dragolyre;Amulette;32
 ```
 
 ## Locked decisions
@@ -76,13 +87,29 @@ Logic (mirrors the existing `useShoppingList` bucketing, keyed on typeId):
 (`useShoppingList`'s dofus/familier branches can optionally be refactored to use
 this helper later; not required for this feature — keep the change focused.)
 
-### Resolution — `src/composables/useCustomShopping.ts` (new)
+### Parsing + Resolution — `src/composables/useCustomShopping.ts` (new)
 
 ```ts
-export async function resolveCustomNames(rawNames: string[]): Promise<CustomEntry[]>;
+/** Extract item names from pasted text. Accepts a plain "one name per line" list
+ *  AND a CSV-like "nom;type;niveau" format — we only keep the NAME (first ; field),
+ *  since resolution is name-based. */
+export function parseCustomLines(text: string): string[];
+
+export async function resolveCustomNames(names: string[]): Promise<CustomEntry[]>;
 ```
 
-- Trim lines, drop empties, de-dup by normalized name (preserve first-seen order).
+`parseCustomLines`:
+- Split on newlines; for each line take the part before the first `;` (a plain
+  line with no `;` yields the whole line), then trim.
+- Drop empty results.
+- Drop a header line: when the name field is `nom` (case-insensitive) — covers the
+  `nom;type;niveau` header and a bare `nom`.
+- De-dup by normalized name (preserve first-seen order).
+
+Example: `Alliance de Silimelle;Anneau;26` → `Alliance de Silimelle`;
+`nom;type;niveau` → dropped; `Anneau d'Allister` → `Anneau d'Allister`.
+
+`resolveCustomNames` (takes the already-parsed names):
 - `const pool = await fetchItemsByNames(names)` (one request).
 - Group pool by normalized name; for each input name, pick an item whose
   normalized name matches (prefer one routable via `routeItemByType`, else first).
@@ -130,11 +157,18 @@ the card path).
 
 - An **"Import custom"** button in the header row (near the global total pill).
   Opens a modal (new small component `CustomImportModal.vue`, or inline) with a
-  `<textarea>` ("Un item par ligne…") and, when a list exists, a **Vider** button.
-- **Validate**: split lines → `resolveCustomNames` (button shows loading) →
-  `customStore.setEntries(result)` → close → toast
-  `"<found>/<total> items reconnus" (+ " — <n> inconnus")`.
-- **Vider**: `customStore.clear()`.
+  `<textarea>` ("Un item par ligne, ou collez un CSV nom;type;niveau…") and, when
+  a list exists, a **Vider** button.
+- Two action buttons in the modal:
+  - **Analyser**: `parseCustomLines` → `resolveCustomNames` (loading state), then
+    show a non-committing preview in the modal: `"<valides> valides · <invalides>
+    invalides"` plus the list of invalid names. Does NOT touch the stored list.
+    The resolved result is cached against the current textarea content so a
+    following **Importer** with unchanged text reuses it (no second fetch).
+  - **Importer**: resolves (or reuses the cached analysis if the text is
+    unchanged) → `customStore.setEntries(result)` → close → toast
+    `"<valides>/<total> items reconnus" (+ " — <invalides> inconnus")`.
+- **Vider**: `customStore.clear()` (clears the imported list).
 - **Custom badge**: on each rendered item whose `id ∈ list.customItemIds`, a small
   turquoise pastille (reuse the existing item-row styling; add a marker element).
 - **"Inconnu" panel**: rendered after the rooms when `list.unknown.length > 0` —
@@ -170,9 +204,12 @@ with only unknowns) still shows the planner instead of the empty placeholder.
 - dofus → 200/dofus; trophée lvl 30 → 50-99/trophee (bumped); familier → hub/familier;
   monture → hub/monture; coiffe typeId 16 lvl 60 → 50-99/coiffe; unknown typeId 99 → null.
 
-### Resolution — `tests/composables/useCustomShopping.spec.ts` (mock fetchItemsByNames + ensureItems)
-- Found names → itemId; missing → null; dedup by normalized name; ensureItems
-  called with found ids; one batched fetch.
+### Parsing + Resolution — `tests/composables/useCustomShopping.spec.ts`
+- `parseCustomLines`: plain list → names; CSV `nom;type;niveau` rows → first field
+  only; the `nom;type;niveau` (and bare `nom`) header dropped; empty lines dropped;
+  dedup by normalized name.
+- `resolveCustomNames` (mock fetchItemsByNames + ensureItems): found names → itemId;
+  missing → null; ensureItems called with found ids; one batched fetch.
 
 ### Shopping integration — `tests/composables/useShoppingList.spec.ts` (extend)
 - A custom found item lands in the right room/NPC and is in `customItemIds`.
@@ -183,9 +220,12 @@ with only unknowns) still shows the planner instead of the empty placeholder.
 - Totals include custom items (units/perRoom).
 
 ### Component smoke — `tests/components/AppPurchasePlanner-custom.spec.ts`
-- "Import custom" opens the modal; validating calls `resolveCustomNames` (mock) +
-  `setEntries` + toast; the Inconnu panel renders names from `list.unknown`; a
-  custom-badged item renders the marker.
+- "Import custom" opens the modal.
+- **Analyser** calls resolve (mock) and shows the valid/invalid counts WITHOUT
+  calling `setEntries` (the stored list is untouched).
+- **Importer** calls `setEntries` with the resolved entries + toast + closes.
+- The Inconnu panel renders names from `list.unknown`; a custom-badged item
+  renders the marker.
 
 No Playwright E2E.
 
