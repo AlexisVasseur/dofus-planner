@@ -104,7 +104,7 @@ async function copyItem(name: string, key: string): Promise<void> {
         data-testid="open-custom-import"
         class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
         @click="customModalOpen = true"
-      >Import custom</button>
+      >Ajouter des objets</button>
     </div>
 
     <template v-else>
@@ -112,20 +112,13 @@ async function copyItem(name: string, key: string): Promise<void> {
            Each room is its own floating panel; the bottom timeline minimap drives
            which room is in view by setting ui.activeCardId. -->
       <div class="flex flex-col gap-6 pt-6 pb-12">
-        <!-- Global total: quantity-aware (sums the ×N badges), pinned above the rooms. -->
-        <div class="mx-4 flex items-center justify-center gap-3">
-          <span class="inline-flex items-center gap-2 rounded-full border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] px-4 py-1.5">
-            <span class="font-mono font-extrabold text-[15px] text-[#8AE0EE] tabular-nums">{{ list.totals.units }}</span>
-            <span class="font-sans font-bold text-[11px] text-text-muted tracking-[0.08em] uppercase">
-              {{ list.totals.units > 1 ? 'items à acheter' : 'item à acheter' }}
-            </span>
-          </span>
+        <div class="mx-4 flex items-center justify-center">
           <button
             type="button"
             data-testid="open-custom-import"
             class="font-sans font-bold text-[10px] uppercase tracking-[0.06em] px-3 py-1.5 rounded-full border border-[#5DCFE0]/40 text-[#8AE0EE] hover:bg-[#5DCFE0]/[0.10] transition-colors"
             @click="customModalOpen = true"
-          >Import custom</button>
+          >Ajouter des objets</button>
         </div>
         <div
           v-for="room in visibleRooms"
