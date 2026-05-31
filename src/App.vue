@@ -8,6 +8,7 @@ import AppSwitchView from './components/AppSwitchView.vue';
 import ItemPickerPopover from './components/ItemPickerPopover.vue';
 import ClassPickerModal from './components/ClassPickerModal.vue';
 import CardCodeImportModal from './components/CardCodeImportModal.vue';
+import DofusbookImportModal from './components/DofusbookImportModal.vue';
 import StatInvestmentModal from './components/StatInvestmentModal.vue';
 import AppToast from './components/AppToast.vue';
 import { useBuildStore } from './stores/build';
@@ -100,6 +101,7 @@ onMounted(() => {
     <ItemPickerPopover />
     <ClassPickerModal />
     <CardCodeImportModal />
+    <DofusbookImportModal />
     <StatInvestmentModal />
     <AppToast />
   </div>

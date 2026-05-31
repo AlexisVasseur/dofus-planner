@@ -7,7 +7,7 @@ vi.mock('@/composables/useDofusbookImport', () => ({
   resolveDofusbookItems: (...a: unknown[]) => resolveDofusbookItems(...a),
 }));
 
-import CardCodeImportModal from '@/components/CardCodeImportModal.vue';
+import DofusbookImportModal from '@/components/DofusbookImportModal.vue';
 import { useUiStore } from '@/stores/ui';
 import { useBuildStore } from '@/stores/build';
 
@@ -48,13 +48,12 @@ beforeEach(() => {
   resolveDofusbookItems.mockReset();
 });
 
-describe('CardCodeImportModal — Dofusbook mode', () => {
-  it('switching to Dofusbook mode shows the paste textarea', async () => {
+describe('DofusbookImportModal', () => {
+  it('opening in Dofusbook mode shows the paste textarea', async () => {
     const ui = useUiStore();
     const build = useBuildStore();
-    ui.openCodeImport(build.cards[0].id);
-    const w = mount(CardCodeImportModal, { attachTo: document.body });
-    await w.find('[data-testid="import-mode-dofusbook"]').trigger('click');
+    ui.openCodeImport(build.cards[0].id, 'dofusbook');
+    const w = mount(DofusbookImportModal, { attachTo: document.body });
     expect(w.find('[data-testid="dofusbook-textarea"]').exists()).toBe(true);
   });
 
@@ -69,10 +68,9 @@ describe('CardCodeImportModal — Dofusbook mode', () => {
     });
     const addSpy = vi.spyOn(build, 'addCardAfter');
     const afterId = build.cards[0].id;
-    ui.openCodeImport(afterId);
+    ui.openCodeImport(afterId, 'dofusbook');
 
-    const w = mount(CardCodeImportModal, { attachTo: document.body });
-    await w.find('[data-testid="import-mode-dofusbook"]').trigger('click');
+    const w = mount(DofusbookImportModal, { attachTo: document.body });
     await w.find('[data-testid="dofusbook-textarea"]').setValue(SAMPLE);
     await w.find('[data-testid="import-submit"]').trigger('click');
     await flushPromises();
@@ -98,10 +96,9 @@ describe('CardCodeImportModal — Dofusbook mode', () => {
       resolvedCount: 0,
     });
     const addSpy = vi.spyOn(build, 'addCardAfter');
-    ui.openCodeImport(build.cards[0].id);
+    ui.openCodeImport(build.cards[0].id, 'dofusbook');
 
-    const w = mount(CardCodeImportModal, { attachTo: document.body });
-    await w.find('[data-testid="import-mode-dofusbook"]').trigger('click');
+    const w = mount(DofusbookImportModal, { attachTo: document.body });
     await w.find('[data-testid="dofusbook-textarea"]').setValue(SAMPLE);
     await w.find('[data-testid="import-submit"]').trigger('click');
     await flushPromises();
