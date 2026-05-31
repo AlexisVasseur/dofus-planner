@@ -201,22 +201,22 @@ function cancelTitle() {
         </div>
       </div>
     </div>
-    <!-- Kebab trigger — single button anchored to the top-right of the header. -->
+    <!-- Options trigger — anchored to the top-right of the header. -->
     <button
       ref="kebabRef"
       data-testid="card-kebab"
       type="button"
-      class="absolute top-1.5 right-1.5 w-8 h-8 rounded-full text-text-faint hover:text-accent hover:bg-accent/10 border border-transparent hover:border-accent/40 inline-flex items-center justify-center transition-colors"
-      aria-label="Actions"
+      class="absolute top-1.5 right-1.5 h-7 inline-flex items-center gap-1 px-2 rounded-md border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] text-[#8AE0EE] font-sans font-bold text-[10px] uppercase tracking-[0.06em] hover:bg-[#5DCFE0]/[0.16] hover:border-[#5DCFE0]/70 transition-colors"
+      aria-label="Options"
       aria-haspopup="menu"
       :aria-expanded="menuOpen"
       @click.stop="toggleMenu"
     >
-      <svg viewBox="0 0 24 24" class="w-4 h-4" fill="currentColor" aria-hidden="true">
-        <circle cx="12" cy="5"  r="1.6" />
-        <circle cx="12" cy="12" r="1.6" />
-        <circle cx="12" cy="19" r="1.6" />
+      <svg viewBox="0 0 24 24" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="3" />
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
       </svg>
+      Options
     </button>
     <Transition name="menu">
       <div
