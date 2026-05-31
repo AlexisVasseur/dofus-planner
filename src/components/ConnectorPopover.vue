@@ -20,7 +20,7 @@ const popoverRef = ref<HTMLElement | null>(null);
 
 const VERTICAL_GAP = 10;
 const VIEWPORT_MARGIN = 12;
-const WIDTH = 480;
+const WIDTH = 280;
 
 const style = computed(() => {
   const ideal = props.anchorX - WIDTH / 2;
@@ -50,7 +50,7 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
          end-of-timeline picker. -->
     <div
       ref="popoverRef"
-      class="connector-popover fixed flex gap-2 p-2 rounded-xl border-2 border-dashed border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] z-[60]"
+      class="connector-popover fixed grid grid-cols-2 gap-2 p-2 rounded-xl border-2 border-dashed border-[#5DCFE0]/40 backdrop-blur-md shadow-[0_12px_32px_rgba(0,0,0,0.6)] z-[60]"
       :style="{
         ...style,
         background: 'rgba(8,8,8,0.85)',
