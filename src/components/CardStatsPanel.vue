@@ -188,6 +188,7 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
               ? 'cursor-default opacity-60'
               : 'hover:bg-[#8AE0EE]/[0.10] hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] cursor-pointer',
             r.investKey !== null && r.statsValue > 0 ? '!font-extrabold' : '',
+            r.investKey !== null && r.statsValue === 0 ? 'opacity-60' : '',
           ]"
           :style="r.investKey !== null && r.statsValue > 0
             ? { color: STAT_COLOR[r.investKey], textShadow: `0 0 4px ${STAT_COLOR[r.investKey]}bb, 0 0 9px ${STAT_COLOR[r.investKey]}66` }
