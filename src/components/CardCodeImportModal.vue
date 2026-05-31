@@ -105,9 +105,21 @@ useEventListener(window, 'keydown', (e: KeyboardEvent) => {
           </button>
         </header>
         <div class="px-5 py-4 flex flex-col gap-3">
-          <p class="font-sans text-xs text-text-muted leading-relaxed">
-            Colle un code de partage Dofusbook (le code court généré par « Copier le code »).
-          </p>
+          <div class="rounded-lg border border-[#5DCFE0]/25 bg-[#5DCFE0]/[0.06] px-4 py-3 flex flex-col gap-2">
+            <p class="font-sans text-xs text-text-muted leading-relaxed">
+              Colle ici un code de stuff. Deux sources fonctionnent :
+            </p>
+            <ul class="flex flex-col gap-1.5 font-sans text-xs text-text-muted leading-relaxed list-disc list-inside">
+              <li>
+                Le code généré par <span class="text-[#8AE0EE] font-semibold">dofus-stuffer</span> — la partie après
+                <code class="font-mono text-[#8AE0EE]">?stuff=</code> dans l'URL (ex.
+                <code class="font-mono text-[#8AE0EE]">dofus-stuffer.is-great.net?stuff=hqEwi6Ewz…</code>).
+              </li>
+              <li>
+                Un code copié depuis <span class="text-[#8AE0EE] font-semibold">dofus-planner</span> via « Copier ».
+              </li>
+            </ul>
+          </div>
           <textarea
             data-testid="code-textarea"
             ref="textareaRef"
