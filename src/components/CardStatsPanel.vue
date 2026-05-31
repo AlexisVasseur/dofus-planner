@@ -35,6 +35,18 @@ const ICON = {
   puiss: ICON_BASE + 'puissance.png',
 };
 
+// Per-stat highlight colour for an invested stat — keyed off the element/icon hue
+// (Terre / Feu / Eau / Air / Sagesse / Vita) but brightened for contrast on the
+// dark panel background.
+const STAT_COLOR: Record<InvestableStat, string> = {
+  vitalite:     '#ff7a8a', // HP — pink-red
+  force:        '#e0a64e', // Terre — earthy gold
+  intelligence: '#ff6a4d', // Feu — orange-red
+  chance:       '#5aa9ff', // Eau — blue
+  agilite:      '#5fd06a', // Air — green
+  sagesse:      '#b388ff', // Sagesse — violet
+};
+
 const cb = (c: number) => characterBase.value[c] ?? 0;
 const ib = (c: number) => itemBonus.value[c] ?? 0;
 // Parcho 100 bonus per stat — moves out of the Stats column and into the +Item /
@@ -171,9 +183,13 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
         <button
           type="button"
           class="stat-value font-mono font-bold tabular-nums text-center text-text-default border border-white/15 rounded-md justify-self-center inline-block transition-colors"
-          :class="r.investKey === null
-            ? 'cursor-default opacity-60'
-            : 'hover:bg-[#8AE0EE]/[0.10] hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] cursor-pointer'"
+          :class="[
+            r.investKey === null
+              ? 'cursor-default opacity-60'
+              : 'hover:bg-[#8AE0EE]/[0.10] hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] cursor-pointer',
+            r.investKey !== null && r.statsValue > 0 ? '!font-extrabold' : '',
+          ]"
+          :style="r.investKey !== null && r.statsValue > 0 ? { color: STAT_COLOR[r.investKey] } : undefined"
           :disabled="r.investKey === null"
           :data-stat-trigger="r.investKey !== null ? `${props.card.id}-${r.investKey}` : undefined"
           @click.stop="onStatClick(r)"
