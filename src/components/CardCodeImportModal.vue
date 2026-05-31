@@ -28,7 +28,7 @@ watch(open, async (isOpen) => {
   if (!isOpen) return;
   code.value = '';
   error.value = null;
-  mode.value = 'code';
+  mode.value = ui.codeImportMode;
   importing.value = false;
   await nextTick();
   textareaRef.value?.focus();

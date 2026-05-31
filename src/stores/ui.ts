@@ -10,6 +10,9 @@ export type ItemPickerTarget =
 
 export type ViewMode = 'build' | 'switch' | 'purchase';
 
+/** Which import tab the card-import modal opens on. */
+export type ImportMode = 'code' | 'dofusbook';
+
 export interface StatModalTarget {
   cardId: string;
   stat: InvestableStat;
@@ -27,9 +30,10 @@ export const useUiStore = defineStore('ui', () => {
   const itemPickerTarget = ref<ItemPickerTarget | null>(null);
   const classPickerCardId = ref<string | null>(null);
   const viewMode = ref<ViewMode>('build');
-  // When set, the import-code modal is open. Value = id of the card after which
-  // the imported card will be inserted.
+  // When set, the import modal is open. Value = id of the card after which the
+  // imported card will be inserted. `codeImportMode` picks the opening tab.
   const codeImportAfterCardId = ref<string | null>(null);
+  const codeImportMode = ref<ImportMode>('code');
   // When set, the stat investment modal is open for {cardId, stat}.
   const statModalTarget = ref<StatModalTarget | null>(null);
   // Shopping "Ajouter des objets" (custom import) modal — triggered from the minimap.
@@ -65,8 +69,9 @@ export const useUiStore = defineStore('ui', () => {
     viewMode.value = mode;
   }
 
-  function openCodeImport(afterCardId: string): void {
+  function openCodeImport(afterCardId: string, mode: ImportMode = 'code'): void {
     codeImportAfterCardId.value = afterCardId;
+    codeImportMode.value = mode;
   }
 
   function closeCodeImport(): void {
@@ -96,6 +101,7 @@ export const useUiStore = defineStore('ui', () => {
     classPickerCardId,
     viewMode,
     codeImportAfterCardId,
+    codeImportMode,
     statModalTarget,
     customImportOpen,
     openCustomImport,

@@ -14,7 +14,10 @@ function addEmpty(): void {
   build.addEmptyCardAfter(props.afterCardId);
 }
 function addFromCode(): void {
-  ui.openCodeImport(props.afterCardId);
+  ui.openCodeImport(props.afterCardId, 'code');
+}
+function addFromDofusbook(): void {
+  ui.openCodeImport(props.afterCardId, 'dofusbook');
 }
 </script>
 
@@ -57,6 +60,17 @@ function addFromCode(): void {
         <polyline points="8 6 2 12 8 18" />
       </svg>
       <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Coller un code</span>
+    </button>
+    <button
+      type="button"
+      class="flex-1 flex flex-col items-center justify-center gap-2.5 rounded-lg border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.10] hover:bg-[#5DCFE0]/[0.18] hover:border-[#5DCFE0]/60 transition-colors"
+      @click="addFromDofusbook"
+    >
+      <svg class="w-7 h-7 text-[#8AE0EE]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+      <span class="font-sans font-bold text-[12px] uppercase tracking-[0.06em] text-[#8AE0EE]">Coller Dofusbook</span>
     </button>
   </article>
 </template>

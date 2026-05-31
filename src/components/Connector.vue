@@ -20,7 +20,8 @@ const anchorY = computed(() => pillBottom.value);
 function toggle() { open.value = !open.value; }
 function pickEmpty() { build.addEmptyCardAfter(props.afterCardId); open.value = false; }
 function pickCopy() { build.addCopyCardAfter(props.afterCardId); open.value = false; }
-function pickCode() { ui.openCodeImport(props.afterCardId); open.value = false; }
+function pickCode() { ui.openCodeImport(props.afterCardId, 'code'); open.value = false; }
+function pickDofusbook() { ui.openCodeImport(props.afterCardId, 'dofusbook'); open.value = false; }
 function close() { open.value = false; }
 
 // Silence unused-warning on pillY (kept for future flip-above-anchor logic)
@@ -49,6 +50,7 @@ void pillY;
       @empty="pickEmpty"
       @copy="pickCopy"
       @code="pickCode"
+      @dofusbook="pickDofusbook"
       @close="close"
     />
   </div>
