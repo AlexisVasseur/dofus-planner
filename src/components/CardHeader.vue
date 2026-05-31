@@ -253,7 +253,7 @@ function cancelTitle() {
             <polyline points="15 3 21 3 21 9" />
             <line x1="10" y1="14" x2="21" y2="3" />
           </svg>
-          Ouvrir Dofusbook
+          Export Dofusbook
         </button>
         <button
           v-if="!readonly"
