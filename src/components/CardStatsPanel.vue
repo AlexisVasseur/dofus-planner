@@ -189,7 +189,9 @@ onBeforeUnmount(() => { if (hoverTimer !== null) clearTimeout(hoverTimer); });
               : 'hover:bg-[#8AE0EE]/[0.10] hover:border-[#5DCFE0]/40 hover:text-[#8AE0EE] cursor-pointer',
             r.investKey !== null && r.statsValue > 0 ? '!font-extrabold' : '',
           ]"
-          :style="r.investKey !== null && r.statsValue > 0 ? { color: STAT_COLOR[r.investKey] } : undefined"
+          :style="r.investKey !== null && r.statsValue > 0
+            ? { color: STAT_COLOR[r.investKey], textShadow: `0 0 4px ${STAT_COLOR[r.investKey]}bb, 0 0 9px ${STAT_COLOR[r.investKey]}66` }
+            : undefined"
           :disabled="r.investKey === null"
           :data-stat-trigger="r.investKey !== null ? `${props.card.id}-${r.investKey}` : undefined"
           @click.stop="onStatClick(r)"
