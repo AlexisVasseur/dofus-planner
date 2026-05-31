@@ -206,7 +206,7 @@ function cancelTitle() {
       ref="kebabRef"
       data-testid="card-kebab"
       type="button"
-      class="absolute top-1.5 right-1.5 h-7 inline-flex items-center gap-1 px-2 rounded-md border border-[#5DCFE0]/40 bg-[#5DCFE0]/[0.08] text-[#8AE0EE] font-sans font-bold text-[10px] uppercase tracking-[0.06em] hover:bg-[#5DCFE0]/[0.16] hover:border-[#5DCFE0]/70 transition-colors"
+      class="card-options-btn absolute top-1.5 right-1.5 h-7 inline-flex items-center gap-1 px-2 rounded-md border font-sans font-bold text-[10px] uppercase tracking-[0.06em] transition-colors"
       aria-label="Options"
       aria-haspopup="menu"
       :aria-expanded="menuOpen"
@@ -290,4 +290,16 @@ function cancelTitle() {
 <style scoped>
 .menu-enter-active, .menu-leave-active { transition: opacity 120ms ease, transform 120ms ease; }
 .menu-enter-from, .menu-leave-to { opacity: 0; transform: translateY(-4px); }
+
+/* "Options" button — tinted with the card's class accent (falls back to turquoise). */
+.card-options-btn {
+  --opt-accent: var(--class-accent, #5DCFE0);
+  color: var(--opt-accent);
+  border-color: color-mix(in srgb, var(--opt-accent) 45%, transparent);
+  background: color-mix(in srgb, var(--opt-accent) 10%, transparent);
+}
+.card-options-btn:hover {
+  border-color: color-mix(in srgb, var(--opt-accent) 75%, transparent);
+  background: color-mix(in srgb, var(--opt-accent) 18%, transparent);
+}
 </style>
