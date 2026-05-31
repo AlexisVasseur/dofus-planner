@@ -93,11 +93,11 @@ function makeRow(
 }
 const statRows = computed<StatRow[]>(() => [
   makeRow(ICON.pv,    'Vitalité',     null,            'vitalite',     CHAR_VITALITE,     null),
-  makeRow(ICON.sag,   'Sagesse',      null,            'sagesse',      CHAR_SAGESSE,      null),
   makeRow(ICON.terre, 'Force',        'Dommage Force', 'force',        CHAR_FORCE,        CHAR_DOM_TERRE),
-  makeRow(ICON.air,   'Agilité',      'Dommage Air',   'agilite',      CHAR_AGILITE,      CHAR_DOM_AIR),
   makeRow(ICON.feu,   'Intelligence', 'Dommage Feu',   'intelligence', CHAR_INTELLIGENCE, CHAR_DOM_FEU),
   makeRow(ICON.eau,   'Chance',       'Dommage Eau',   'chance',       CHAR_CHANCE,       CHAR_DOM_EAU),
+  makeRow(ICON.air,   'Agilité',      'Dommage Air',   'agilite',      CHAR_AGILITE,      CHAR_DOM_AIR),
+  makeRow(ICON.sag,   'Sagesse',      null,            'sagesse',      CHAR_SAGESSE,      null),
   makeRow(ICON.puiss, 'Puissance',    'Dommages',      null,           CHAR_PUISSANCE,    CHAR_DOMMAGE),
 ]);
 
